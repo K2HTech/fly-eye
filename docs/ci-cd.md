@@ -52,7 +52,8 @@ These tasks intentionally resynchronize `.venv` to the selected profile. Run
 The CI workflow runs for pushes and pull requests involving `main` or
 `develop`, and it can be started manually. It contains four checks:
 
-1. Commit messages are validated with `.githooks/commit-msg`.
+1. Commit messages and pull request titles are validated with
+   `.githooks/commit-msg`.
 2. Formatting, linting, tests, repository invariants, and lockfile consistency
    are checked with `task check:quality`.
 3. Base, desktop, and ML environments are created independently to enforce

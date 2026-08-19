@@ -24,6 +24,8 @@ Project development guidelines:
 
 - [Commit convention](docs/commit-convention.md) — Commit message format,
   allowed types, examples, and local hook setup.
+- [Branching strategy](docs/branching-strategy.md) — Branch roles, pull request
+  reviews, merge methods, releases, and hotfixes.
 - [Dependency management](docs/dependency-management.md) — Python version,
   isolated dependency sets, environment setup, and lockfile workflow.
 - [CI/CD](docs/ci-cd.md) — Local Task commands, automated checks, security
