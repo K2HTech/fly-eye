@@ -34,6 +34,16 @@ tasks:
     cmds:
       - "{{.PYTHON}} pytest"
 
+  desktop:run:
+    desc: Run the Fly Eye desktop application
+    cmds:
+      - uv run --locked --extra desktop python -m desktop
+
+  desktop:test:
+    desc: Run the headless desktop bootstrap tests
+    cmds:
+      - uv run --locked --extra desktop pytest tests/test_desktop_application.py
+
   lock:check:
     desc: Verify that uv.lock matches pyproject.toml
     cmds:

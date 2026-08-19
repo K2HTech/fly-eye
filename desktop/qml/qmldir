@@ -1,0 +1,4 @@
+singleton Theme 1.0 Theme.qml
+SurfacePanel 1.0 SurfacePanel.qml
+BrandLabel 1.0 BrandLabel.qml
+StatusChip 1.0 StatusChip.qml
