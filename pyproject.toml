@@ -1,0 +1,26 @@
+[project]
+name = "fly-eye"
+version = "0.1.0"
+description = "A lightweight sports tracking system inspired by Hawk-Eye."
+readme = "README.md"
+requires-python = ">=3.14,<3.15"
+dependencies = []
+
+[project.optional-dependencies]
+desktop = [
+    "pyside6",
+]
+ml = [
+    "torch",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true

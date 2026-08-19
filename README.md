@@ -22,3 +22,5 @@ Project development guidelines:
 
 - [Commit convention](docs/commit-convention.md) — Commit message format,
   allowed types, examples, and local hook setup.
+- [Dependency management](docs/dependency-management.md) — Python version,
+  isolated dependency sets, environment setup, and lockfile workflow.
