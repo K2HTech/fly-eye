@@ -31,7 +31,11 @@ export function DecisionScreen({
           <span aria-hidden="true">◎</span> FLY EYE
         </div>
         <h1 id="decision-screen-title">The call — Court 2 · Game 3 · 21–18</h1>
-        <span className="decision-screen__confidence">
+        <span
+          className="decision-screen__confidence"
+          role="status"
+          aria-label={`Decision confidence ${confidence}%`}
+        >
           Confidence {confidence}%
         </span>
       </header>
@@ -47,14 +51,23 @@ export function DecisionScreen({
           onBackToLive={onBackToLive}
         />
 
-        <div className="decision-screen__plan">
-          <p>Top-down reconstruction — landing zone magnified 8×</p>
+        <section
+          className="decision-screen__plan"
+          aria-labelledby="decision-evidence-title"
+        >
+          <h2 id="decision-evidence-title">
+            Top-down reconstruction — landing zone magnified 8×
+          </h2>
           <DecisionEvidence
             verdict={verdict}
             distanceMm={marginMm}
             cameraLabel={camerasUsed.replaceAll(" ", "")}
           />
-          <div className="decision-screen__legend" aria-label="Evidence legend">
+          <div
+            className="decision-screen__legend"
+            role="group"
+            aria-label="Evidence legend"
+          >
             <span>
               <i className="decision-screen__swatch--trajectory" />
               Shuttle path
@@ -73,7 +86,7 @@ export function DecisionScreen({
               {actionMessage}
             </output>
           )}
-        </div>
+        </section>
       </div>
     </section>
   );

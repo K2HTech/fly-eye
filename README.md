@@ -24,8 +24,18 @@ task desktop:run  # Native Tauri window
 task check        # CI-equivalent local checks
 ```
 
+The browser development server starts the Live Monitor. For development-only
+screen previews, open `http://localhost:1420/?screen=review` or
+`http://localhost:1420/?screen=decision`; production builds ignore these query
+parameters. The normal simulated flow is Live Monitor → Clip Review → Decision:
+review the last rally, mark the landing frame, then run the simulated call.
+There is no camera, calibration, tracking, or inference integration in this
+application yet.
+
 Project development guidelines:
 
+- [Developer guide](docs/development.md) — Setup, tasks, previews, and the
+  simulated three-screen workflow.
 - [Commit convention](docs/commit-convention.md) — Commit message format and
   validation hook.
 - [Branching strategy](docs/branching-strategy.md) — Branch roles, reviews,

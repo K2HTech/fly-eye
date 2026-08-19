@@ -170,11 +170,38 @@
 }
 
 @media (max-width: 640px) {
+  .clip-review__topbar {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .clip-review__topbar h1 {
+    grid-column: auto;
+    grid-row: auto;
+    order: 2;
+    text-align: left;
+  }
+
+  .clip-review__status {
+    order: 3;
+    justify-content: space-between;
+  }
+
   .clip-review__feeds {
     grid-template-columns: 1fr;
+    padding: 10px;
   }
 
   .clip-review__status output {
     display: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .clip-review__feed,
+  .clip-review__status span {
+    forced-color-adjust: none;
+    border-color: ButtonText;
   }
 }

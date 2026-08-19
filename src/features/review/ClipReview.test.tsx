@@ -28,4 +28,13 @@ describe("ClipReview", () => {
 
     expect(onBack).toHaveBeenCalledOnce();
   });
+
+  it("names the synchronized status and paused camera states", () => {
+    render(<ClipReview onBack={vi.fn()} onDecision={vi.fn()} />);
+
+    expect(
+      screen.getByRole("status", { name: /camera synchronization status/i }),
+    ).toBeVisible();
+    expect(screen.getAllByRole("status", { name: "PAUSED" })).toHaveLength(2);
+  });
 });

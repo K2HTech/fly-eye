@@ -199,23 +199,27 @@ export function ReviewTransport({
           <span
             className="review-transport__marker review-transport__marker--start"
             style={{ left: percentage(startFrame) }}
+            role="img"
             aria-label={markerLabels.start}
           />
           <span
             className="review-transport__marker review-transport__marker--end"
             style={{ left: percentage(endFrame) }}
+            role="img"
             aria-label={markerLabels.end}
           />
           {impactFrame !== undefined && (
             <span
               className="review-transport__marker review-transport__marker--impact"
               style={{ left: percentage(impactFrame) }}
+              role="img"
               aria-label={markerLabels.impact}
             />
           )}
           <span
             className="review-transport__marker review-transport__marker--current"
             style={{ left: percentage(currentFrame) }}
+            role="img"
             aria-label={markerLabels.current}
           />
           <input

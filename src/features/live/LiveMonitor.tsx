@@ -202,7 +202,7 @@ export function LiveMonitor({
 }: LiveMonitorProps) {
   useEffect(() => {
     const handleShortcut = (event: KeyboardEvent) => {
-      if (event.key.toLowerCase() === "f1") {
+      if (event.key === "F1" && !event.repeat) {
         event.preventDefault();
         onReview();
       }
@@ -233,23 +233,35 @@ export function LiveMonitor({
           <span className="live-monitor__team">{match.rightTeam}</span>
           <span className="live-monitor__game">Game {match.game}</span>
         </div>
-        <div className="live-monitor__chips" aria-label="System status">
+        <div
+          className="live-monitor__chips"
+          role="group"
+          aria-label="System status"
+        >
           {cameras.map((camera) => (
             <span
               className={`live-monitor__chip live-monitor__chip--${camera.status}`}
               key={camera.id}
+              role="status"
             >
               ● CAM {camera.id} · {camera.frameRate} fps
             </span>
           ))}
-          <span className="live-monitor__chip live-monitor__chip--online">
+          <span
+            className="live-monitor__chip live-monitor__chip--online"
+            role="status"
+          >
             CALIBRATED
           </span>
           <time className="live-monitor__clock">{match.elapsed}</time>
         </div>
       </header>
 
-      <div className="live-monitor__feeds" aria-label="Camera feeds">
+      <div
+        className="live-monitor__feeds"
+        role="region"
+        aria-label="Camera feeds"
+      >
         {cameras.map((camera) => (
           <CameraCard camera={camera} key={camera.id} />
         ))}
@@ -262,7 +274,7 @@ export function LiveMonitor({
           type="button"
           onClick={onReview}
         >
-          Review last rally <kbd>F1</kbd>
+          Review last rally <kbd aria-hidden="true">F1</kbd>
         </button>
       </footer>
     </section>

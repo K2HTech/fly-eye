@@ -28,15 +28,15 @@ Use one of these types:
 | `chore` | Perform maintenance that does not fit another type. |
 | `revert` | Revert an earlier commit. |
 
-The optional scope identifies the affected area, such as `core`, `desktop`,
-`calib`, or `ml`. Write the description in the imperative mood, keep it concise,
-and do not end it with a period.
+The optional scope identifies the affected area, such as `ui`, `review`,
+`decision`, `tauri`, or `docs`. Write the description in the imperative mood,
+keep it concise, and do not end it with a period.
 
 Examples:
 
 ```text
-feat(core): add camera calibration model
-fix(desktop): prevent empty video selection
+feat(review): add synchronized clip transport
+fix(ui): prevent an empty decision state
 docs: document branching workflow
 ```
 
@@ -44,7 +44,7 @@ For a breaking change, place `!` before the colon and explain the change in the
 commit body:
 
 ```text
-feat(core)!: replace calibration profile format
+feat(tauri)!: change the desktop host configuration
 ```
 
 ## Pull request titles
@@ -54,7 +54,7 @@ becomes the commit recorded on `develop`. Write the title in the same
 Conventional Commit format:
 
 ```text
-feat(calib): add camera calibration workflow
+feat(decision): add the simulated evidence panel
 ```
 
 CI validates both the commits in a pull request and its title. A work-in-progress
