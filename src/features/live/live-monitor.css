@@ -193,8 +193,11 @@
 }
 
 .live-monitor__feed-meta {
+  max-width: 45%;
+  overflow: hidden;
   color: var(--live-faint);
   font-size: 10px;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -333,6 +336,66 @@
   .live-monitor__scoreboard {
     order: 3;
     width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .live-monitor__topbar {
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .live-monitor__chips {
+    width: 100%;
+  }
+
+  .live-monitor__scoreboard {
+    gap: 7px;
+    font-size: 12px;
+  }
+
+  .live-monitor__team {
+    font-size: 15px;
+  }
+
+  .live-monitor__feeds {
+    padding: 10px;
+  }
+
+  .live-monitor__feed-bar {
+    padding-inline: 8px;
+  }
+
+  .live-monitor__feed-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .live-monitor__deck {
+    gap: 12px;
+    padding: 0 10px 12px;
+  }
+
+  .live-monitor__buffer {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .live-monitor__review {
+    width: 100%;
+    padding: 13px 16px;
+    font-size: 17px;
+  }
+}
+
+@media (forced-colors: active) {
+  .live-monitor__review:focus-visible,
+  .live-monitor__feed,
+  .live-monitor__track {
+    forced-color-adjust: none;
+    outline-color: ButtonText;
   }
 }
 

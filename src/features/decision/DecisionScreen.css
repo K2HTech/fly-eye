@@ -82,11 +82,12 @@
   background: var(--decision-sunk);
 }
 
-.decision-screen__plan > p {
+.decision-screen__plan > h2 {
   margin: 0 0 10px;
   color: var(--decision-faint);
   font-family: "IBM Plex Mono", ui-monospace, monospace;
   font-size: 10px;
+  font-weight: 400;
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
@@ -156,5 +157,28 @@
   }
   .decision-screen__confidence {
     font-size: 9px;
+  }
+
+  .decision-screen__plan {
+    padding: 10px;
+  }
+
+  .decision-screen__plan > h2 {
+    overflow-wrap: anywhere;
+    line-height: 1.4;
+  }
+
+  .decision-screen__legend {
+    gap: 10px;
+  }
+}
+
+@media (forced-colors: active) {
+  .decision-screen .decision-panel__verdict,
+  .decision-screen__plan,
+  .decision-screen .decision-panel__ghost,
+  .decision-screen__notice {
+    forced-color-adjust: none;
+    border-color: ButtonText;
   }
 }

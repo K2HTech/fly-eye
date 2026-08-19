@@ -10,10 +10,16 @@ describe("DecisionScreen", () => {
     expect(screen.getByRole("heading", { name: /the call/i })).toBeVisible();
     expect(screen.getByText("Confidence 96%")).toBeVisible();
     expect(
+      screen.getByRole("status", { name: "Decision confidence 96%" }),
+    ).toBeVisible();
+    expect(
       screen.getByRole("status", { name: "Shuttle was OUT" }),
     ).toBeVisible();
     expect(
       screen.getByRole("img", { name: /24 millimetres OUT/i }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("group", { name: "Evidence legend" }),
     ).toBeVisible();
   });
 

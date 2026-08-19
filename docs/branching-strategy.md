@@ -52,7 +52,7 @@ The author must provide the purpose of the change, testing evidence, and any
 known limitations. A reviewer checks that:
 
 - The implementation matches the task and avoids unrelated changes.
-- Dependency direction and the `core` isolation rules are preserved.
+- React, TypeScript, and Tauri boundaries remain clear and intentional.
 - Tests cover important behavior and failure cases.
 - New dependencies are necessary, correctly grouped, and security-audited.
 - User data, credentials, and large media files are handled safely.
@@ -70,15 +70,15 @@ topic branch.
 ## Release to main
 
 When `develop` is stable, the release manager updates the version and release
-notes on `develop`, regenerates `uv.lock`, and runs `task check`. They then open
-a release pull request from `develop` into `main`.
+notes in the web app and Tauri host manifests, then runs `task check`. They
+then open a release pull request from `develop` into `main`.
 
 Release PRs should receive two approvals when the team is large enough and must
 pass the complete CI suite. A designated maintainer merges the PR with **Create
 a merge commit** so the release boundary remains visible in history.
 
 After the merge, the release manager tags the merge commit with the version
-from `pyproject.toml`:
+from `package.json` (kept in sync with the Tauri configuration):
 
 ```bash
 git switch main

@@ -37,4 +37,20 @@ describe("LiveMonitor", () => {
 
     expect(onReview).toHaveBeenCalledTimes(2);
   });
+
+  it("does not repeat the F1 action while the key is held", () => {
+    const onReview = vi.fn();
+    render(<LiveMonitor onReview={onReview} />);
+
+    fireEvent.keyDown(window, { key: "F1", repeat: true });
+
+    expect(onReview).not.toHaveBeenCalled();
+  });
+
+  it("exposes camera feeds and system chips as named regions/statuses", () => {
+    render(<LiveMonitor onReview={vi.fn()} />);
+
+    expect(screen.getByRole("region", { name: "Camera feeds" })).toBeVisible();
+    expect(screen.getAllByRole("status")).toHaveLength(3);
+  });
 });

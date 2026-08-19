@@ -7,9 +7,10 @@ tasks:
       - task --list
 
   setup:
-    desc: Install the locked frontend dependencies
+    desc: Install locked frontend dependencies and the Rust audit tool
     cmds:
       - npm ci
+      - cargo install cargo-audit --locked
 
   dev:
     desc: Run the React application in a browser
@@ -20,6 +21,11 @@ tasks:
     desc: Run the React application in the Tauri desktop host
     cmds:
       - npm run tauri dev
+
+  desktop:build:
+    desc: Build native Tauri bundles for the current platform
+    cmds:
+      - npm run desktop:build
 
   format:
     desc: Format web project files with Prettier
@@ -66,6 +72,16 @@ tasks:
     cmds:
       - cargo check --manifest-path src-tauri/Cargo.toml --locked
 
+  rust:clippy:
+    desc: Run Rust lints with warnings treated as errors
+    cmds:
+      - cargo clippy --manifest-path src-tauri/Cargo.toml --locked --all-targets --all-features -- -D warnings
+
+  rust:audit:
+    desc: Audit locked Rust dependencies against the RustSec advisory database
+    cmds:
+      - cargo audit --file src-tauri/Cargo.lock
+
   audit:
     desc: Audit locked npm dependencies for known vulnerabilities
     cmds:
@@ -79,14 +95,21 @@ tasks:
       - task: typecheck
       - task: test
       - task: build
+
+  check:rust:
+    desc: Run all Rust formatting, lint, and compile checks
+    cmds:
       - task: rust:format:check
+      - task: rust:clippy
+      - task: rust:check
 
   check:
     desc: Run every local CI check
     cmds:
       - task: check:quality
-      - task: rust:check
+      - task: check:rust
       - task: audit
+      - task: rust:audit
 
   release:check:
     desc: Verify a release tag matches the application version

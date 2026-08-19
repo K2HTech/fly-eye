@@ -36,7 +36,9 @@ function ReviewCamera({ id, position, frame }: ReviewCameraProps) {
           variant={position}
           ariaLabel={`Paused camera ${id} ${position} view at frame ${frame}`}
         />
-        <span className="clip-review__paused">PAUSED</span>
+        <span className="clip-review__paused" role="status" aria-label="PAUSED">
+          PAUSED
+        </span>
       </div>
     </article>
   );
@@ -76,8 +78,13 @@ export function ClipReview({ onBack, onDecision }: ClipReviewProps) {
         <h1 id="clip-review-title">
           Clip review — mark the moment the shuttle lands
         </h1>
-        <div className="clip-review__status">
-          <span>SYNC ±1 FRAME</span>
+        <div
+          className="clip-review__status"
+          role="status"
+          aria-label="Camera synchronization status"
+          aria-live="polite"
+        >
+          <span aria-hidden="true">SYNC ±1 FRAME</span>
           <output aria-label="Current synchronized frame">
             frame {currentFrame}
           </output>
