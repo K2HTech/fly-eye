@@ -17,3 +17,9 @@ TransportButton 1.0 TransportButton.qml
 ReviewTransport 1.0 ReviewTransport.qml
 ClipCameraGrid 1.0 ClipCameraGrid.qml
 ClipReview 1.0 ClipReview.qml
+DecisionHeader 1.0 DecisionHeader.qml
+VerdictCard 1.0 VerdictCard.qml
+EvidencePanel 1.0 EvidencePanel.qml
+DecisionActions 1.0 DecisionActions.qml
+ReconstructionView 1.0 ReconstructionView.qml
+DecisionScreen 1.0 DecisionScreen.qml

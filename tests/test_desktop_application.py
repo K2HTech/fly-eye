@@ -116,16 +116,35 @@ def test_f1_shortcut_requests_live_review(qgui_application: QGuiApplication) -> 
 
     completion_index = clip_review.metaObject().indexOfSignal("decisionRequested()")
     completion_spy = QSignalSpy(clip_review, clip_review.metaObject().method(completion_index))
+    request_index = inspector.metaObject().indexOfSignal("reconstructionRequested()")
+    request_spy = QSignalSpy(inspector, inspector.metaObject().method(request_index))
     assert QMetaObject.invokeMethod(get_call_button, "click")
+    assert request_spy.count() == 1
+    QTest.keyClick(window, Qt.Key.Key_Return)
+    qgui_application.processEvents()
+    assert request_spy.count() == 2
     inspector.setProperty("reconstructionProgress", 0.99)
     QTest.qWait(100)
     assert completion_spy.count() == 1
-    assert window.property("activeScreen") == "review"
+    assert window.property("activeScreen") == "decision"
 
-    QTest.keyClick(window, Qt.Key.Key_Return)
+    decision_screen = window.findChild(QQuickItem, "decisionScreen")
+    actions = decision_screen.findChild(QQuickItem, "decisionActions")
+    show_button = actions.findChild(QQuickItem, "showButton")
+    save_button = actions.findChild(QQuickItem, "saveButton")
+    retry_button = actions.findChild(QQuickItem, "retryButton")
+
+    assert QMetaObject.invokeMethod(show_button, "click")
+    assert actions.property("statusMessage") == "COURT SCREEN PREVIEW READY"
+    assert QMetaObject.invokeMethod(save_button, "click")
+    assert actions.property("statusMessage") == "CLIP SAVE SIMULATED"
+    assert QMetaObject.invokeMethod(retry_button, "click")
     qgui_application.processEvents()
-    assert inspector.property("reconstructionRunning") is True
+    assert window.property("activeScreen") == "review"
+    assert transport.property("currentFrame") == 1284
+    assert inspector.property("reconstructionProgress") == pytest.approx(0.68)
 
+    window.setProperty("activeScreen", "decision")
     QTest.keyClick(window, Qt.Key.Key_Escape)
     qgui_application.processEvents()
     assert window.property("activeScreen") == "live"

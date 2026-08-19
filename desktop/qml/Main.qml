@@ -15,6 +15,10 @@ ApplicationWindow {
         window.activeScreen = "review"
     }
 
+    function showDecision() {
+        window.activeScreen = "decision"
+    }
+
     visible: true
     width: 1440
     height: 900
@@ -45,6 +49,22 @@ ApplicationWindow {
         enabled: visible
 
         onBackRequested: window.showLiveMonitor()
-        onDecisionRequested: console.info("Clip reconstruction completed")
+        onDecisionRequested: window.showDecision()
+    }
+
+    FlyEye.DecisionScreen {
+        id: decisionScreen
+        objectName: "decisionScreen"
+        anchors.centerIn: parent
+        width: window.width - 48
+        height: window.height - 48
+        visible: window.activeScreen === "decision"
+        enabled: visible
+
+        onRetryRequested: {
+            clipReview.resetReview()
+            window.showClipReview()
+        }
+        onBackRequested: window.showLiveMonitor()
     }
 }

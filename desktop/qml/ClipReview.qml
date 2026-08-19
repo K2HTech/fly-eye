@@ -8,6 +8,16 @@ Rectangle {
     signal backRequested()
     signal decisionRequested()
 
+    function resetReview() {
+        transport.pause()
+        transport.currentFrame = 1284
+        transport.startFrame = 1249
+        transport.endFrame = 1317
+        inspector.automaticSelection = true
+        inspector.reconstructionRunning = false
+        inspector.reconstructionProgress = 0.68
+    }
+
     color: FlyEye.Theme.background
     radius: 14
     border.width: 1
