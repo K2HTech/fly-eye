@@ -7,7 +7,7 @@ v2 application on `feature/tauri-desktop-ui`.
 | Batch | Scope                                                               | Status   |
 | ----- | ------------------------------------------------------------------- | -------- |
 | 1     | React/Tauri foundation and Node/Rust tooling                        | Complete |
-| 2     | Live Monitor                                                        | Pending  |
+| 2     | Live Monitor                                                        | Complete |
 | 3     | Clip Review                                                         | Pending  |
 | 4     | Decision screen                                                     | Pending  |
 | 5     | Accessibility, responsive UI, cross-platform CI, security, and docs | Pending  |

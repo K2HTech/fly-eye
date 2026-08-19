@@ -4,18 +4,14 @@ import { describe, expect, it } from "vitest";
 import App from "./App";
 
 describe("App", () => {
-  it("welcomes the operator to the ready workspace foundation", () => {
+  it("opens on the live operator monitor", () => {
     render(<App />);
 
-    expect(screen.getByRole("banner")).toBeTruthy();
+    expect(screen.getByRole("region", { name: "Live monitor" })).toBeVisible();
+    expect(screen.getByText("FLY EYE")).toBeVisible();
+    expect(screen.getAllByText(/120 fps/i)).toHaveLength(2);
     expect(
-      screen.getByRole("heading", { name: /operator workspace is ready/i }),
-    ).toBeTruthy();
-    expect(
-      screen.getByRole("status", { name: /workspace status: ready/i }),
-    ).toBeTruthy();
-    expect(
-      screen.getByText(/monitoring and review surfaces will be added/i),
-    ).toBeTruthy();
+      screen.getByRole("button", { name: /review last rally/i }),
+    ).toBeEnabled();
   });
 });
