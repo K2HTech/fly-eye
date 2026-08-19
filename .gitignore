@@ -1,7 +1,11 @@
+node_modules/
+dist/
+src-tauri/target/
+src-tauri/gen/
 .venv/
 __pycache__/
-*.py[cod]
 .pytest_cache/
 .ruff_cache/
-.coverage
-htmlcov/
+.DS_Store
+*.log
+*.tsbuildinfo

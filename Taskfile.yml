@@ -1,8 +1,5 @@
 version: "3"
 
-vars:
-  PYTHON: uv run --locked --all-extras
-
 tasks:
   default:
     desc: List available development tasks
@@ -10,86 +7,90 @@ tasks:
       - task --list
 
   setup:
-    desc: Install all development and optional dependencies
+    desc: Install the locked frontend dependencies
     cmds:
-      - uv sync --locked --all-extras
+      - npm ci
+
+  dev:
+    desc: Run the React application in a browser
+    cmds:
+      - npm run dev
+
+  desktop:run:
+    desc: Run the React application in the Tauri desktop host
+    cmds:
+      - npm run tauri dev
 
   format:
-    desc: Format Python files with Ruff
+    desc: Format web project files with Prettier
     cmds:
-      - "{{.PYTHON}} ruff format ."
+      - npm run format
 
   format:check:
-    desc: Check Python formatting without changing files
+    desc: Check web project formatting
     cmds:
-      - "{{.PYTHON}} ruff format --check ."
+      - npm run format:check
 
   lint:
-    desc: Run Ruff lint checks
+    desc: Run ESLint
     cmds:
-      - "{{.PYTHON}} ruff check ."
+      - npm run lint
+
+  typecheck:
+    desc: Check strict TypeScript types
+    cmds:
+      - npm run typecheck
 
   test:
-    desc: Run the pytest suite
+    desc: Run the Vitest suite
     cmds:
-      - "{{.PYTHON}} pytest"
+      - npm run test
 
-  lock:check:
-    desc: Verify that uv.lock matches pyproject.toml
+  build:
+    desc: Build the production web application
     cmds:
-      - uv lock --check
+      - npm run build
+
+  rust:format:
+    desc: Format the Tauri Rust host
+    cmds:
+      - cargo fmt --manifest-path src-tauri/Cargo.toml
+
+  rust:format:check:
+    desc: Check formatting of the Tauri Rust host
+    cmds:
+      - cargo fmt --manifest-path src-tauri/Cargo.toml --check
+
+  rust:check:
+    desc: Compile-check the Tauri Rust host
+    cmds:
+      - cargo check --manifest-path src-tauri/Cargo.toml --locked
 
   audit:
-    desc: Audit all installed dependencies for known vulnerabilities
+    desc: Audit locked npm dependencies for known vulnerabilities
     cmds:
-      - uv sync --locked --all-extras
-      - >-
-        uv run --no-sync pip-audit --local --vulnerability-service osv
-        --progress-spinner off
+      - npm audit --audit-level=high
 
   check:quality:
-    desc: Run lockfile, formatting, linting, and test checks
+    desc: Run formatting, linting, types, tests, and the production web build
     cmds:
-      - task: lock:check
       - task: format:check
       - task: lint
+      - task: typecheck
       - task: test
-
-  check:base:
-    desc: Verify the base environment has no optional dependencies
-    cmds:
-      - uv sync --locked --no-dev
-      - uv run --no-sync python scripts/check_environment.py base
-
-  check:desktop:
-    desc: Verify the desktop environment is isolated from ML dependencies
-    cmds:
-      - uv sync --locked --no-dev --extra desktop
-      - uv run --no-sync python scripts/check_environment.py desktop
-
-  check:ml:
-    desc: Verify the ML environment is isolated from desktop dependencies
-    cmds:
-      - uv sync --locked --no-dev --extra ml
-      - uv run --no-sync python scripts/check_environment.py ml
-
-  check:environments:
-    desc: Verify every dependency profile locally
-    cmds:
-      - task: check:base
-      - task: check:desktop
-      - task: check:ml
+      - task: build
+      - task: rust:format:check
 
   check:
-    desc: Run every check performed by CI
+    desc: Run every local CI check
     cmds:
       - task: check:quality
-      - task: check:environments
+      - task: rust:check
       - task: audit
 
   release:check:
-    desc: Verify a release tag matches the project version
+    desc: Verify a release tag matches the application version
     requires:
       vars: [TAG]
     cmds:
-      - uv run --locked --no-dev python scripts/check_release.py "{{.TAG}}"
+      - node scripts/check-release.mjs "{{.TAG}}"

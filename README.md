@@ -1,32 +1,38 @@
 # Fly Eye
 
-Fly Eye is a lightweight system inspired by Sony's Hawk-Eye technology.
+Fly Eye is a cross-platform operator interface for reviewing sports line calls.
+This repository contains only the UI application; camera capture, calibration,
+tracking, and inference are external system boundaries.
 
 ## Project structure
 
-- `core/` — Pure Python library containing calibration mathematics, detection,
-  triangulation, and trajectory logic. It must not depend on PySide6 or network
-  functionality.
-- `desktop/` — PySide6 desktop application. It imports and uses `core`.
-- `calib/` — Calibration tools and the operator-facing calibration wizard.
-- `ml/` — Machine-learning training and offline evaluation code. It imports and
-  uses `core`.
-- `data/` — Sample video clips and one known-good calibration profile. Large
-  assets in this directory will be managed with Git LFS.
-- `docs/` — Project documentation.
-- `tests/` — Automated tests for the project.
-- `scripts/` — Small cross-platform validation utilities used locally and in CI.
-- `.github/` — GitHub Actions workflows for integration checks and releases.
+- `src/` — React and TypeScript UI, tests, styles, assets, and simulated services.
+- `src-tauri/` — Tauri v2 Rust host, capabilities, and desktop configuration.
+- `docs/` — Product and development documentation.
+- `.github/` — GitHub Actions workflows.
 
 ## Development
 
+Install Node.js 24, stable Rust, the platform-specific
+[Tauri prerequisites](https://v2.tauri.app/start/prerequisites/), and
+[Task](https://taskfile.dev/docs/installation/). Then run:
+
+```bash
+task setup
+task dev          # Browser development
+task desktop:run  # Native Tauri window
+task check        # CI-equivalent local checks
+```
+
 Project development guidelines:
 
-- [Commit convention](docs/commit-convention.md) — Commit message format,
-  allowed types, examples, and local hook setup.
-- [Branching strategy](docs/branching-strategy.md) — Branch roles, pull request
-  reviews, merge methods, releases, and hotfixes.
-- [Dependency management](docs/dependency-management.md) — Python version,
-  isolated dependency sets, environment setup, and lockfile workflow.
-- [CI/CD](docs/ci-cd.md) — Local Task commands, automated checks, security
-  policy, and release process.
+- [Commit convention](docs/commit-convention.md) — Commit message format and
+  validation hook.
+- [Branching strategy](docs/branching-strategy.md) — Branch roles, reviews,
+  merge methods, releases, and hotfixes.
+- [Dependency management](docs/dependency-management.md) — Locked npm and Cargo
+  dependencies and update workflow.
+- [CI/CD](docs/ci-cd.md) — Local checks, automated validation, security policy,
+  and release process.
+- [Migration progress](docs/migration-progress.md) — React/Tauri migration
+  checkpoints and verification status.
