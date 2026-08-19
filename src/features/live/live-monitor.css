@@ -1,0 +1,349 @@
+.live-monitor {
+  --live-ink: #0e1116;
+  --live-panel: #171c24;
+  --live-sunk: #0a0d12;
+  --live-line: #262e3a;
+  --live-chalk: #f2f4f0;
+  --live-mute: #7c8798;
+  --live-faint: #525c6b;
+  --live-cork: #e8a33d;
+  --live-blue: #4c8dff;
+  --live-out: #ff4d4d;
+  --live-in: #35d07f;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--live-line);
+  border-radius: 14px;
+  background: var(--live-ink);
+  color: var(--live-chalk);
+  box-shadow: 0 20px 60px rgb(0 0 0 / 60%);
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+}
+
+.live-monitor__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.live-monitor__topbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--live-line);
+  background: var(--live-panel);
+  flex-wrap: wrap;
+}
+
+.live-monitor__brand,
+.live-monitor__team,
+.live-monitor__game,
+.live-monitor__review,
+.live-monitor__feed-name {
+  font-family: "Saira Condensed", Impact, sans-serif;
+  text-transform: uppercase;
+}
+
+.live-monitor__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--live-chalk);
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+.live-monitor__brand-mark {
+  color: var(--live-cork);
+  font-size: 22px;
+}
+
+.live-monitor__scoreboard {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 0 auto;
+  color: var(--live-mute);
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+
+.live-monitor__court-label {
+  padding: 4px 9px;
+  border-radius: 4px;
+  background: #16233a;
+  color: #9fc2ff;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+
+.live-monitor__team {
+  color: var(--live-chalk);
+  font-size: 17px;
+  letter-spacing: 0.04em;
+}
+
+.live-monitor__points,
+.live-monitor__clock,
+.live-monitor__chip,
+.live-monitor__feed-meta,
+.live-monitor__ticks,
+.live-monitor__eyebrow {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+.live-monitor__points {
+  padding: 0 4px;
+  color: var(--live-chalk);
+  font-size: 19px;
+  font-weight: 600;
+}
+
+.live-monitor__game {
+  color: var(--live-mute);
+  font-size: 15px;
+  letter-spacing: 0.08em;
+}
+
+.live-monitor__chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.live-monitor__chip {
+  padding: 4px 9px;
+  border: 1px solid #1d4a34;
+  border-radius: 20px;
+  background: #0f2419;
+  color: var(--live-in);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.live-monitor__chip--offline {
+  border-color: #633127;
+  background: #2a1714;
+  color: #ff9090;
+}
+
+.live-monitor__clock {
+  color: var(--live-mute);
+  font-size: 13px;
+}
+
+.live-monitor__feeds {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 14px;
+}
+
+.live-monitor__feed {
+  overflow: hidden;
+  border: 1px solid var(--live-line);
+  border-radius: 10px;
+  background: var(--live-sunk);
+}
+
+.live-monitor__feed-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--live-line);
+  background: #12161e;
+}
+
+.live-monitor__feed-name {
+  margin: 0;
+  color: var(--live-chalk);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+}
+
+.live-monitor__record-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: var(--live-out);
+  vertical-align: middle;
+}
+
+.live-monitor__record-dot--offline {
+  background: var(--live-faint);
+}
+
+.live-monitor__feed-meta {
+  color: var(--live-faint);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.live-monitor__well {
+  position: relative;
+  background: #0b1a11;
+}
+
+.live-monitor__court {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.live-monitor__feed-tag {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  padding: 4px 8px;
+  border: 1px solid rgb(242 244 240 / 15%);
+  border-radius: 4px;
+  background: rgb(0 0 0 / 60%);
+  color: #c7cfdc;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.live-monitor__feed-tag--online {
+  border-color: rgb(255 77 77 / 45%);
+  background: rgb(255 77 77 / 14%);
+  color: #ff9090;
+}
+
+.live-monitor__deck {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  padding: 0 14px 16px;
+  flex-wrap: wrap;
+}
+
+.live-monitor__buffer {
+  flex: 1;
+  min-width: 280px;
+}
+
+.live-monitor__eyebrow {
+  margin: 0 0 7px;
+  color: var(--live-faint);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.live-monitor__track {
+  position: relative;
+  height: 30px;
+  overflow: hidden;
+  border: 1px solid var(--live-line);
+  border-radius: 5px;
+  background: var(--live-sunk);
+}
+
+.live-monitor__track-fill {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(90deg, #141c28 0 3px, #111823 3px 6px);
+}
+
+.live-monitor__rally {
+  position: absolute;
+  inset-block: 0;
+  border-left: 2px solid var(--live-cork);
+  background: rgb(232 163 61 / 22%);
+}
+
+.live-monitor__now {
+  position: absolute;
+  inset-block: 0;
+  right: 0;
+  width: 3px;
+  background: var(--live-out);
+}
+
+.live-monitor__ticks {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 5px;
+  color: var(--live-faint);
+  font-size: 10px;
+}
+
+.live-monitor__review {
+  padding: 16px 24px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--live-blue);
+  box-shadow:
+    0 0 0 1px rgb(76 141 255 / 40%),
+    0 10px 30px rgb(76 141 255 / 22%);
+  color: #04101f;
+  cursor: pointer;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.live-monitor__review:hover {
+  background: #69a0ff;
+}
+
+.live-monitor__review:focus-visible {
+  outline: 2px solid var(--live-chalk);
+  outline-offset: 3px;
+}
+
+.live-monitor kbd {
+  margin-left: 10px;
+  padding: 2px 6px;
+  border: 1px solid rgb(0 0 0 / 35%);
+  border-radius: 4px;
+  background: rgb(0 0 0 / 28%);
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0;
+}
+
+@media (max-width: 820px) {
+  .live-monitor__feeds {
+    grid-template-columns: 1fr;
+  }
+
+  .live-monitor__scoreboard {
+    order: 3;
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .live-monitor__record-dot--online {
+    animation: live-monitor-blink 1.4s steps(1, end) infinite;
+  }
+}
+
+@keyframes live-monitor-blink {
+  50% {
+    opacity: 0.2;
+  }
+}
