@@ -11,6 +11,7 @@ Rectangle {
     property string cameraVariant: "sideline"
     property string resolution: "1280×720"
     property string latency: "4.2 ms"
+    property string metadata: resolution + " · " + latency
     property bool live: true
 
     implicitWidth: 420
@@ -70,7 +71,7 @@ Rectangle {
             anchors.right: parent.right
             anchors.rightMargin: 10
             anchors.verticalCenter: parent.verticalCenter
-            text: root.resolution + " · " + root.latency
+            text: root.metadata
             color: FlyEye.Theme.textFaint
             font.family: FlyEye.Theme.monoFont
             font.pixelSize: 10

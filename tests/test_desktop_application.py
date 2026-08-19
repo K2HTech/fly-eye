@@ -19,7 +19,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 pytest.importorskip("PySide6")
 
-from PySide6.QtCore import Qt  # noqa: E402
+from PySide6.QtCore import QMetaObject, Qt  # noqa: E402
 from PySide6.QtGui import QGuiApplication  # noqa: E402
 from PySide6.QtQuick import QQuickItem  # noqa: E402
 from PySide6.QtTest import QSignalSpy, QTest  # noqa: E402
@@ -79,3 +79,53 @@ def test_f1_shortcut_requests_live_review(qgui_application: QGuiApplication) -> 
     qgui_application.processEvents()
 
     assert review_spy.count() == 1
+    assert window.property("activeScreen") == "review"
+
+    clip_review = window.findChild(QQuickItem, "clipReview")
+    transport = clip_review.findChild(QQuickItem, "reviewTransport")
+    camera_grid = clip_review.findChild(QQuickItem, "clipCameraGrid")
+    camera_a = camera_grid.findChild(QQuickItem, "cameraA")
+    forward_button = transport.findChild(QQuickItem, "forwardOneButton")
+    play_pause_button = transport.findChild(QQuickItem, "playPauseButton")
+    inspector = clip_review.findChild(QQuickItem, "clipInspector")
+    get_call_button = inspector.findChild(QQuickItem, "getCallButton")
+
+    assert clip_review.property("visible") is True
+    assert transport.property("currentFrame") == 1284
+    assert QMetaObject.invokeMethod(forward_button, "click")
+    qgui_application.processEvents()
+    assert transport.property("currentFrame") == 1285
+    assert camera_a.property("metadata") == "f 1285"
+
+    QTest.keyClick(window, Qt.Key.Key_Right)
+    qgui_application.processEvents()
+    assert transport.property("currentFrame") == 1286
+
+    assert QMetaObject.invokeMethod(play_pause_button, "click")
+    QTest.qWait(50)
+    assert transport.property("currentFrame") > 1286
+    assert QMetaObject.invokeMethod(play_pause_button, "click")
+    assert transport.property("playing") is False
+
+    QTest.keyClick(window, Qt.Key.Key_BracketLeft)
+    qgui_application.processEvents()
+    assert transport.property("startFrame") == transport.property("currentFrame")
+    QTest.keyClick(window, Qt.Key.Key_BracketRight)
+    qgui_application.processEvents()
+    assert transport.property("endFrame") == transport.property("currentFrame")
+
+    completion_index = clip_review.metaObject().indexOfSignal("decisionRequested()")
+    completion_spy = QSignalSpy(clip_review, clip_review.metaObject().method(completion_index))
+    assert QMetaObject.invokeMethod(get_call_button, "click")
+    inspector.setProperty("reconstructionProgress", 0.99)
+    QTest.qWait(100)
+    assert completion_spy.count() == 1
+    assert window.property("activeScreen") == "review"
+
+    QTest.keyClick(window, Qt.Key.Key_Return)
+    qgui_application.processEvents()
+    assert inspector.property("reconstructionRunning") is True
+
+    QTest.keyClick(window, Qt.Key.Key_Escape)
+    qgui_application.processEvents()
+    assert window.property("activeScreen") == "live"

@@ -9,3 +9,11 @@ CameraFeed 1.0 CameraFeed.qml
 RollingBuffer 1.0 RollingBuffer.qml
 ReviewButton 1.0 ReviewButton.qml
 LiveMonitor 1.0 LiveMonitor.qml
+ClipReviewHeader 1.0 ClipReviewHeader.qml
+InfoRow 1.0 InfoRow.qml
+ModeToggle 1.0 ModeToggle.qml
+ClipInspector 1.0 ClipInspector.qml
+TransportButton 1.0 TransportButton.qml
+ReviewTransport 1.0 ReviewTransport.qml
+ClipCameraGrid 1.0 ClipCameraGrid.qml
+ClipReview 1.0 ClipReview.qml
