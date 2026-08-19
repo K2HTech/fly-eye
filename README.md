@@ -15,4 +15,18 @@ Fly Eye is a lightweight system inspired by Sony's Hawk-Eye technology.
   assets in this directory will be managed with Git LFS.
 - `docs/` — Project documentation.
 - `tests/` — Automated tests for the project.
+- `scripts/` — Small cross-platform validation utilities used locally and in CI.
+- `.github/` — GitHub Actions workflows for integration checks and releases.
 
+## Development
+
+Project development guidelines:
+
+- [Commit convention](docs/commit-convention.md) — Commit message format,
+  allowed types, examples, and local hook setup.
+- [Branching strategy](docs/branching-strategy.md) — Branch roles, pull request
+  reviews, merge methods, releases, and hotfixes.
+- [Dependency management](docs/dependency-management.md) — Python version,
+  isolated dependency sets, environment setup, and lockfile workflow.
+- [CI/CD](docs/ci-cd.md) — Local Task commands, automated checks, security
+  policy, and release process.
