@@ -30,3 +30,5 @@ Project development guidelines:
   isolated dependency sets, environment setup, and lockfile workflow.
 - [CI/CD](docs/ci-cd.md) — Local Task commands, automated checks, security
   policy, and release process.
+- [Desktop UI implementation plan](docs/ui-implementation-plan.md) — Approved
+  review batches, scope boundaries, and approval gates for the operator UI.
