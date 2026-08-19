@@ -1,71 +1,55 @@
 # Dependency management
 
-Fly Eye uses [uv](https://docs.astral.sh/uv/) to manage Python versions,
-dependencies, virtual environments, and the project lockfile.
+Fly Eye uses npm for React/TypeScript dependencies and Cargo for the minimal
+Tauri v2 host. `package-lock.json` and `src-tauri/Cargo.lock` are committed so
+local development and CI resolve the same versions.
 
-## Python version
+## Toolchain
 
-The project uses stable CPython 3.14. The `.python-version` file lets uv select
-or install the correct interpreter automatically. The supported range is kept to
-the Python 3.14 release line in `pyproject.toml`.
+- Node.js `24.13.1`, recorded in `.node-version`
+- npm `11`
+- Stable Rust
 
-## Dependency sets
+Install the platform-specific prerequisites from the
+[Tauri documentation](https://v2.tauri.app/start/prerequisites/) before running
+the native application.
 
-Dependencies shared by every component belong in the base `dependencies` list.
-Component-specific dependencies are isolated as optional extras:
-
-- `desktop` contains PySide6 and must not include ML dependencies.
-- `ml` contains CPU-only PyTorch and must not include desktop dependencies.
-
-Development tools such as pytest, Ruff, and pip-audit belong to the `dev`
-dependency group rather than a runtime extra.
-
-The CPU-only PyTorch package is resolved from the official PyTorch CPU index.
-The index is explicit, so unrelated packages continue to come from PyPI.
-
-## Create an environment
-
-From the repository root, choose only the environment needed for the work:
+On Ubuntu, install the native development packages before `task rust:check` or
+`task desktop:run`:
 
 ```bash
-# Core and base dependencies only
-uv sync --locked --no-dev
-
-# Core plus the desktop application
-uv sync --locked --no-dev --extra desktop
-
-# Core plus machine-learning tooling
-uv sync --locked --no-dev --extra ml
+sudo apt-get update
+sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev \
+  libdbus-1-dev librsvg2-dev patchelf pkg-config
 ```
 
-Install all development and optional dependencies with `task setup`. The
-`--locked` option prevents uv from changing an outdated lockfile and reports an
-error instead.
+## Install dependencies
+
+```bash
+task setup
+```
+
+`task setup` runs `npm ci`, which installs exactly the dependency graph in
+`package-lock.json` and fails if it disagrees with `package.json`.
+
+Cargo resolves its graph from `src-tauri/Cargo.lock` when the Rust host is
+checked or built.
 
 ## Change dependencies
 
-Use uv rather than editing the lockfile manually:
+Use npm rather than editing `package-lock.json` manually:
 
 ```bash
-# Add a shared runtime dependency
-uv add <package>
-
-# Add a desktop-only dependency
-uv add --optional desktop <package>
-
-# Add an ML-only dependency
-uv add --optional ml <package>
-
-# Add a development-only dependency
-uv add --dev <package>
-
-# Refresh all permitted dependency versions
-uv lock --upgrade
+npm install <package>
+npm install --save-dev <package>
+npm uninstall <package>
 ```
 
-Commit `pyproject.toml` and `uv.lock` together whenever dependencies change.
-Check that the lockfile matches the project metadata before committing:
+For Rust dependencies, edit `src-tauri/Cargo.toml` and then run:
 
 ```bash
-uv lock --check
+cargo update --manifest-path src-tauri/Cargo.toml
 ```
+
+Commit the manifest and corresponding lockfile together. Run `task check`
+before submitting a pull request.

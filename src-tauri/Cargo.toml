@@ -1,0 +1,20 @@
+[package]
+name = "fly-eye"
+version = "0.1.0"
+description = "FLY EYE desktop application"
+authors = ["FLY EYE"]
+edition = "2021"
+
+[lib]
+name = "fly_eye_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
