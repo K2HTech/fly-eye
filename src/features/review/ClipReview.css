@@ -1,0 +1,180 @@
+.clip-review {
+  --review-ink: #0e1116;
+  --review-panel: #171c24;
+  --review-sunk: #0a0d12;
+  --review-line: #262e3a;
+  --review-chalk: #f2f4f0;
+  --review-mute: #7c8798;
+  --review-faint: #525c6b;
+  --review-cork: #e8a33d;
+  --review-blue: #4c8dff;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--review-line);
+  border-radius: 14px;
+  background: var(--review-ink);
+  color: var(--review-chalk);
+  box-shadow: 0 20px 60px rgb(0 0 0 / 60%);
+}
+
+.clip-review__topbar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  min-height: 58px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--review-line);
+  background: var(--review-panel);
+}
+
+.clip-review__brand {
+  color: var(--review-chalk);
+  font-family: "Saira Condensed", Impact, sans-serif;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+.clip-review__brand span {
+  margin-right: 6px;
+  color: var(--review-cork);
+  font-size: 22px;
+}
+
+.clip-review__topbar h1 {
+  margin: 0;
+  color: var(--review-cork);
+  font-family: "Saira Condensed", Impact, sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.clip-review__status {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  white-space: nowrap;
+}
+
+.clip-review__status span {
+  padding: 4px 9px;
+  border: 1px solid #4e3a16;
+  border-radius: 20px;
+  background: #241b0c;
+  color: var(--review-cork);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.clip-review__status output {
+  color: var(--review-mute);
+  font-size: 13px;
+}
+
+.clip-review__workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+}
+
+.clip-review__feeds {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  min-width: 0;
+  padding: 14px 0 14px 14px;
+}
+
+.clip-review__feed {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--review-line);
+  border-radius: 10px;
+  background: var(--review-sunk);
+}
+
+.clip-review__feed-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--review-line);
+  background: #12161e;
+}
+
+.clip-review__feed-bar h2 {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--review-chalk);
+  font-family: "Saira Condensed", Impact, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.clip-review__feed-bar span {
+  color: var(--review-faint);
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.clip-review__well {
+  position: relative;
+  background: #0b1a11;
+}
+
+.clip-review__paused {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  padding: 4px 8px;
+  border: 1px solid rgb(242 244 240 / 15%);
+  border-radius: 4px;
+  background: rgb(0 0 0 / 60%);
+  color: #c7cfdc;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+}
+
+@media (max-width: 900px) {
+  .clip-review__topbar {
+    grid-template-columns: 1fr auto;
+  }
+
+  .clip-review__topbar h1 {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .clip-review__workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .clip-review__feeds {
+    padding-right: 14px;
+  }
+}
+
+@media (max-width: 640px) {
+  .clip-review__feeds {
+    grid-template-columns: 1fr;
+  }
+
+  .clip-review__status output {
+    display: none;
+  }
+}

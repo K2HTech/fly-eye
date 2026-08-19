@@ -1,0 +1,146 @@
+.review-transport {
+  --review-ink: #0e1116;
+  --review-panel: #171c24;
+  --review-sunk: #0a0d12;
+  --review-line: #262e3a;
+  --review-chalk: #f2f4f0;
+  --review-mute: #7c8798;
+  --review-faint: #525c6b;
+  --review-cork: #e8a33d;
+  --review-blue: #4c8dff;
+  display: block;
+  width: 100%;
+  padding: 14px;
+  border-top: 1px solid var(--review-line);
+  background: var(--review-panel);
+  color: var(--review-chalk);
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+}
+
+.review-transport__timeline {
+  position: relative;
+  height: 34px;
+  border: 1px solid var(--review-line);
+  border-radius: 6px;
+  background: var(--review-sunk);
+  cursor: pointer;
+}
+
+.review-transport__selection {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  min-width: 2px;
+  border-right: 2px solid var(--review-blue);
+  border-left: 2px solid var(--review-blue);
+  background: rgb(76 141 255 / 16%);
+  pointer-events: none;
+}
+
+.review-transport__marker {
+  position: absolute;
+  top: -7px;
+  bottom: -7px;
+  z-index: 2;
+  width: 2px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.review-transport__marker--start,
+.review-transport__marker--end {
+  background: var(--review-blue);
+}
+.review-transport__marker--impact {
+  background: var(--review-cork);
+}
+.review-transport__marker--current {
+  z-index: 3;
+  background: var(--review-chalk);
+}
+
+.review-transport__range {
+  position: absolute;
+  z-index: 4;
+  inset: -8px 0;
+  width: 100%;
+  height: 50px;
+  margin: 0;
+  cursor: ew-resize;
+  opacity: 0;
+}
+
+.review-transport__controls {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.review-transport__controls button {
+  padding: 8px 12px;
+  border: 1px solid var(--review-line);
+  border-radius: 6px;
+  background: var(--review-ink);
+  color: #c7cfdc;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.review-transport__controls button:hover {
+  border-color: #3a465a;
+}
+.review-transport__controls button:focus-visible,
+.review-transport__range:focus-visible {
+  outline: 2px solid var(--review-blue);
+  outline-offset: 2px;
+}
+.review-transport__controls .review-transport__play {
+  padding: 8px 20px;
+  border-color: var(--review-blue);
+  background: #16233a;
+  color: #9fc2ff;
+}
+.review-transport__speed,
+.review-transport__hint {
+  color: var(--review-faint);
+  font:
+    11px "IBM Plex Mono",
+    ui-monospace,
+    monospace;
+}
+.review-transport__speed {
+  margin-left: 10px;
+}
+.review-transport__speed b {
+  color: var(--review-cork);
+  font-weight: 500;
+}
+.review-transport__hint {
+  margin-left: auto;
+  font-size: 10px;
+}
+.review-transport kbd {
+  margin: 0 2px;
+  padding: 2px 6px;
+  border: 1px solid var(--review-line);
+  border-radius: 4px;
+  background: var(--review-ink);
+  color: var(--review-mute);
+  font:
+    10px "IBM Plex Mono",
+    ui-monospace,
+    monospace;
+}
+
+@media (max-width: 640px) {
+  .review-transport__speed {
+    margin-left: 0;
+  }
+  .review-transport__hint {
+    width: 100%;
+    margin-left: 0;
+  }
+}
