@@ -16,3 +16,8 @@ Fly Eye is a lightweight system inspired by Sony's Hawk-Eye technology.
 - `docs/` — Project documentation.
 - `tests/` — Automated tests for the project.
 
+## Contributing
+
+All commits must follow the project's [commit convention](docs/commit-convention.md).
+The guide also explains how to enable the repository's commit-message validation
+hook after cloning.
