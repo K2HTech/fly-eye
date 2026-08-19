@@ -19,7 +19,10 @@ if str(PROJECT_ROOT) not in sys.path:
 
 pytest.importorskip("PySide6")
 
+from PySide6.QtCore import Qt  # noqa: E402
 from PySide6.QtGui import QGuiApplication  # noqa: E402
+from PySide6.QtQuick import QQuickItem  # noqa: E402
+from PySide6.QtTest import QSignalSpy, QTest  # noqa: E402
 
 from desktop.application import create_engine, font_files, qml_file, register_fonts  # noqa: E402
 
@@ -58,3 +61,21 @@ def test_qml_entry_point_loads_a_root_object(qgui_application: QGuiApplication) 
     # Keep the engine alive for the duration of the assertion and make the
     # relationship to the Qt application explicit for headless test runs.
     assert engine.thread() is qgui_application.thread()
+
+
+def test_f1_shortcut_requests_live_review(qgui_application: QGuiApplication) -> None:
+    engine = create_engine()
+    window = engine.rootObjects()[0]
+    live_monitor = window.findChild(QQuickItem, "liveMonitor")
+
+    assert live_monitor is not None
+    signal_index = live_monitor.metaObject().indexOfSignal("reviewRequested()")
+    assert signal_index >= 0
+    review_spy = QSignalSpy(live_monitor, live_monitor.metaObject().method(signal_index))
+
+    window.requestActivate()
+    qgui_application.processEvents()
+    QTest.keyClick(window, Qt.Key.Key_F1)
+    qgui_application.processEvents()
+
+    assert review_spy.count() == 1

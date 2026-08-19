@@ -3,18 +3,22 @@ import QtQuick
 
 QtObject {
     readonly property color background: "#0E1116"
-    readonly property color surface: "#151A21"
-    readonly property color panel: "#1B222C"
-    readonly property color panelRaised: "#232C38"
-    readonly property color border: "#2E3947"
-    readonly property color text: "#F2F5F7"
-    readonly property color textMuted: "#9BA8B6"
-    readonly property color textFaint: "#627080"
-    readonly property color accent: "#D7FF4F"
-    readonly property color accentMuted: "#8EA82F"
-    readonly property color success: "#62E6A7"
-    readonly property color warning: "#FFCA62"
-    readonly property color danger: "#FF7474"
+    readonly property color surface: "#171C24"
+    readonly property color panel: "#12161E"
+    readonly property color panelRaised: "#1B222C"
+    readonly property color well: "#0A0D12"
+    readonly property color courtWell: "#0B1A11"
+    readonly property color court: "#17402A"
+    readonly property color border: "#262E3A"
+    readonly property color text: "#F2F4F0"
+    readonly property color textMuted: "#7C8798"
+    readonly property color textFaint: "#525C6B"
+    readonly property color accent: "#4C8DFF"
+    readonly property color accentMuted: "#16233A"
+    readonly property color amber: "#E8A33D"
+    readonly property color success: "#35D07F"
+    readonly property color warning: amber
+    readonly property color danger: "#FF4D4D"
 
     readonly property int space1: 4
     readonly property int space2: 8
