@@ -1,0 +1,95 @@
+version: "3"
+
+vars:
+  PYTHON: uv run --locked --all-extras
+
+tasks:
+  default:
+    desc: List available development tasks
+    cmds:
+      - task --list
+
+  setup:
+    desc: Install all development and optional dependencies
+    cmds:
+      - uv sync --locked --all-extras
+
+  format:
+    desc: Format Python files with Ruff
+    cmds:
+      - "{{.PYTHON}} ruff format ."
+
+  format:check:
+    desc: Check Python formatting without changing files
+    cmds:
+      - "{{.PYTHON}} ruff format --check ."
+
+  lint:
+    desc: Run Ruff lint checks
+    cmds:
+      - "{{.PYTHON}} ruff check ."
+
+  test:
+    desc: Run the pytest suite
+    cmds:
+      - "{{.PYTHON}} pytest"
+
+  lock:check:
+    desc: Verify that uv.lock matches pyproject.toml
+    cmds:
+      - uv lock --check
+
+  audit:
+    desc: Audit all installed dependencies for known vulnerabilities
+    cmds:
+      - uv sync --locked --all-extras
+      - >-
+        uv run --no-sync pip-audit --local --vulnerability-service osv
+        --progress-spinner off
+
+  check:quality:
+    desc: Run lockfile, formatting, linting, and test checks
+    cmds:
+      - task: lock:check
+      - task: format:check
+      - task: lint
+      - task: test
+
+  check:base:
+    desc: Verify the base environment has no optional dependencies
+    cmds:
+      - uv sync --locked --no-dev
+      - uv run --no-sync python scripts/check_environment.py base
+
+  check:desktop:
+    desc: Verify the desktop environment is isolated from ML dependencies
+    cmds:
+      - uv sync --locked --no-dev --extra desktop
+      - uv run --no-sync python scripts/check_environment.py desktop
+
+  check:ml:
+    desc: Verify the ML environment is isolated from desktop dependencies
+    cmds:
+      - uv sync --locked --no-dev --extra ml
+      - uv run --no-sync python scripts/check_environment.py ml
+
+  check:environments:
+    desc: Verify every dependency profile locally
+    cmds:
+      - task: check:base
+      - task: check:desktop
+      - task: check:ml
+
+  check:
+    desc: Run every check performed by CI
+    cmds:
+      - task: check:quality
+      - task: check:environments
+      - task: audit
+
+  release:check:
+    desc: Verify a release tag matches the project version
+    requires:
+      vars: [TAG]
+    cmds:
+      - uv run --locked --no-dev python scripts/check_release.py "{{.TAG}}"

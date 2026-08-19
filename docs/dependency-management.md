@@ -17,6 +17,9 @@ Component-specific dependencies are isolated as optional extras:
 - `desktop` contains PySide6 and must not include ML dependencies.
 - `ml` contains CPU-only PyTorch and must not include desktop dependencies.
 
+Development tools such as pytest, Ruff, and pip-audit belong to the `dev`
+dependency group rather than a runtime extra.
+
 The CPU-only PyTorch package is resolved from the official PyTorch CPU index.
 The index is explicit, so unrelated packages continue to come from PyPI.
 
@@ -26,18 +29,18 @@ From the repository root, choose only the environment needed for the work:
 
 ```bash
 # Core and base dependencies only
-uv sync --frozen
+uv sync --locked --no-dev
 
 # Core plus the desktop application
-uv sync --frozen --extra desktop
+uv sync --locked --no-dev --extra desktop
 
 # Core plus machine-learning tooling
-uv sync --frozen --extra ml
+uv sync --locked --no-dev --extra ml
 ```
 
-Running `uv sync` without `--frozen` may update an outdated lockfile. Use
-`--frozen` during normal development and in continuous integration so the
-resolved versions remain unchanged.
+Install all development and optional dependencies with `task setup`. The
+`--locked` option prevents uv from changing an outdated lockfile and reports an
+error instead.
 
 ## Change dependencies
 
@@ -52,6 +55,9 @@ uv add --optional desktop <package>
 
 # Add an ML-only dependency
 uv add --optional ml <package>
+
+# Add a development-only dependency
+uv add --dev <package>
 
 # Refresh all permitted dependency versions
 uv lock --upgrade
