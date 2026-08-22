@@ -8,6 +8,7 @@ import {
 import {
   DecisionRoute,
   LiveRoute,
+  MatchDashboardPlaceholder,
   Placeholder,
   PublicOnlyRoute,
   RequireSession,
@@ -16,6 +17,7 @@ import {
   UnknownRoute,
   type PlaceholderProps,
 } from "./RouteScreens";
+import { RegisterPage, SignInPage, WelcomePage } from "../features/auth";
 import { routePaths } from "./paths";
 
 function placeholder(props: PlaceholderProps) {
@@ -32,28 +34,15 @@ const appRoutes: RouteObject[] = [
     children: [
       {
         path: routePaths.welcome,
-        element: placeholder({
-          eyebrow: "Operator console",
-          title: "Welcome to FLY EYE",
-          description:
-            "Registration, sign-in, and demo access arrive in Batch 3.",
-        }),
+        element: createElement(WelcomePage),
       },
       {
         path: routePaths.register,
-        element: placeholder({
-          eyebrow: "Prototype account",
-          title: "Create account",
-          description: "The registration experience arrives in Batch 3.",
-        }),
+        element: createElement(RegisterPage),
       },
       {
         path: routePaths.signIn,
-        element: placeholder({
-          eyebrow: "Prototype account",
-          title: "Sign in",
-          description: "The sign-in experience arrives in Batch 3.",
-        }),
+        element: createElement(SignInPage),
       },
     ],
   },
@@ -62,11 +51,7 @@ const appRoutes: RouteObject[] = [
     children: [
       {
         path: routePaths.matches,
-        element: placeholder({
-          eyebrow: "Match operations",
-          title: "Match dashboard",
-          description: "The operator dashboard arrives in Batch 4.",
-        }),
+        element: createElement(MatchDashboardPlaceholder),
       },
       {
         path: routePaths.newMatch,
