@@ -51,13 +51,17 @@ compile checks.
 Start `task dev`, then use these browser URLs:
 
 ```text
-http://localhost:1420/?screen=review
-http://localhost:1420/?screen=decision
+http://localhost:1420/#/matches/demo/live
+http://localhost:1420/#/matches/demo/review
+http://localhost:1420/#/matches/demo/decision
 ```
 
-The query parameter is read only in Vite development mode. A production build
-always starts on the Live Monitor regardless of the URL. The native Tauri
-window starts on the Live Monitor as well.
+The app uses hash routes for browser and Tauri compatibility. During the
+routing-foundation batch, development builds use a temporary authenticated
+fixture so these operator screens remain directly previewable. Production
+builds do not use the fixture and redirect protected routes to the welcome
+screen. The fixture will be replaced by the local demo-session service in a
+later batch.
 
 ## Simulated operator flow
 

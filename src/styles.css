@@ -107,3 +107,49 @@ input:focus-visible {
 .app-viewport > * {
   width: min(100%, 1440px);
 }
+
+.route-placeholder {
+  display: grid;
+  min-height: min(620px, calc(100vh - 64px));
+  place-content: center;
+  padding: clamp(32px, 8vw, 96px);
+  border: 1px solid #293342;
+  border-radius: 18px;
+  background: #11161f;
+  text-align: center;
+}
+
+.route-placeholder h1,
+.route-placeholder p {
+  margin: 0;
+}
+
+.route-placeholder h1 {
+  margin-top: 10px;
+  font-family: "Saira Condensed", sans-serif;
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.route-placeholder > p:not(.route-placeholder__eyebrow) {
+  max-width: 48rem;
+  margin-top: 18px;
+  color: #95a1b4;
+}
+
+.route-placeholder__eyebrow {
+  color: #e8a33d;
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.route-placeholder .route-placeholder__notice {
+  justify-self: center;
+  padding: 10px 14px;
+  border: 1px solid #44536a;
+  border-radius: 8px;
+  color: #d6e0f0;
+}

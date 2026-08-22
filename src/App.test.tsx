@@ -1,47 +1,113 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import App from "./App";
+import { AppRouter } from "./App";
+import { matchRoutes, routePaths } from "./app/paths";
+import { createAppHashRouter, createAppMemoryRouter } from "./app/router";
+import {
+  routeAccessForEnvironment,
+  type RouteAccessState,
+} from "./app/routeAccess";
 
-afterEach(() => vi.useRealTimers());
+const authenticated: RouteAccessState = { status: "authenticated" };
+const anonymous: RouteAccessState = { status: "anonymous" };
 
-describe("App", () => {
-  it("opens on the live operator monitor", () => {
-    render(<App />);
+function renderRoute(path: string, access: RouteAccessState = authenticated) {
+  const router = createAppMemoryRouter([path]);
+  render(<AppRouter access={access} router={router} />);
+  return router;
+}
 
-    expect(screen.getByRole("region", { name: "Live monitor" })).toBeVisible();
-    expect(screen.getByText("FLY EYE")).toBeVisible();
-    expect(screen.getAllByText(/120 fps/i)).toHaveLength(2);
-    expect(
-      screen.getByRole("button", { name: /review last rally/i }),
-    ).toBeEnabled();
+afterEach(() => {
+  vi.useRealTimers();
+  window.location.hash = "";
+});
+
+describe("application routing", () => {
+  it("does not enable the development access fixture in production", () => {
+    expect(routeAccessForEnvironment(false)).toEqual({ status: "anonymous" });
   });
 
-  it("moves between the live monitor and synchronized clip review", () => {
-    render(<App />);
+  it("sends an anonymous launch to the welcome route", async () => {
+    const router = renderRoute(routePaths.root, anonymous);
+
+    expect(
+      await screen.findByRole("heading", { name: /welcome to fly eye/i }),
+    ).toBeVisible();
+    expect(router.state.location.pathname).toBe(routePaths.welcome);
+  });
+
+  it("does not flash protected content while restoring a session", () => {
+    renderRoute(matchRoutes.live("match-42"), { status: "restoring" });
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      /preparing your operator workspace/i,
+    );
+    expect(
+      screen.queryByRole("region", { name: /live monitor/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("guards a protected route and explains the redirect", async () => {
+    const router = renderRoute(matchRoutes.review("match-42"), anonymous);
+
+    expect(
+      await screen.findByRole("heading", { name: /welcome to fly eye/i }),
+    ).toBeVisible();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      /sign in or continue as demo/i,
+    );
+    expect(router.state.location.pathname).toBe(routePaths.welcome);
+  });
+
+  it("opens an authenticated hash route directly", async () => {
+    window.location.hash = `#${matchRoutes.live("match-42")}`;
+    const router = createAppHashRouter();
+    render(<AppRouter access={authenticated} router={router} />);
+
+    expect(
+      await screen.findByRole("region", { name: "Live monitor" }),
+    ).toBeVisible();
+    expect(router.state.location.pathname).toBe(matchRoutes.live("match-42"));
+  });
+
+  it("moves through the match-aware monitor workflow", () => {
+    vi.useFakeTimers();
+    const router = renderRoute(matchRoutes.live("match-42"));
 
     fireEvent.click(screen.getByRole("button", { name: /review last rally/i }));
     expect(screen.getByRole("heading", { name: /clip review/i })).toBeVisible();
-    expect(screen.getAllByText("f 1284")).toHaveLength(2);
+    expect(router.state.location.pathname).toBe(matchRoutes.review("match-42"));
 
-    fireEvent.keyDown(window, { key: "Escape" });
-    expect(screen.getByRole("region", { name: "Live monitor" })).toBeVisible();
-  });
-
-  it("completes the simulated review and supports decision exit routes", () => {
-    vi.useFakeTimers();
-    render(<App />);
-
-    fireEvent.click(screen.getByRole("button", { name: /review last rally/i }));
     fireEvent.click(screen.getByRole("button", { name: /get the call/i }));
     act(() => vi.advanceTimersByTime(600));
 
     expect(screen.getByRole("heading", { name: /the call/i })).toBeVisible();
-    expect(
-      screen.getByRole("status", { name: /shuttle was out/i }),
-    ).toBeVisible();
+    expect(router.state.location.pathname).toBe(
+      matchRoutes.decision("match-42"),
+    );
 
     fireEvent.click(screen.getByRole("button", { name: /run it again/i }));
     expect(screen.getByRole("heading", { name: /clip review/i })).toBeVisible();
+    expect(router.state.location.pathname).toBe(matchRoutes.review("match-42"));
+  });
+
+  it("supports a direct decision route without navigation state", () => {
+    renderRoute(matchRoutes.decision("match-42"));
+
+    expect(screen.getByRole("heading", { name: /the call/i })).toBeVisible();
+    expect(
+      screen.getByText("Landing frame").nextElementSibling,
+    ).toHaveTextContent("1284");
+  });
+
+  it("redirects an unknown authenticated route with an explanation", async () => {
+    const router = renderRoute("/not-a-real-page");
+
+    expect(
+      await screen.findByRole("heading", { name: /match dashboard/i }),
+    ).toBeVisible();
+    expect(screen.getByRole("status")).toHaveTextContent(/page was not found/i);
+    expect(router.state.location.pathname).toBe(routePaths.matches);
   });
 });
