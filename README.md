@@ -26,12 +26,12 @@ task check        # CI-equivalent local checks
 
 The app uses hash routes so navigation behaves consistently in browsers and the
 Tauri webview. It restores versioned local demo data before opening protected
-routes. Until the onboarding UI lands, development builds use a temporary demo
-fallback when no saved session exists. Preview the existing screens at
+routes. Signed-out users start at the welcome screen and can create a local
+prototype profile, sign in locally, or continue in demo mode. Preview the existing screens at
 `http://localhost:1420/#/matches/demo/live`,
 `http://localhost:1420/#/matches/demo/review`, or
-`http://localhost:1420/#/matches/demo/decision`. Production builds do not use
-that fallback and start at the welcome route when signed out. There is no camera, calibration,
+`http://localhost:1420/#/matches/demo/decision` after starting a local session.
+There is no camera, calibration,
 tracking, or inference integration in this application yet.
 
 Project development guidelines:

@@ -92,7 +92,8 @@ input {
 }
 
 button:focus-visible,
-input:focus-visible {
+input:focus-visible,
+a:focus-visible {
   outline: 2px solid #4c8dff;
   outline-offset: 2px;
 }
@@ -152,4 +153,49 @@ input:focus-visible {
   border: 1px solid #44536a;
   border-radius: 8px;
   color: #d6e0f0;
+}
+
+.route-placeholder__session {
+  display: grid;
+  min-width: min(100%, 340px);
+  justify-self: center;
+  gap: 5px;
+  margin-top: 28px;
+  padding: 18px 22px;
+  border: 1px solid #354256;
+  border-radius: 10px;
+  background: #0b1017;
+}
+
+.route-placeholder__session span {
+  color: #43d596;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.route-placeholder__session strong {
+  font-size: 1.05rem;
+}
+
+.route-placeholder__session small {
+  color: #8290a5;
+}
+
+.route-placeholder__action {
+  min-height: 42px;
+  justify-self: center;
+  margin-top: 22px;
+  padding: 0 22px;
+  border: 1px solid #43516a;
+  border-radius: 7px;
+  background: #151c26;
+  color: #e9edf2;
+  cursor: pointer;
+}
+
+.route-placeholder__action:disabled {
+  cursor: wait;
+  opacity: 0.65;
 }

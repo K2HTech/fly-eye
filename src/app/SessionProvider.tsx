@@ -21,7 +21,6 @@ import {
 
 interface SessionProviderProps {
   children: ReactNode;
-  developmentFallback?: AuthenticatedOperator;
 }
 
 interface SessionSnapshot {
@@ -36,10 +35,7 @@ const restoring: SessionSnapshot = {
   error: null,
 };
 
-export function SessionProvider({
-  children,
-  developmentFallback,
-}: SessionProviderProps) {
+export function SessionProvider({ children }: SessionProviderProps) {
   const { auth } = useAppServices();
   const [snapshot, setSnapshot] = useState<SessionSnapshot>(restoring);
   const requestVersion = useRef(0);
@@ -50,10 +46,9 @@ export function SessionProvider({
     try {
       const identity = await auth.getCurrentSession();
       if (request !== requestVersion.current) return;
-      const restoredIdentity = identity ?? developmentFallback ?? null;
       setSnapshot({
-        status: restoredIdentity ? "authenticated" : "anonymous",
-        identity: restoredIdentity,
+        status: identity ? "authenticated" : "anonymous",
+        identity,
         error: null,
       });
     } catch (error) {
@@ -64,7 +59,7 @@ export function SessionProvider({
         error: error instanceof Error ? error : new Error("Session failed."),
       });
     }
-  }, [auth, developmentFallback]);
+  }, [auth]);
 
   useEffect(() => {
     void restore();

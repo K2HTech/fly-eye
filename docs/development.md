@@ -57,12 +57,9 @@ http://localhost:1420/#/matches/demo/decision
 ```
 
 The app uses hash routes for browser and Tauri compatibility and restores its
-versioned local demo data before opening protected routes. Until the onboarding
-UI lands, development builds use a temporary demo fallback when no saved
-session exists so these operator screens remain directly previewable.
-Production builds do not use that fallback and redirect signed-out protected
-routes to the welcome screen. The onboarding batch will replace the fallback
-with explicit registration, sign-in, and demo actions.
+versioned local demo data before opening protected routes. Signed-out users are
+redirected to the welcome screen. Create a local prototype profile, sign in
+locally, or choose demo mode before opening these protected preview routes.
 
 ## Simulated operator flow
 

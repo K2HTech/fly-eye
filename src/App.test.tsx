@@ -5,13 +5,45 @@ import { AppRouter } from "./App";
 import { matchRoutes, routePaths } from "./app/paths";
 import { createAppHashRouter, createAppMemoryRouter } from "./app/router";
 import type { RouteAccessState } from "./app/routeAccess";
+import { SessionContext, type SessionContextValue } from "./app/sessionContext";
 
 const authenticated: RouteAccessState = { status: "authenticated" };
 const anonymous: RouteAccessState = { status: "anonymous" };
 
+const testIdentity = {
+  profile: {
+    id: "operator-test",
+    displayName: "Test Operator",
+    email: "operator@example.com",
+    createdAt: "2026-01-01T00:00:00.000Z",
+  },
+  session: {
+    profileId: "operator-test",
+    mode: "simulated" as const,
+    startedAt: "2026-01-01T00:00:00.000Z",
+  },
+};
+
+function sessionValue(access: RouteAccessState): SessionContextValue {
+  return {
+    status: access.status,
+    identity: access.status === "authenticated" ? testIdentity : null,
+    error: null,
+    refresh: vi.fn(async () => undefined),
+    register: vi.fn(async () => testIdentity),
+    signIn: vi.fn(async () => testIdentity),
+    continueAsDemo: vi.fn(async () => testIdentity),
+    signOut: vi.fn(async () => undefined),
+  };
+}
+
 function renderRoute(path: string, access: RouteAccessState = authenticated) {
   const router = createAppMemoryRouter([path]);
-  render(<AppRouter access={access} router={router} />);
+  render(
+    <SessionContext.Provider value={sessionValue(access)}>
+      <AppRouter access={access} router={router} />
+    </SessionContext.Provider>,
+  );
   return router;
 }
 
@@ -25,7 +57,7 @@ describe("application routing", () => {
     const router = renderRoute(routePaths.root, anonymous);
 
     expect(
-      await screen.findByRole("heading", { name: /welcome to fly eye/i }),
+      await screen.findByRole("heading", { name: /see the line/i }),
     ).toBeVisible();
     expect(router.state.location.pathname).toBe(routePaths.welcome);
   });
@@ -45,7 +77,7 @@ describe("application routing", () => {
     const router = renderRoute(matchRoutes.review("match-42"), anonymous);
 
     expect(
-      await screen.findByRole("heading", { name: /welcome to fly eye/i }),
+      await screen.findByRole("heading", { name: /see the line/i }),
     ).toBeVisible();
     expect(screen.getByRole("status")).toHaveTextContent(
       /sign in or continue as demo/i,
@@ -56,7 +88,11 @@ describe("application routing", () => {
   it("opens an authenticated hash route directly", async () => {
     window.location.hash = `#${matchRoutes.live("match-42")}`;
     const router = createAppHashRouter();
-    render(<AppRouter access={authenticated} router={router} />);
+    render(
+      <SessionContext.Provider value={sessionValue(authenticated)}>
+        <AppRouter access={authenticated} router={router} />
+      </SessionContext.Provider>,
+    );
 
     expect(
       await screen.findByRole("region", { name: "Live monitor" }),

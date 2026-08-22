@@ -91,7 +91,7 @@ describe("application providers", () => {
 
     expect(screen.getByRole("status")).toHaveTextContent(/preparing/i);
     expect(
-      await screen.findByRole("heading", { name: /welcome to fly eye/i }),
+      await screen.findByRole("heading", { name: /see the line/i }),
     ).toBeVisible();
   });
 

@@ -1,6 +1,6 @@
 import { RouterProvider } from "react-router-dom";
 
-import type { AppServices, AuthenticatedOperator } from "./services";
+import type { AppServices } from "./services";
 import { AppServicesProvider } from "./app/AppServicesProvider";
 import { MatchProvider } from "./app/MatchProvider";
 import type { AppRouterInstance } from "./app/router";
@@ -37,13 +37,12 @@ function SessionRouter({ router }: SessionRouterProps) {
 interface AppProps {
   router: AppRouterInstance;
   services: AppServices;
-  developmentFallback?: AuthenticatedOperator;
 }
 
-function App({ router, services, developmentFallback }: AppProps) {
+function App({ router, services }: AppProps) {
   return (
     <AppServicesProvider services={services}>
-      <SessionProvider developmentFallback={developmentFallback}>
+      <SessionProvider>
         <MatchProvider>
           <SessionRouter router={router} />
         </MatchProvider>
