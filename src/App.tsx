@@ -1,23 +1,20 @@
 import { RouterProvider } from "react-router-dom";
 
+import type { AppServices, AuthenticatedOperator } from "./services";
+import { AppServicesProvider } from "./app/AppServicesProvider";
+import { MatchProvider } from "./app/MatchProvider";
 import type { AppRouterInstance } from "./app/router";
 import { RouteAccessProvider } from "./app/RouteAccessProvider";
-import {
-  routeAccessForEnvironment,
-  type RouteAccessState,
-} from "./app/routeAccess";
-
-const environmentAccess = routeAccessForEnvironment(import.meta.env.DEV);
+import type { RouteAccessState } from "./app/routeAccess";
+import { SessionProvider } from "./app/SessionProvider";
+import { useSession } from "./app/sessionContext";
 
 interface AppRouterProps {
-  access?: RouteAccessState;
+  access: RouteAccessState;
   router: AppRouterInstance;
 }
 
-export function AppRouter({
-  access = environmentAccess,
-  router,
-}: AppRouterProps) {
+export function AppRouter({ access, router }: AppRouterProps) {
   return (
     <RouteAccessProvider state={access}>
       <main className="app-viewport">
@@ -27,4 +24,32 @@ export function AppRouter({
   );
 }
 
-export default AppRouter;
+interface SessionRouterProps {
+  router: AppRouterInstance;
+}
+
+function SessionRouter({ router }: SessionRouterProps) {
+  const session = useSession();
+  const access: RouteAccessState = { status: session.status };
+  return <AppRouter access={access} router={router} />;
+}
+
+interface AppProps {
+  router: AppRouterInstance;
+  services: AppServices;
+  developmentFallback?: AuthenticatedOperator;
+}
+
+function App({ router, services, developmentFallback }: AppProps) {
+  return (
+    <AppServicesProvider services={services}>
+      <SessionProvider developmentFallback={developmentFallback}>
+        <MatchProvider>
+          <SessionRouter router={router} />
+        </MatchProvider>
+      </SessionProvider>
+    </AppServicesProvider>
+  );
+}
+
+export default App;

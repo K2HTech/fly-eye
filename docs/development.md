@@ -56,12 +56,13 @@ http://localhost:1420/#/matches/demo/review
 http://localhost:1420/#/matches/demo/decision
 ```
 
-The app uses hash routes for browser and Tauri compatibility. During the
-routing-foundation batch, development builds use a temporary authenticated
-fixture so these operator screens remain directly previewable. Production
-builds do not use the fixture and redirect protected routes to the welcome
-screen. The fixture will be replaced by the local demo-session service in a
-later batch.
+The app uses hash routes for browser and Tauri compatibility and restores its
+versioned local demo data before opening protected routes. Until the onboarding
+UI lands, development builds use a temporary demo fallback when no saved
+session exists so these operator screens remain directly previewable.
+Production builds do not use that fallback and redirect signed-out protected
+routes to the welcome screen. The onboarding batch will replace the fallback
+with explicit registration, sign-in, and demo actions.
 
 ## Simulated operator flow
 

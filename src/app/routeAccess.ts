@@ -7,12 +7,6 @@ export type RouteAccessState =
 
 export const RouteAccessContext = createContext<RouteAccessState | null>(null);
 
-export function routeAccessForEnvironment(
-  isDevelopment: boolean,
-): RouteAccessState {
-  return isDevelopment ? { status: "authenticated" } : { status: "anonymous" };
-}
-
 export function useRouteAccess(): RouteAccessState {
   const state = useContext(RouteAccessContext);
 

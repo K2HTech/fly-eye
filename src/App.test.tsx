@@ -4,10 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { AppRouter } from "./App";
 import { matchRoutes, routePaths } from "./app/paths";
 import { createAppHashRouter, createAppMemoryRouter } from "./app/router";
-import {
-  routeAccessForEnvironment,
-  type RouteAccessState,
-} from "./app/routeAccess";
+import type { RouteAccessState } from "./app/routeAccess";
 
 const authenticated: RouteAccessState = { status: "authenticated" };
 const anonymous: RouteAccessState = { status: "anonymous" };
@@ -24,10 +21,6 @@ afterEach(() => {
 });
 
 describe("application routing", () => {
-  it("does not enable the development access fixture in production", () => {
-    expect(routeAccessForEnvironment(false)).toEqual({ status: "anonymous" });
-  });
-
   it("sends an anonymous launch to the welcome route", async () => {
     const router = renderRoute(routePaths.root, anonymous);
 

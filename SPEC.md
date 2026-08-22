@@ -26,6 +26,9 @@ the backend and device integrations planned for the future.
 - Hardware readiness is required before entering the live monitor.
 - The initial product creates standalone matches. Multiple recent matches may
   exist, but tournament grouping and management are explicitly deferred.
+- Local demo matches belong to the workstation workspace and remain available
+  across local profile changes. A future backend adapter will apply its own
+  user, organization, or venue ownership rules.
 - The product name shown throughout the application is **FLY EYE**.
 
 ## 3. Users and Roles
@@ -279,6 +282,10 @@ when the backend API is available.
 
 The local adapters are disposable prototype infrastructure, not an
 authentication or security boundary.
+
+Local runtime validators enforce persistence structure and reject unknown
+fields. User-facing semantic rules such as required non-empty names and valid
+email formatting are enforced by the onboarding and match forms.
 
 ## 8. State and Navigation Architecture
 
