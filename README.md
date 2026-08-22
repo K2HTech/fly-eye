@@ -24,13 +24,14 @@ task desktop:run  # Native Tauri window
 task check        # CI-equivalent local checks
 ```
 
-The browser development server starts the Live Monitor. For development-only
-screen previews, open `http://localhost:1420/?screen=review` or
-`http://localhost:1420/?screen=decision`; production builds ignore these query
-parameters. The normal simulated flow is Live Monitor → Clip Review → Decision:
-review the last rally, mark the landing frame, then run the simulated call.
-There is no camera, calibration, tracking, or inference integration in this
-application yet.
+The app uses hash routes so navigation behaves consistently in browsers and the
+Tauri webview. During the routing-foundation batch, development builds use a
+temporary authenticated fixture. Preview the existing screens at
+`http://localhost:1420/#/matches/demo/live`,
+`http://localhost:1420/#/matches/demo/review`, or
+`http://localhost:1420/#/matches/demo/decision`. Production builds do not use
+that fixture and start at the welcome route. There is no camera, calibration,
+tracking, or inference integration in this application yet.
 
 Project development guidelines:
 
