@@ -17,7 +17,7 @@ import {
   type PlaceholderProps,
 } from "./RouteScreens";
 import { RegisterPage, SignInPage, WelcomePage } from "../features/auth";
-import { MatchDashboardPage } from "../features/matches";
+import { CreateMatchPage, MatchDashboardPage } from "../features/matches";
 import { routePaths } from "./paths";
 
 function placeholder(props: PlaceholderProps) {
@@ -55,11 +55,7 @@ const appRoutes: RouteObject[] = [
       },
       {
         path: routePaths.newMatch,
-        element: placeholder({
-          eyebrow: "Match operations",
-          title: "Create match",
-          description: "The match creation workflow arrives in Batch 5.",
-        }),
+        element: createElement(CreateMatchPage),
       },
       {
         path: routePaths.readinessPattern,

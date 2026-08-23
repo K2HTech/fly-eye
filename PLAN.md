@@ -163,7 +163,8 @@
 
 - Build match details and participants form sections.
 - Support singles and doubles with the correct number of player fields.
-- Add the default best-of-three, 21-point match format.
+- Add selectable Standard 3x21 and BWF 2027 3x15 scoring presets, with 3x21 as
+  the transition-period default.
 - Add accessible validation, cancel, and submission behavior.
 - Persist a successfully created draft through `MatchRepository`.
 - Navigate the new match to hardware readiness.
