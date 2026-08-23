@@ -56,16 +56,6 @@
   line-height: 1;
 }
 
-.auth-shell__prototype {
-  padding: 8px 12px;
-  border: 1px solid #354256;
-  border-radius: 999px;
-  color: #92a0b4;
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 0.7rem;
-  letter-spacing: 0.12em;
-}
-
 .auth-shell__body {
   display: grid;
   min-height: 680px;
@@ -301,27 +291,6 @@
   font-weight: 600;
 }
 
-.auth-warning {
-  display: grid;
-  gap: 5px;
-  margin-top: 24px;
-  padding: 14px 16px;
-  border: 1px solid rgb(243 170 60 / 35%);
-  border-radius: 8px;
-  background: rgb(243 170 60 / 7%);
-  color: #c6ced9;
-  font-size: 0.82rem;
-  line-height: 1.5;
-}
-
-.auth-warning strong {
-  color: #f3aa3c;
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 0.68rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
 .auth-form {
   display: grid;
   gap: 17px;
@@ -436,7 +405,6 @@
     border-radius: 14px;
   }
 
-  .auth-shell__prototype,
   .auth-shell__footer span:last-child {
     display: none;
   }
@@ -478,8 +446,7 @@
 
 @media (forced-colors: active) {
   .auth-button,
-  .auth-field input,
-  .auth-warning {
+  .auth-field input {
     border: 1px solid ButtonText;
   }
 }

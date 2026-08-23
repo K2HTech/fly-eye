@@ -52,7 +52,7 @@ export function SignInPage() {
       navigate(routePaths.matches, { replace: true });
     } catch (cause) {
       setServiceError(
-        cause instanceof Error ? cause.message : "Unable to sign in locally.",
+        cause instanceof Error ? cause.message : "Unable to sign in.",
       );
     } finally {
       setValues((current) => ({ ...current, password: "" }));
@@ -63,15 +63,8 @@ export function SignInPage() {
   return (
     <AuthShell eyebrow="Returning operator" title="Resume your workspace">
       <p className="auth-shell__lead auth-shell__lead--compact">
-        Sign in with an email already registered on this workstation.
+        Enter your email and password to access your operator workspace.
       </p>
-      <div className="auth-warning" role="note">
-        <strong>Local simulation only</strong>
-        <span>
-          Enter a demo-only passphrase. It is discarded immediately and is not
-          checked by a server.
-        </span>
-      </div>
 
       <form
         className="auth-form"
@@ -100,7 +93,7 @@ export function SignInPage() {
         </div>
 
         <div className="auth-field">
-          <label htmlFor="sign-in-password">Demo passphrase</label>
+          <label htmlFor="sign-in-password">Password</label>
           <input
             ref={passwordRef}
             id="sign-in-password"
@@ -132,12 +125,12 @@ export function SignInPage() {
           type="submit"
           disabled={isSubmitting}
         >
-          {isSubmitting ? "Starting local session…" : "Sign in locally"}
+          {isSubmitting ? "Signing in…" : "Sign in"}
         </button>
       </form>
 
       <p className="auth-switch">
-        No local profile yet? <Link to={routePaths.register}>Create one</Link>
+        Need an account? <Link to={routePaths.register}>Sign up</Link>
       </p>
     </AuthShell>
   );
