@@ -25,8 +25,8 @@ Allowed types:
   feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert
 
 Examples:
-  feat(core): add camera calibration model
-  fix(desktop): prevent empty video selection
+  feat(ui): add match readiness workflow
+  fix(demo): prevent cross-match navigation
   docs: document branching workflow
 
 See docs/commit-convention.md for details.
