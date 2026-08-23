@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { InvalidMatchStatusTransitionError } from "../../domain";
 import {
@@ -33,6 +33,57 @@ function setup() {
   });
   return { services, storage };
 }
+
+afterEach(() => vi.unstubAllGlobals());
+
+describe("local record ID generation", () => {
+  it("uses crypto.randomUUID when the platform provides it", async () => {
+    const randomUUID = vi.fn(() => "123e4567-e89b-42d3-a456-426614174000");
+    const getRandomValues = vi.fn(() => {
+      throw new Error("Fallback should not run");
+    });
+    vi.stubGlobal("crypto", { randomUUID, getRandomValues });
+
+    const services = createLocalAppServices(new MemoryStorage());
+    const match = await services.matches.create(matchInput);
+
+    expect(match.id).toBe("match-123e4567-e89b-42d3-a456-426614174000");
+    expect(randomUUID).toHaveBeenCalledOnce();
+    expect(getRandomValues).not.toHaveBeenCalled();
+  });
+
+  it("creates unique UUID v4 IDs when randomUUID is unavailable", async () => {
+    let invocation = 0;
+    const getRandomValues = vi.fn((target: Uint8Array) => {
+      invocation += 1;
+      target.forEach((_value, index) => {
+        target[index] = (invocation * 31 + index * 17) & 0xff;
+      });
+      return target;
+    });
+    vi.stubGlobal("crypto", { getRandomValues });
+
+    const services = createLocalAppServices(new MemoryStorage());
+    const first = await services.matches.create(matchInput);
+    const second = await services.matches.create(matchInput);
+    const idPattern =
+      /^match-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+
+    expect(first.id).toMatch(idPattern);
+    expect(second.id).toMatch(idPattern);
+    expect(second.id).not.toBe(first.id);
+    expect(getRandomValues).toHaveBeenCalledTimes(2);
+  });
+
+  it("fails clearly instead of generating a weak ID without secure crypto", async () => {
+    vi.stubGlobal("crypto", {});
+    const services = createLocalAppServices(new MemoryStorage());
+
+    await expect(services.matches.create(matchInput)).rejects.toThrow(
+      "Secure random ID generation is unavailable.",
+    );
+  });
+});
 
 describe("local authentication service", () => {
   it("registers and restores only persistence-safe identity data", async () => {
