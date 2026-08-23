@@ -6,10 +6,20 @@ tracking, and inference are external system boundaries.
 
 ## Project structure
 
-- `src/` — React and TypeScript UI, tests, styles, assets, and simulated services.
-- `src-tauri/` — Tauri v2 Rust host, capabilities, and desktop configuration.
+- `src/app/` — Routing, providers, session state, and the authenticated shell.
+- `src/components/` — Shared React UI components.
+- `src/domain/` — UI-facing models and framework-independent workflow rules.
+- `src/features/` — Auth, matches, readiness, live monitoring, review, and
+  decision screens. Tests and feature styles live beside their components.
+- `src/infrastructure/` — Replaceable adapters, currently including versioned
+  browser storage for the local UI implementation.
+- `src/services/` — Contracts between the UI and infrastructure adapters.
+- `src/assets/` — Application icons and locally bundled fonts.
+- `src-tauri/` — Tauri v2 Rust host, capabilities, icons, and desktop
+  configuration.
+- `scripts/` — Project automation used by local tasks and CI.
 - `docs/` — Product and development documentation.
-- `.github/` — GitHub Actions workflows.
+- `.github/` — GitHub Actions and dependency-update configuration.
 
 ## Development
 
@@ -25,14 +35,16 @@ task check        # CI-equivalent local checks
 ```
 
 The app uses hash routes so navigation behaves consistently in browsers and the
-Tauri webview. It restores versioned local demo data before opening protected
-routes. Signed-out users start at the welcome screen and can create a local
-prototype profile, sign in locally, or continue in demo mode. Preview the existing screens at
-`http://localhost:1420/#/matches/demo/live`,
-`http://localhost:1420/#/matches/demo/review`, or
-`http://localhost:1420/#/matches/demo/decision` after starting a local session.
-There is no camera, calibration,
-tracking, or inference integration in this application yet.
+Tauri webview. It restores versioned local UI data before opening protected
+routes. Signed-out users can create an account-shaped local profile, sign in,
+or run an isolated demo without registration. Demo setup is untimed; the
+15-minute trial begins only after the operator confirms **Start monitoring**.
+Each demo session is restricted to its generated match.
+
+Authentication and match persistence are local adapters prepared for future
+backend replacement. Passwords are intentionally neither stored nor verified
+in this UI-only implementation. Camera capture, calibration, tracking, and
+inference integrations are also outside the current repository.
 
 Project development guidelines:
 
@@ -46,5 +58,3 @@ Project development guidelines:
   dependencies and update workflow.
 - [CI/CD](docs/ci-cd.md) — Local checks, automated validation, security policy,
   and release process.
-- [Migration progress](docs/migration-progress.md) — React/Tauri migration
-  checkpoints and verification status.

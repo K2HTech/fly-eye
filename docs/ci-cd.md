@@ -36,10 +36,7 @@ locked update pull requests for normal review.
 
 Configure the protected-branch rulesets to require `Commit convention`,
 `Quality`, and `Dependency vulnerabilities`. `Quality` is a stable aggregate
-check that fails when any Ubuntu, macOS, or Windows matrix job fails. Remove the
-retired Python dependency checks (`Dependencies (base)`, `Dependencies
-(desktop)`, and `Dependencies (ml)`) after the first React/Tauri CI run exposes
-the replacement check names in GitHub.
+check that fails when any Ubuntu, macOS, or Windows matrix job fails.
 
 ## Vulnerability policy
 
