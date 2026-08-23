@@ -218,12 +218,7 @@ export function LiveMonitor({
         <h1 id="live-monitor-title" className="live-monitor__sr-only">
           Live monitor
         </h1>
-        <div className="live-monitor__brand" aria-label="FLY EYE">
-          <span className="live-monitor__brand-mark" aria-hidden="true">
-            ◎
-          </span>
-          <span>FLY EYE</span>
-        </div>
+        <span className="live-monitor__mode">Live monitor</span>
         <div className="live-monitor__scoreboard">
           <span className="live-monitor__court-label">{match.court}</span>
           <span className="live-monitor__team">{match.leftTeam}</span>

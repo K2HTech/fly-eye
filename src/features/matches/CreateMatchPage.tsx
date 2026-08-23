@@ -116,15 +116,7 @@ export function CreateMatchPage() {
   return (
     <section className="create-match" aria-labelledby="create-match-title">
       <header className="create-match__header">
-        <button
-          className="create-match__brand"
-          type="button"
-          onClick={() => navigate(routePaths.matches)}
-          aria-label="FLY EYE, return to match dashboard"
-        >
-          <span aria-hidden="true">◎</span>
-          FLY EYE
-        </button>
+        <strong className="create-match__context">Match setup</strong>
         <div>
           <span>New match</span>
           <strong>Draft workspace</strong>

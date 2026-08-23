@@ -20,9 +20,14 @@ const draftInput = {
 async function authenticatedApp(withDraft = false) {
   const services = createLocalAppServices(new MemoryStorage(), {
     createId: (prefix) => `${prefix}-42`,
-    now: () => "2026-08-22T10:00:00.000Z",
+    now: () => new Date().toISOString(),
   });
-  await services.auth.continueAsDemo();
+  await services.auth.register({
+    displayName: "Test Operator",
+    email: "operator@example.com",
+    password: "test-password",
+    passwordConfirmation: "test-password",
+  });
   if (withDraft) await services.matches.create(draftInput);
   const router = createAppMemoryRouter(["/matches"]);
   const result = render(<App router={router} services={services} />);

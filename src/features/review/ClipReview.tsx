@@ -72,9 +72,6 @@ export function ClipReview({ onBack, onDecision }: ClipReviewProps) {
   return (
     <section className="clip-review" aria-labelledby="clip-review-title">
       <header className="clip-review__topbar">
-        <div className="clip-review__brand" aria-label="FLY EYE">
-          <span aria-hidden="true">◎</span> FLY EYE
-        </div>
         <h1 id="clip-review-title">
           Clip review — mark the moment the shuttle lands
         </h1>

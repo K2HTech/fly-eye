@@ -27,9 +27,6 @@ export function DecisionScreen({
       aria-labelledby="decision-screen-title"
     >
       <header className="decision-screen__topbar">
-        <div className="decision-screen__brand" aria-label="FLY EYE">
-          <span aria-hidden="true">◎</span> FLY EYE
-        </div>
         <h1 id="decision-screen-title">The call — Court 2 · Game 3 · 21–18</h1>
         <span
           className="decision-screen__confidence"
@@ -43,11 +40,8 @@ export function DecisionScreen({
       <div className="decision-screen__workspace">
         <DecisionPanel
           result={result}
-          onShowOnCourtScreen={() =>
-            setActionMessage("Court-screen preview ready — simulated UI")
-          }
           onRunAgain={onRunAgain}
-          onSaveClip={() => setActionMessage("Clip save queued — simulated UI")}
+          onSaveClip={() => setActionMessage("Clip added to the save queue.")}
           onBackToLive={onBackToLive}
         />
 

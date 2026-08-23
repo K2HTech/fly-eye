@@ -10,7 +10,6 @@ describe("LiveMonitor", () => {
     render(<LiveMonitor onReview={vi.fn()} />);
 
     expect(screen.getByRole("region", { name: /live monitor/i })).toBeVisible();
-    expect(screen.getByText("FLY EYE")).toBeVisible();
     expect(screen.getByText("Nguyen / Tran")).toBeVisible();
     expect(
       screen.getByRole("heading", { name: /cam a — sideline/i }),

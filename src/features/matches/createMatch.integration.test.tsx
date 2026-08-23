@@ -14,9 +14,14 @@ async function renderWizard(services?: AppServices) {
     services ??
     createLocalAppServices(new MemoryStorage(), {
       createId: (prefix) => `${prefix}-42`,
-      now: () => "2026-08-23T08:00:00.000Z",
+      now: () => new Date().toISOString(),
     });
-  await appServices.auth.continueAsDemo();
+  await appServices.auth.register({
+    displayName: "Test Operator",
+    email: "operator@example.com",
+    password: "test-password",
+    passwordConfirmation: "test-password",
+  });
   const router = createAppMemoryRouter(["/matches/new"]);
   const result = render(<App router={router} services={appServices} />);
   await screen.findByRole("heading", { name: /create match/i });
@@ -235,18 +240,16 @@ describe("create-match workflow", () => {
     await user.click(screen.getByRole("button", { name: /creating match/i }));
     expect(create).toHaveBeenCalledOnce();
 
-    resolveCreate({
-      id: "match-pending",
-      eventName: "Fly Eye Open",
-      court: "Court 2",
-      competitionType: "singles",
-      sideA: { displayName: "Nguyen", players: ["Nguyen"] },
-      sideB: { displayName: "Tran", players: ["Tran"] },
-      format: { bestOfGames: 3, pointsToWin: 21 },
-      status: "draft",
-      createdAt: "2026-08-23T08:00:00.000Z",
-      updatedAt: "2026-08-23T08:00:00.000Z",
-    });
+    resolveCreate(
+      await base.matches.create({
+        eventName: "Fly Eye Open",
+        court: "Court 2",
+        competitionType: "singles",
+        sideA: { displayName: "Nguyen", players: ["Nguyen"] },
+        sideB: { displayName: "Tran", players: ["Tran"] },
+        format: { bestOfGames: 3, pointsToWin: 21 },
+      }),
+    );
     expect(
       await screen.findByRole("heading", { name: /hardware readiness/i }),
     ).toBeVisible();

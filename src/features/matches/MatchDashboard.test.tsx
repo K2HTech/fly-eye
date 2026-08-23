@@ -7,23 +7,8 @@ import {
 } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import type { AuthenticatedOperator } from "../../services";
 import type { MatchRecord } from "../../domain";
 import { MatchDashboard } from "./MatchDashboard";
-
-const identity: AuthenticatedOperator = {
-  profile: {
-    id: "operator-1",
-    displayName: "Khoa Tran",
-    email: "khoa@example.com",
-    createdAt: "2026-08-22T10:00:00.000Z",
-  },
-  session: {
-    profileId: "operator-1",
-    mode: "demo",
-    startedAt: "2026-08-22T10:00:00.000Z",
-  },
-};
 
 const match: MatchRecord = {
   id: "match-1",
@@ -43,14 +28,12 @@ function renderDashboard(
 ) {
   return render(
     <MatchDashboard
-      identity={identity}
       matches={[]}
       status="ready"
       error={null}
       onCreateMatch={vi.fn()}
       onResumeMatch={vi.fn()}
       onRetry={vi.fn()}
-      onSignOut={vi.fn()}
       {...overrides}
     />,
   );
@@ -67,7 +50,6 @@ describe("MatchDashboard", () => {
     expect(
       screen.getByText(/start your first review workspace/i),
     ).toBeVisible();
-    expect(screen.getByText(/demo session/i)).toBeVisible();
     expect(
       screen.queryByRole("button", { name: /^create match$/i }),
     ).not.toBeInTheDocument();
@@ -131,28 +113,5 @@ describe("MatchDashboard", () => {
     cleanup();
     renderDashboard({ status: "loading" });
     expect(screen.getByRole("status")).toHaveTextContent(/loading/i);
-  });
-
-  it("supports local identity, sign-out state, and accessible controls", () => {
-    const onSignOut = vi.fn();
-    renderDashboard({
-      onSignOut,
-      isSigningOut: true,
-      actionError: "Sign-out was rejected.",
-    });
-
-    const signOut = screen.getByRole("button", { name: /signing out/i });
-    expect(signOut).toBeDisabled();
-    expect(
-      screen.getByRole("button", { name: /create your first match/i }),
-    ).toBeEnabled();
-    expect(screen.getByText("Khoa Tran")).toBeVisible();
-    expect(screen.getByRole("alert")).toHaveTextContent(
-      /sign-out was rejected/i,
-    );
-
-    // The disabled state intentionally prevents duplicate sign-out requests.
-    fireEvent.click(signOut);
-    expect(onSignOut).not.toHaveBeenCalled();
   });
 });
