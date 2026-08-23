@@ -27,10 +27,10 @@ export interface SignInValidation {
   errors: FieldErrors<SignInField>;
 }
 
-const minimumDemoPasswordLength = 8;
+const minimumPasswordLength = 8;
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/** Normalizes an email for comparison and for the local prototype profile. */
+/** Normalizes an email for consistent account lookup. */
 export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
@@ -45,12 +45,12 @@ function validateEmail(email: string): string | undefined {
   return undefined;
 }
 
-function validateDemoPassword(password: string): string | undefined {
+function validatePassword(password: string): string | undefined {
   if (!password.trim()) {
-    return "Enter a demo-only passphrase. Do not use a real password.";
+    return "Enter your password.";
   }
-  if (password.length < minimumDemoPasswordLength) {
-    return `Use at least ${minimumDemoPasswordLength} characters for the demo passphrase.`;
+  if (password.length < minimumPasswordLength) {
+    return `Use at least ${minimumPasswordLength} characters for the password.`;
   }
   return undefined;
 }
@@ -69,13 +69,13 @@ export function validateRegistration(
   const emailError = validateEmail(values.email);
   if (emailError) errors.email = emailError;
 
-  const passwordError = validateDemoPassword(values.password);
+  const passwordError = validatePassword(values.password);
   if (passwordError) errors.password = passwordError;
 
   if (!values.passwordConfirmation) {
-    errors.passwordConfirmation = "Confirm your demo-only passphrase.";
+    errors.passwordConfirmation = "Confirm your password.";
   } else if (values.password !== values.passwordConfirmation) {
-    errors.passwordConfirmation = "Passphrases do not match.";
+    errors.passwordConfirmation = "Passwords do not match.";
   }
 
   return {
@@ -90,7 +90,7 @@ export function validateSignIn(values: SignInFormValues): SignInValidation {
   const emailError = validateEmail(values.email);
   if (emailError) errors.email = emailError;
 
-  const passwordError = validateDemoPassword(values.password);
+  const passwordError = validatePassword(values.password);
   if (passwordError) errors.password = passwordError;
 
   return {

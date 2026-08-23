@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
+import { BrandMark } from "../../components/BrandMark";
 import { routePaths } from "../../app/paths";
 import "./auth.css";
 
@@ -21,12 +22,9 @@ export function AuthShell({ aside, children, eyebrow, title }: AuthShellProps) {
           to={routePaths.welcome}
           aria-label="FLY EYE welcome"
         >
-          <span className="auth-shell__mark" aria-hidden="true">
-            ◎
-          </span>
+          <BrandMark className="auth-shell__mark" />
           <span>FLY EYE</span>
         </Link>
-        <span className="auth-shell__prototype">LOCAL UI PROTOTYPE</span>
       </header>
 
       <div
@@ -42,7 +40,7 @@ export function AuthShell({ aside, children, eyebrow, title }: AuthShellProps) {
 
       <footer className="auth-shell__footer">
         <span>Two-camera line-call review</span>
-        <span>Local badminton operations</span>
+        <span>Badminton match operations</span>
       </footer>
     </section>
   );

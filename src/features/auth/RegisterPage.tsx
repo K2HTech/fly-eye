@@ -69,7 +69,7 @@ export function RegisterPage() {
       setServiceError(
         cause instanceof Error
           ? cause.message
-          : "Unable to create the local prototype profile.",
+          : "Unable to create your account.",
       );
     } finally {
       setValues((current) => ({
@@ -82,17 +82,10 @@ export function RegisterPage() {
   };
 
   return (
-    <AuthShell eyebrow="New operator" title="Create your local profile">
+    <AuthShell eyebrow="New operator" title="Create your account">
       <p className="auth-shell__lead auth-shell__lead--compact">
-        Set up the operator identity used on this workstation.
+        Set up your operator identity to create and manage matches.
       </p>
-      <div className="auth-warning" role="note">
-        <strong>Prototype authentication</strong>
-        <span>
-          Do not use a real password. Demo passphrases are discarded and never
-          stored or verified remotely.
-        </span>
-      </div>
 
       <form
         className="auth-form"
@@ -130,7 +123,7 @@ export function RegisterPage() {
           inputRef={(element) => {
             fields.current.password = element;
           }}
-          label="Demo passphrase"
+          label="Password"
           name="password"
           onChange={updateField}
           type="password"
@@ -142,7 +135,7 @@ export function RegisterPage() {
           inputRef={(element) => {
             fields.current.passwordConfirmation = element;
           }}
-          label="Confirm demo passphrase"
+          label="Confirm password"
           name="passwordConfirmation"
           onChange={updateField}
           type="password"
@@ -160,13 +153,12 @@ export function RegisterPage() {
           type="submit"
           disabled={isSubmitting}
         >
-          {isSubmitting ? "Creating local profile…" : "Create profile"}
+          {isSubmitting ? "Creating account…" : "Create account"}
         </button>
       </form>
 
       <p className="auth-switch">
-        Already created a local profile?{" "}
-        <Link to={routePaths.signIn}>Sign in</Link>
+        Already have an account? <Link to={routePaths.signIn}>Sign in</Link>
       </p>
     </AuthShell>
   );

@@ -59,8 +59,8 @@ describe("registration validation", () => {
     expect(result.errors).toMatchObject({
       displayName: "Enter your display name.",
       email: "Enter a valid email address.",
-      password: "Use at least 8 characters for the demo passphrase.",
-      passwordConfirmation: "Passphrases do not match.",
+      password: "Use at least 8 characters for the password.",
+      passwordConfirmation: "Passwords do not match.",
     });
   });
 
@@ -71,9 +71,7 @@ describe("registration validation", () => {
     });
 
     expect(result.valid).toBe(false);
-    expect(result.errors.passwordConfirmation).toBe(
-      "Confirm your demo-only passphrase.",
-    );
+    expect(result.errors.passwordConfirmation).toBe("Confirm your password.");
   });
 
   it("rejects a display name that is too long", () => {
@@ -87,14 +85,14 @@ describe("registration validation", () => {
     );
   });
 
-  it("rejects a whitespace-only demo passphrase", () => {
+  it("rejects a whitespace-only password", () => {
     const result = validateRegistration({
       ...validRegistration,
       password: "        ",
       passwordConfirmation: "        ",
     });
 
-    expect(result.errors.password).toMatch(/demo-only passphrase/i);
+    expect(result.errors.password).toMatch(/enter your password/i);
   });
 });
 
@@ -112,13 +110,13 @@ describe("sign-in validation", () => {
     });
   });
 
-  it("validates email and demo passphrase independently", () => {
+  it("validates email and password independently", () => {
     const result = validateSignIn({ email: "", password: "short" });
 
     expect(result.valid).toBe(false);
     expect(result.errors).toEqual({
       email: "Enter your email address.",
-      password: "Use at least 8 characters for the demo passphrase.",
+      password: "Use at least 8 characters for the password.",
     });
   });
 
