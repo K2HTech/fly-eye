@@ -2,11 +2,14 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { AppRouter } from "./App";
+import { AppServicesProvider } from "./app/AppServicesProvider";
 import { MatchContext, type MatchContextValue } from "./app/matchContext";
 import { matchRoutes, routePaths } from "./app/paths";
 import { createAppHashRouter, createAppMemoryRouter } from "./app/router";
 import type { RouteAccessState } from "./app/routeAccess";
 import { SessionContext, type SessionContextValue } from "./app/sessionContext";
+import { createLocalAppServices } from "./infrastructure/local";
+import { MemoryStorage } from "./test/MemoryStorage";
 
 const authenticated: RouteAccessState = { status: "authenticated" };
 const anonymous: RouteAccessState = { status: "anonymous" };
@@ -34,6 +37,8 @@ function sessionValue(access: RouteAccessState): SessionContextValue {
     register: vi.fn(async () => testIdentity),
     signIn: vi.fn(async () => testIdentity),
     continueAsDemo: vi.fn(async () => testIdentity),
+    assignDemoMatch: vi.fn(async () => testIdentity),
+    startDemoTrial: vi.fn(async () => testIdentity),
     signOut: vi.fn(async () => undefined),
   };
 }
@@ -50,12 +55,15 @@ const emptyMatches: MatchContextValue = {
 
 function renderRoute(path: string, access: RouteAccessState = authenticated) {
   const router = createAppMemoryRouter([path]);
+  const services = createLocalAppServices(new MemoryStorage());
   render(
-    <SessionContext.Provider value={sessionValue(access)}>
-      <MatchContext.Provider value={emptyMatches}>
-        <AppRouter access={access} router={router} />
-      </MatchContext.Provider>
-    </SessionContext.Provider>,
+    <AppServicesProvider services={services}>
+      <SessionContext.Provider value={sessionValue(access)}>
+        <MatchContext.Provider value={emptyMatches}>
+          <AppRouter access={access} router={router} />
+        </MatchContext.Provider>
+      </SessionContext.Provider>
+    </AppServicesProvider>,
   );
   return router;
 }
@@ -93,7 +101,7 @@ describe("application routing", () => {
       await screen.findByRole("heading", { name: /see the line/i }),
     ).toBeVisible();
     expect(
-      screen.queryByText(/sign in or continue as demo/i),
+      screen.queryByText(/sign in to open that workspace/i),
     ).not.toBeInTheDocument();
     expect(router.state.location.pathname).toBe(routePaths.welcome);
   });
@@ -101,12 +109,15 @@ describe("application routing", () => {
   it("opens an authenticated hash route directly", async () => {
     window.location.hash = `#${matchRoutes.live("match-42")}`;
     const router = createAppHashRouter();
+    const services = createLocalAppServices(new MemoryStorage());
     render(
-      <SessionContext.Provider value={sessionValue(authenticated)}>
-        <MatchContext.Provider value={emptyMatches}>
-          <AppRouter access={authenticated} router={router} />
-        </MatchContext.Provider>
-      </SessionContext.Provider>,
+      <AppServicesProvider services={services}>
+        <SessionContext.Provider value={sessionValue(authenticated)}>
+          <MatchContext.Provider value={emptyMatches}>
+            <AppRouter access={authenticated} router={router} />
+          </MatchContext.Provider>
+        </SessionContext.Provider>
+      </AppServicesProvider>,
     );
 
     expect(

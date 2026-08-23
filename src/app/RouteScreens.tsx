@@ -12,6 +12,8 @@ import { LiveMonitor } from "../features/live";
 import { ClipReview, type ClipDecision } from "../features/review";
 import { matchRoutes, routePaths } from "./paths";
 import { useRouteAccess } from "./routeAccess";
+import { useSession } from "./sessionContext";
+import { AuthenticatedShell } from "./AuthenticatedShell";
 
 interface RouteMessageState {
   message?: string;
@@ -96,9 +98,15 @@ export function RootRoute() {
 
 export function PublicOnlyRoute() {
   const access = useRouteAccess();
+  const location = useLocation();
+  const isStartingDemo =
+    typeof location.state === "object" &&
+    location.state !== null &&
+    "startingDemo" in location.state &&
+    location.state.startingDemo === true;
 
   if (access.status === "restoring") return <RestorationScreen />;
-  if (access.status === "authenticated") {
+  if (access.status === "authenticated" && !isStartingDemo) {
     return <Navigate replace to={routePaths.matches} />;
   }
 
@@ -108,22 +116,35 @@ export function PublicOnlyRoute() {
 export function RequireSession() {
   const access = useRouteAccess();
   const location = useLocation();
+  const session = useSession();
 
   if (access.status === "restoring") return <RestorationScreen />;
   if (access.status === "anonymous") {
-    return (
-      <Navigate
-        replace
-        state={{
-          from: `${location.pathname}${location.search}`,
-          message: "Sign in or continue as demo to open that workspace.",
-        }}
-        to={routePaths.welcome}
-      />
-    );
+    return <Navigate replace to={routePaths.welcome} />;
   }
 
-  return <Outlet />;
+  const identity = session.identity;
+  if (identity?.session.mode === "demo") {
+    const demoMatchId = identity.session.demoMatchId;
+    const demoMatchPrefix = demoMatchId
+      ? `/matches/${encodeURIComponent(demoMatchId)}/`
+      : null;
+    if (!demoMatchPrefix || !location.pathname.startsWith(demoMatchPrefix)) {
+      return (
+        <Navigate
+          replace
+          state={demoMatchId ? undefined : { startingDemo: true }}
+          to={
+            demoMatchId
+              ? matchRoutes.readiness(demoMatchId)
+              : routePaths.welcome
+          }
+        />
+      );
+    }
+  }
+
+  return <AuthenticatedShell />;
 }
 
 function useMatchId(): string {

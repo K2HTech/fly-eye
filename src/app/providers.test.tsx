@@ -98,6 +98,7 @@ describe("application providers", () => {
   it("restores a persisted session before rendering a protected route", async () => {
     const services = createLocalAppServices(new MemoryStorage());
     await services.auth.continueAsDemo();
+    await services.auth.assignDemoMatch("match-1");
     const router = createAppMemoryRouter(["/matches/match-1/live"]);
 
     render(<App router={router} services={services} />);
@@ -142,7 +143,7 @@ describe("application providers", () => {
       "anonymous",
     );
     expect(screen.getByLabelText("Session error")).toHaveTextContent(
-      /unable to read local demo data/i,
+      /unable to read application data/i,
     );
   });
 
@@ -158,6 +159,8 @@ describe("application providers", () => {
         register: (input) => base.auth.register(input),
         signIn: (input) => base.auth.signIn(input),
         continueAsDemo: async () => identity,
+        assignDemoMatch: (matchId) => base.auth.assignDemoMatch(matchId),
+        startDemoTrial: () => base.auth.startDemoTrial(),
         signOut: () => base.auth.signOut(),
       },
     };

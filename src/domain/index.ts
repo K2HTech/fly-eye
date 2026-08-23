@@ -19,3 +19,9 @@ export {
   InvalidMatchStatusTransitionError,
   isHardwareReady,
 } from "./matchTransitions";
+
+export {
+  DEMO_TRIAL_DURATION_MS,
+  demoTrialRemainingMs,
+  isDemoTrialExpired,
+} from "./demoTrial";

@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
-import { routePaths } from "../../app/paths";
+import { BrandMark } from "../../components/BrandMark";
+import { matchRoutes, routePaths } from "../../app/paths";
+import { useAppServices } from "../../app/servicesContext";
 import { useSession } from "../../app/sessionContext";
 import "./landing.css";
-
-type DemoEntryPoint = "hero" | "footer";
 
 const systemMetrics = [
   [
@@ -64,11 +64,11 @@ function LandingPreview() {
     <div
       className="landing-preview"
       role="img"
-      aria-label="Simulated badminton court preview showing an illustrative out verdict"
+      aria-label="Badminton court preview showing an illustrative out verdict"
     >
       <div className="landing-preview__topline">
         <span>
-          <i aria-hidden="true" /> Demo · Cam A + Cam B
+          <i aria-hidden="true" /> Cam A + Cam B
         </span>
         <span>120 fps · synchronized</span>
       </div>
@@ -126,12 +126,12 @@ function LandingPreview() {
           </g>
         </svg>
         <div className="landing-preview__verdict">
-          <span>Verdict · demo rally</span>
+          <span>Verdict · sample rally</span>
           <div>
             <strong>OUT</strong>
             <b>97% confidence</b>
           </div>
-          <small>Demonstration result</small>
+          <small>Illustrative result</small>
         </div>
       </div>
       <div className="landing-preview__caption">
@@ -143,28 +143,48 @@ function LandingPreview() {
 }
 
 export function WelcomePage() {
+  const location = useLocation();
   const navigate = useNavigate();
+  const services = useAppServices();
   const session = useSession();
   const [isEnteringDemo, setIsEnteringDemo] = useState(false);
-  const [demoError, setDemoError] = useState<{
-    entryPoint: DemoEntryPoint;
-    message: string;
-  } | null>(null);
+  const [demoError, setDemoError] = useState<string | null>(null);
+  const routeMessage =
+    typeof location.state === "object" &&
+    location.state !== null &&
+    "message" in location.state &&
+    typeof location.state.message === "string"
+      ? location.state.message
+      : null;
 
-  const enterDemo = async (entryPoint: DemoEntryPoint) => {
+  const enterDemo = async () => {
     if (isEnteringDemo) return;
     setIsEnteringDemo(true);
     setDemoError(null);
+    navigate(routePaths.welcome, {
+      replace: true,
+      state: { startingDemo: true },
+    });
     try {
       await session.continueAsDemo();
-      navigate(routePaths.matches, { replace: true });
-    } catch (cause) {
-      setDemoError({
-        entryPoint,
-        message:
-          cause instanceof Error ? cause.message : "Unable to start demo mode.",
+      const match = await services.matches.create({
+        eventName: "FLY EYE Live Demo",
+        court: "Demo Court",
+        competitionType: "singles",
+        sideA: { displayName: "Nguyen", players: ["Nguyen"] },
+        sideB: { displayName: "Tran", players: ["Tran"] },
+        format: { bestOfGames: 3, pointsToWin: 21 },
       });
-    } finally {
+      await session.assignDemoMatch(match.id);
+      navigate(matchRoutes.readiness(match.id), { replace: true });
+    } catch {
+      try {
+        await session.signOut();
+      } catch {
+        // The primary error below remains actionable even if cleanup fails.
+      }
+      navigate(routePaths.welcome, { replace: true });
+      setDemoError("The live demo could not start. Please try again.");
       setIsEnteringDemo(false);
     }
   };
@@ -178,7 +198,7 @@ export function WelcomePage() {
           onClick={() => scrollToSection("landing-top")}
           aria-label="FLY EYE, return to top"
         >
-          <span aria-hidden="true" /> FLY EYE
+          <BrandMark /> FLY EYE
         </button>
         <nav className="landing-nav" aria-label="Landing page sections">
           <button type="button" onClick={() => scrollToSection("system")}>
@@ -228,16 +248,16 @@ export function WelcomePage() {
           </p>
           <div className="landing-hero__actions">
             <button
-              className="landing-demo-button"
+              className="landing-primary-button"
               type="button"
               disabled={isEnteringDemo}
-              onClick={() => void enterDemo("hero")}
+              onClick={() => void enterDemo()}
             >
               <span>
                 <strong>
-                  {isEnteringDemo ? "Opening demo…" : "Open demo workspace"}
+                  {isEnteringDemo ? "Opening live demo…" : "Run the live demo"}
                 </strong>
-                <small>No signup · simulated workspace</small>
+                <small>No signup · real match footage</small>
               </span>
               <b aria-hidden="true">→</b>
             </button>
@@ -246,9 +266,14 @@ export function WelcomePage() {
               <Link to={routePaths.signIn}>Sign in to your console →</Link>
             </p>
           </div>
-          {demoError?.entryPoint === "hero" && (
+          {demoError && (
             <p className="landing-error" role="alert">
-              {demoError.message}
+              {demoError}
+            </p>
+          )}
+          {routeMessage && (
+            <p className="landing-notice" role="status">
+              {routeMessage}
             </p>
           )}
         </div>
@@ -341,25 +366,20 @@ export function WelcomePage() {
         <div>
           <h2 id="landing-final-title">Open the console.</h2>
           <p>
-            Demo mode keeps non-secret profile and match data on this device
-            only.
+            Try the complete operator flow for up to 15 minutes without creating
+            an account.
           </p>
         </div>
         <div className="landing-final__actions">
           <button
             type="button"
             disabled={isEnteringDemo}
-            onClick={() => void enterDemo("footer")}
+            onClick={() => void enterDemo()}
           >
             Continue as demo →
           </button>
           <Link to={routePaths.register}>Sign up</Link>
         </div>
-        {demoError?.entryPoint === "footer" && (
-          <p className="landing-error" role="alert">
-            {demoError.message}
-          </p>
-        )}
       </section>
 
       <footer className="landing-footer">

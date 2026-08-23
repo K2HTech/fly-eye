@@ -135,12 +135,38 @@ describe("local authentication service", () => {
     await services.auth.continueAsDemo();
     await services.matches.create(matchInput);
 
-    const restarted = createLocalAppServices(storage);
+    const restarted = createLocalAppServices(storage, { now: () => timestamp });
 
     await expect(restarted.auth.getCurrentSession()).resolves.toMatchObject({
       session: { mode: "demo" },
     });
     await expect(restarted.matches.list()).resolves.toHaveLength(1);
+  });
+
+  it("expires a demo session after the 15-minute trial", async () => {
+    const storage = new MemoryStorage();
+    let currentTime = "2026-08-22T10:00:00.000Z";
+    const services = createLocalAppServices(storage, {
+      now: () => currentTime,
+      createId: (prefix) => `${prefix}-trial`,
+    });
+    await services.auth.continueAsDemo();
+
+    currentTime = "2026-08-22T11:00:00.000Z";
+    const unstartedDemo = await services.auth.getCurrentSession();
+    expect(unstartedDemo).toMatchObject({ session: { mode: "demo" } });
+    expect(unstartedDemo?.session).not.toHaveProperty("demoTrialStartedAt");
+
+    await services.auth.startDemoTrial();
+
+    currentTime = "2026-08-22T11:14:59.999Z";
+    await expect(services.auth.getCurrentSession()).resolves.toMatchObject({
+      session: { mode: "demo" },
+    });
+
+    currentTime = "2026-08-22T11:15:00.000Z";
+    await expect(services.auth.getCurrentSession()).resolves.toBeNull();
+    expect(storage.getItem(localStorageKeys.session)).toBeNull();
   });
 
   it("creates a visibly identifiable demo identity", async () => {
@@ -149,6 +175,21 @@ describe("local authentication service", () => {
     await expect(services.auth.continueAsDemo()).resolves.toMatchObject({
       profile: { displayName: "Demo Operator" },
       session: { mode: "demo" },
+    });
+  });
+
+  it("locks a demo session to its first assigned match", async () => {
+    const { services } = setup();
+    await services.auth.continueAsDemo();
+
+    await expect(
+      services.auth.assignDemoMatch("match-demo"),
+    ).resolves.toMatchObject({ session: { demoMatchId: "match-demo" } });
+    await expect(
+      services.auth.assignDemoMatch("match-private"),
+    ).rejects.toMatchObject({ code: "demo-match-locked" });
+    await expect(services.auth.getCurrentSession()).resolves.toMatchObject({
+      session: { demoMatchId: "match-demo" },
     });
   });
 
@@ -228,7 +269,7 @@ describe("local authentication service", () => {
         password: "discarded",
         passwordConfirmation: "discarded",
       }),
-    ).rejects.toThrow(/unable to write local demo data/i);
+    ).rejects.toThrow(/unable to write application data/i);
 
     await expect(
       services.auth.signIn({

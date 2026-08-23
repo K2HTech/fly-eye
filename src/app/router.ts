@@ -8,21 +8,16 @@ import {
 import {
   DecisionRoute,
   LiveRoute,
-  Placeholder,
   PublicOnlyRoute,
   RequireSession,
   ReviewRoute,
   RootRoute,
   UnknownRoute,
-  type PlaceholderProps,
 } from "./RouteScreens";
 import { RegisterPage, SignInPage, WelcomePage } from "../features/auth";
 import { CreateMatchPage, MatchDashboardPage } from "../features/matches";
+import { HardwareReadinessPage } from "../features/readiness";
 import { routePaths } from "./paths";
-
-function placeholder(props: PlaceholderProps) {
-  return createElement(Placeholder, props);
-}
 
 const appRoutes: RouteObject[] = [
   {
@@ -59,12 +54,7 @@ const appRoutes: RouteObject[] = [
       },
       {
         path: routePaths.readinessPattern,
-        element: placeholder({
-          eyebrow: "System setup",
-          title: "Hardware readiness",
-          description:
-            "Simulated camera and calibration checks arrive in Batch 6.",
-        }),
+        element: createElement(HardwareReadinessPage),
       },
       { path: routePaths.livePattern, element: createElement(LiveRoute) },
       { path: routePaths.reviewPattern, element: createElement(ReviewRoute) },
