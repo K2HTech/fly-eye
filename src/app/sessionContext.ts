@@ -16,6 +16,8 @@ export interface SessionContextValue {
   register(input: RegistrationInput): Promise<AuthenticatedOperator>;
   signIn(input: SignInInput): Promise<AuthenticatedOperator>;
   continueAsDemo(): Promise<AuthenticatedOperator>;
+  assignDemoMatch(matchId: string): Promise<AuthenticatedOperator>;
+  startDemoTrial(): Promise<AuthenticatedOperator>;
   signOut(): Promise<void>;
 }
 

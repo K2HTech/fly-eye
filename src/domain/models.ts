@@ -22,6 +22,8 @@ export interface Session {
   profileId: string;
   mode: SessionMode;
   startedAt: string;
+  demoMatchId?: string;
+  demoTrialStartedAt?: string;
 }
 
 /**

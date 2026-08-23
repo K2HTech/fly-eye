@@ -1,5 +1,6 @@
 import {
   assertValidMatchStatusTransition,
+  isDemoTrialExpired,
   isHardwareReady,
   type HardwareReadiness,
   type MatchRecord,
@@ -121,6 +122,11 @@ class LocalAuthService implements AuthService {
     const session = this.stores.session.read();
     if (!session) return null;
 
+    if (isDemoTrialExpired(session, Date.parse(this.now()))) {
+      this.stores.session.clear();
+      return null;
+    }
+
     const profile = this.stores.profiles
       .read()
       .find((candidate) => candidate.id === session.profileId);
@@ -169,7 +175,7 @@ class LocalAuthService implements AuthService {
     if (profiles.length === 0) {
       throw new DemoAuthenticationError(
         "profile-not-found",
-        "Create a local prototype profile before signing in.",
+        "Create an account before signing in.",
       );
     }
 
@@ -180,7 +186,7 @@ class LocalAuthService implements AuthService {
     if (!profile) {
       throw new DemoAuthenticationError(
         "email-mismatch",
-        "That email does not match a local prototype profile.",
+        "The email or password is incorrect.",
       );
     }
 
@@ -215,6 +221,49 @@ class LocalAuthService implements AuthService {
     if (!existing) this.stores.profiles.write([...profiles, profile]);
     this.stores.session.write(session);
     return { profile, session };
+  }
+
+  async startDemoTrial(): Promise<AuthenticatedOperator> {
+    const identity = await this.getCurrentSession();
+    if (!identity) {
+      throw new DemoAuthenticationError(
+        "profile-not-found",
+        "Start a demo session before monitoring.",
+      );
+    }
+    if (identity.session.mode !== "demo") return identity;
+    if (identity.session.demoTrialStartedAt) return identity;
+
+    const session: Session = {
+      ...identity.session,
+      demoTrialStartedAt: this.now(),
+    };
+    this.stores.session.write(session);
+    return { profile: identity.profile, session };
+  }
+
+  async assignDemoMatch(matchId: string): Promise<AuthenticatedOperator> {
+    const identity = await this.getCurrentSession();
+    if (!identity || identity.session.mode !== "demo") {
+      throw new DemoAuthenticationError(
+        "profile-not-found",
+        "Start a demo session before assigning its match.",
+      );
+    }
+    if (
+      identity.session.demoMatchId &&
+      identity.session.demoMatchId !== matchId
+    ) {
+      throw new DemoAuthenticationError(
+        "demo-match-locked",
+        "This demo session is already assigned to another match.",
+      );
+    }
+    if (identity.session.demoMatchId === matchId) return identity;
+
+    const session: Session = { ...identity.session, demoMatchId: matchId };
+    this.stores.session.write(session);
+    return { profile: identity.profile, session };
   }
 
   async signOut(): Promise<void> {

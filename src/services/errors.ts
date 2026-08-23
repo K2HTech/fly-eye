@@ -5,7 +5,7 @@ export class LocalPersistenceError extends Error {
   readonly operation: PersistenceOperation;
 
   constructor(operation: PersistenceOperation, key: string) {
-    super(`Unable to ${operation} local demo data for ${key}.`);
+    super(`Unable to ${operation} application data.`);
     this.name = "LocalPersistenceError";
     this.operation = operation;
     this.key = key;
@@ -16,7 +16,7 @@ export class InvalidPersistencePayloadError extends Error {
   readonly key: string;
 
   constructor(key: string) {
-    super(`Refused invalid local demo data for ${key}.`);
+    super("Refused invalid application data.");
     this.name = "InvalidPersistencePayloadError";
     this.key = key;
   }
@@ -33,7 +33,7 @@ export class RecordNotFoundError extends Error {
 }
 
 export class DemoAuthenticationError extends Error {
-  readonly code: "profile-not-found" | "email-mismatch";
+  readonly code: "profile-not-found" | "email-mismatch" | "demo-match-locked";
 
   constructor(code: DemoAuthenticationError["code"], message: string) {
     super(message);
@@ -44,7 +44,7 @@ export class DemoAuthenticationError extends Error {
 
 export class NoActiveSessionError extends Error {
   constructor() {
-    super("An active simulated or demo session is required.");
+    super("An active session is required.");
     this.name = "NoActiveSessionError";
   }
 }

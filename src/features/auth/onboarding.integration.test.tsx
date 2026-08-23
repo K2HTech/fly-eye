@@ -1,9 +1,10 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import axe from "axe-core";
 import { describe, expect, it } from "vitest";
 
 import App from "../../App";
+import { matchRoutes } from "../../app/paths";
 import { createAppMemoryRouter } from "../../app/router";
 import { createLocalAppServices } from "../../infrastructure/local";
 import { MemoryStorage } from "../../test/MemoryStorage";
@@ -45,14 +46,14 @@ async function waitForAuthPage(path: string) {
     await screen.findByRole("heading", {
       name:
         path === "/register"
-          ? /create your local profile/i
+          ? /create your account/i
           : /resume your workspace/i,
     }),
   ).toBeVisible();
 }
 
 describe("onboarding integration", () => {
-  it("offers registration, sign-in, and demo entry choices", async () => {
+  it("offers sign-up, sign-in, and live demo actions", async () => {
     renderApp("/welcome");
     await waitForWelcome();
 
@@ -62,16 +63,16 @@ describe("onboarding integration", () => {
     })) {
       expect(link).toHaveAttribute("href", "/register");
     }
-    expect(screen.getByRole("link", { name: /^sign in$/i })).toHaveAttribute(
-      "href",
-      "/sign-in",
-    );
+    for (const link of screen.getAllByRole("link", { name: /^sign in$/i })) {
+      expect(link).toHaveAttribute("href", "/sign-in");
+    }
     expect(
-      screen.getByRole("button", { name: /continue as demo/i }),
+      screen.getByRole("button", { name: /run the live demo/i }),
     ).toBeEnabled();
+    expect(screen.getByText(/no signup · real match footage/i)).toBeVisible();
     expect(
-      screen.getByRole("button", { name: /open demo workspace/i }),
-    ).toBeEnabled();
+      screen.getByRole("link", { name: /sign in to your console/i }),
+    ).toHaveAttribute("href", "/sign-in");
     expect(
       screen.getByRole("heading", { name: /setup to verdict/i }),
     ).toBeVisible();
@@ -80,21 +81,76 @@ describe("onboarding integration", () => {
     ).toBeVisible();
   });
 
-  it("enters demo mode, reaches the dashboard, and signs out", async () => {
+  it("starts a temporary demo match at camera readiness", async () => {
     const user = userEvent.setup();
-    const { router, storage } = renderApp("/welcome");
+    const { router, services } = renderApp("/welcome");
     await waitForWelcome();
 
-    await user.click(screen.getByRole("button", { name: /continue as demo/i }));
+    await user.click(
+      screen.getByRole("button", { name: /run the live demo/i }),
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: /hardware readiness/i }),
+    ).toBeVisible();
+    expect(router.state.location.pathname).toMatch(
+      /^\/matches\/match-[^/]+\/readiness$/,
+    );
+    expect(screen.queryByRole("timer")).not.toBeInTheDocument();
+    await expect(services.matches.list()).resolves.toEqual([
+      expect.objectContaining({ eventName: "FLY EYE Live Demo" }),
+    ]);
+  });
+
+  it("confines a demo operator to the assigned demo match", async () => {
+    const user = userEvent.setup();
+    const { router, services } = renderApp("/welcome");
+    const otherMatch = await services.matches.create({
+      eventName: "Private match",
+      court: "Court 1",
+      competitionType: "singles",
+      sideA: { displayName: "Player A", players: ["Player A"] },
+      sideB: { displayName: "Player B", players: ["Player B"] },
+      format: { bestOfGames: 3, pointsToWin: 21 },
+    });
+    await waitForWelcome();
+
+    await user.click(
+      screen.getByRole("button", { name: /run the live demo/i }),
+    );
+    await screen.findByRole("heading", { name: /hardware readiness/i });
+    const demoPath = router.state.location.pathname;
+
+    expect(screen.queryByRole("link", { name: /^matches$/i })).toBeNull();
+    expect(screen.getByText(/live demo workspace/i)).toBeVisible();
+
+    await router.navigate("/matches");
+    await waitFor(() => expect(router.state.location.pathname).toBe(demoPath));
+
+    await router.navigate(matchRoutes.live(otherMatch.id));
+    await waitFor(() => expect(router.state.location.pathname).toBe(demoPath));
+    expect(screen.queryByText("Private match")).not.toBeInTheDocument();
+  });
+
+  it("lets an authenticated operator sign out", async () => {
+    const user = userEvent.setup();
+    const storage = new MemoryStorage();
+    const services = createLocalAppServices(storage);
+    await services.auth.register({
+      displayName: "Khoa Tran",
+      email: "khoa@example.com",
+      password: "secure-password",
+      passwordConfirmation: "secure-password",
+    });
+    const router = createAppMemoryRouter(["/matches"]);
+    render(<App router={router} services={services} />);
     await waitForDashboard();
-    expect(screen.getByText("Demo session")).toBeVisible();
+    expect(screen.getByText("Signed in")).toBeVisible();
     expect(router.state.location.pathname).toBe("/matches");
 
     await user.click(screen.getByRole("button", { name: /^sign out$/i }));
     await waitForWelcome();
     expect(router.state.location.pathname).toBe("/welcome");
-    expect(storage.getItem("fly-eye/demo/session")).toBeNull();
-    expect(storage.getItem("fly-eye/demo/profiles")).not.toBeNull();
   });
 
   it("focuses the first invalid registration field and associates its message", async () => {
@@ -102,11 +158,11 @@ describe("onboarding integration", () => {
     renderApp("/register");
     expect(
       await screen.findByRole("heading", {
-        name: /create your local profile/i,
+        name: /create your account/i,
       }),
     ).toBeVisible();
 
-    await user.click(screen.getByRole("button", { name: /create profile/i }));
+    await user.click(screen.getByRole("button", { name: /create account/i }));
 
     const displayName = screen.getByLabelText("Display name");
     expect(displayName).toHaveFocus();
@@ -118,22 +174,19 @@ describe("onboarding integration", () => {
     expect(screen.getByText("Enter your display name.")).toBeVisible();
   });
 
-  it("registers locally and never persists the demo passphrase", async () => {
+  it("registers an account without persisting the submitted password", async () => {
     const user = userEvent.setup();
     const { router, storage } = renderApp("/register");
-    await screen.findByRole("heading", { name: /create your local profile/i });
+    await screen.findByRole("heading", { name: /create your account/i });
 
     await user.type(screen.getByLabelText("Display name"), "Khoa Tran");
     await user.type(screen.getByLabelText("Email"), " KHOA@example.com ");
+    await user.type(screen.getByLabelText("Password"), "demo-secret-123");
     await user.type(
-      screen.getByLabelText("Demo passphrase"),
+      screen.getByLabelText("Confirm password"),
       "demo-secret-123",
     );
-    await user.type(
-      screen.getByLabelText("Confirm demo passphrase"),
-      "demo-secret-123",
-    );
-    await user.click(screen.getByRole("button", { name: /create profile/i }));
+    await user.click(screen.getByRole("button", { name: /create account/i }));
 
     await waitForDashboard();
     expect(router.state.location.pathname).toBe("/matches");
@@ -143,7 +196,7 @@ describe("onboarding integration", () => {
     expect(persisted).not.toMatch(/password|confirmation|token|hash/i);
   });
 
-  it("signs in an existing local profile with normalized email", async () => {
+  it("signs in an existing account with normalized email", async () => {
     const storage = new MemoryStorage();
     const services = createLocalAppServices(storage);
     await services.auth.register({
@@ -161,30 +214,30 @@ describe("onboarding integration", () => {
 
     await user.type(screen.getByLabelText("Email"), " OPERATOR@EXAMPLE.COM ");
     await user.type(
-      screen.getByLabelText("Demo passphrase"),
+      screen.getByLabelText("Password"),
       "another-demo-passphrase",
     );
-    await user.click(screen.getByRole("button", { name: /sign in locally/i }));
+    await user.click(screen.getByRole("button", { name: /^sign in$/i }));
 
     await waitForDashboard();
     expect(router.state.location.pathname).toBe("/matches");
-    expect(screen.getByText("Local profile")).toBeVisible();
+    expect(screen.getByText("Signed in")).toBeVisible();
   });
 
-  it("clears the passphrase after a rejected local sign-in", async () => {
+  it("clears the password after a rejected sign-in", async () => {
     const user = userEvent.setup();
     renderApp("/sign-in");
     await screen.findByRole("heading", { name: /resume your workspace/i });
 
     await user.type(screen.getByLabelText("Email"), "missing@example.com");
-    const passphrase = screen.getByLabelText("Demo passphrase");
-    await user.type(passphrase, "discard-this-passphrase");
-    await user.click(screen.getByRole("button", { name: /sign in locally/i }));
+    const password = screen.getByLabelText("Password");
+    await user.type(password, "discard-this-password");
+    await user.click(screen.getByRole("button", { name: /^sign in$/i }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      /create a local prototype profile/i,
+      /create an account/i,
     );
-    expect(passphrase).toHaveValue("");
+    expect(password).toHaveValue("");
   });
 
   it.each(["/welcome", "/register", "/sign-in"])(

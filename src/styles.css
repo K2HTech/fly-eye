@@ -102,11 +102,248 @@ a:focus-visible {
   display: grid;
   min-height: 100vh;
   place-items: center;
-  padding: clamp(12px, 2.5vw, 32px);
+  padding: clamp(12px, 1.5vw, 24px);
 }
 
 .app-viewport > * {
-  width: min(100%, 1440px);
+  width: 100%;
+}
+
+.app-viewport:has(> .app-shell) {
+  display: block;
+  padding: 0;
+}
+
+.app-shell {
+  min-height: 100vh;
+  background: #0d1118;
+}
+
+.app-shell__header {
+  position: sticky;
+  z-index: 100;
+  top: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  min-height: 64px;
+  align-items: center;
+  gap: clamp(18px, 3vw, 48px);
+  padding: 0 clamp(16px, 2vw, 36px);
+  border-bottom: 1px solid #293442;
+  background: rgb(13 17 24 / 94%);
+  box-shadow: 0 8px 28px rgb(0 0 0 / 24%);
+  backdrop-filter: blur(14px);
+}
+
+.app-shell__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: #f2f4f0;
+  font-family: "Saira Condensed", sans-serif;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.app-shell__brand span {
+  color: #f3aa3c;
+  font-size: 1.55rem;
+}
+
+.app-shell__nav {
+  display: flex;
+  align-self: stretch;
+  align-items: center;
+  gap: 8px;
+}
+
+.app-shell__nav-link {
+  display: inline-flex;
+  height: 100%;
+  align-items: center;
+  padding: 0 13px;
+  border-bottom: 2px solid transparent;
+  color: #8996a9;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.app-shell__nav-link:hover,
+.app-shell__nav-link:focus-visible,
+.app-shell__nav-link.is-active {
+  color: #f2f4f0;
+}
+
+.app-shell__nav-link.is-active {
+  border-bottom-color: #4c8dff;
+}
+
+.app-shell__demo-label {
+  color: #f3aa3c;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.app-shell__account {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.app-shell__identity {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+}
+
+.app-shell__identity span {
+  color: #35d07f;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.app-shell__identity span.app-shell__trial {
+  color: #f3aa3c;
+}
+
+.app-shell__identity span.app-shell__trial--ending {
+  color: #ff7777;
+}
+
+.app-shell__identity strong {
+  max-width: 180px;
+  overflow: hidden;
+  color: #dce3ed;
+  font-size: 0.76rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-shell__account button {
+  min-height: 32px;
+  padding: 0 11px;
+  border: 1px solid #354256;
+  border-radius: 6px;
+  background: #111821;
+  color: #a7b2c2;
+  cursor: pointer;
+  font-size: 0.72rem;
+}
+
+.app-shell__account button:hover:not(:disabled),
+.app-shell__account button:focus-visible {
+  border-color: #4c8dff;
+  color: #f2f4f0;
+}
+
+.app-shell__account button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.app-shell__error {
+  position: fixed;
+  z-index: 110;
+  top: 74px;
+  right: 20px;
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid rgb(255 77 77 / 45%);
+  border-radius: 7px;
+  background: #2a1518;
+  color: #ffc1c1;
+  box-shadow: 0 10px 30px rgb(0 0 0 / 35%);
+  font-size: 0.78rem;
+}
+
+.app-shell__content {
+  min-height: calc(100vh - 64px);
+}
+
+.app-shell__content > .matches-dashboard,
+.app-shell__content > .create-match,
+.app-shell__content > .readiness,
+.app-shell__content > .live-monitor,
+.app-shell__content > .clip-review,
+.app-shell__content > .decision-screen {
+  min-height: calc(100vh - 64px);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+@media (max-width: 680px) {
+  .app-shell__header {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    min-height: 56px;
+    gap: 8px;
+    padding: 0 12px;
+  }
+
+  .app-shell__brand {
+    font-size: 1.05rem;
+  }
+
+  .app-shell__brand span {
+    display: none;
+  }
+
+  .app-shell__nav {
+    justify-content: center;
+    gap: 0;
+  }
+
+  .app-shell__demo-label {
+    overflow: hidden;
+    font-size: 0.58rem;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .app-shell__nav-link {
+    padding: 0 7px;
+    font-size: 0.6rem;
+  }
+
+  .app-shell__nav-link:last-child {
+    display: none;
+  }
+
+  .app-shell__identity {
+    display: none;
+  }
+
+  .app-shell__account {
+    gap: 0;
+  }
+
+  .app-shell__account button {
+    padding: 0 8px;
+    font-size: 0.65rem;
+  }
+
+  .app-shell__content,
+  .app-shell__content > .matches-dashboard,
+  .app-shell__content > .create-match,
+  .app-shell__content > .readiness,
+  .app-shell__content > .live-monitor,
+  .app-shell__content > .clip-review,
+  .app-shell__content > .decision-screen {
+    min-height: calc(100vh - 56px);
+  }
 }
 
 .app-viewport:has(> .landing-page) {

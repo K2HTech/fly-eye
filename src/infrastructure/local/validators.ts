@@ -94,10 +94,20 @@ export function isOperatorProfileList(
 export function isSession(value: unknown): value is Session {
   return (
     isRecord(value) &&
-    hasOnlyKeys(value, ["profileId", "mode", "startedAt"]) &&
+    hasOnlyKeys(value, [
+      "profileId",
+      "mode",
+      "startedAt",
+      "demoMatchId",
+      "demoTrialStartedAt",
+    ]) &&
     typeof value.profileId === "string" &&
     (value.mode === "simulated" || value.mode === "demo") &&
-    typeof value.startedAt === "string"
+    typeof value.startedAt === "string" &&
+    (value.demoMatchId === undefined ||
+      typeof value.demoMatchId === "string") &&
+    (value.demoTrialStartedAt === undefined ||
+      typeof value.demoTrialStartedAt === "string")
   );
 }
 

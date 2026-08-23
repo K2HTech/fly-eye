@@ -42,10 +42,9 @@
 }
 
 .landing-brand > span {
-  width: 22px;
-  height: 22px;
-  border: 3px solid #f5a524;
-  border-radius: 50%;
+  color: #f3aa3c;
+  font-size: 1.8rem;
+  line-height: 1;
 }
 
 .landing-nav {
@@ -160,6 +159,16 @@
   border-radius: 8px;
   font-size: 0.86rem;
 }
+
+.landing-notice {
+  margin: 20px 0 0;
+  padding: 12px 15px;
+  border: 1px solid rgb(245 165 36 / 35%);
+  border-radius: 8px;
+  background: rgb(245 165 36 / 8%);
+  color: #f1c875;
+  font-size: 0.86rem;
+}
 .landing-error {
   border: 1px solid rgb(255 77 77 / 45%);
   background: rgb(255 77 77 / 10%);
@@ -168,12 +177,13 @@
 
 .landing-hero__actions {
   display: flex;
-  align-items: center;
-  gap: 18px;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 12px;
   margin-top: 36px;
 }
 
-.landing-demo-button {
+.landing-primary-button {
   display: flex;
   min-width: min(100%, 330px);
   align-items: center;
@@ -187,32 +197,42 @@
   color: #14100a;
   cursor: pointer;
   text-align: left;
+  text-decoration: none;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease;
 }
 
-.landing-demo-button:disabled,
-.landing-final__actions button:disabled {
+.landing-primary-button:hover:not(:disabled),
+.landing-primary-button:focus-visible {
+  box-shadow: 0 24px 60px rgb(245 165 36 / 38%);
+  transform: translateY(-2px);
+}
+
+.landing-primary-button:disabled {
   cursor: wait;
   opacity: 0.65;
 }
-.landing-demo-button span,
-.landing-demo-button strong,
-.landing-demo-button small {
+
+.landing-primary-button span,
+.landing-primary-button strong,
+.landing-primary-button small {
   display: block;
 }
-.landing-demo-button strong {
+.landing-primary-button strong {
   font-family: "Saira Condensed", sans-serif;
-  font-size: 1.45rem;
+  font-size: 1.8rem;
   letter-spacing: 0.05em;
   line-height: 1;
   text-transform: uppercase;
 }
-.landing-demo-button small {
+.landing-primary-button small {
   margin-top: 7px;
   font-family: "IBM Plex Mono", monospace;
   font-size: 0.62rem;
   letter-spacing: 0.08em;
 }
-.landing-demo-button b {
+.landing-primary-button b {
   display: grid;
   width: 44px;
   height: 44px;
@@ -658,7 +678,7 @@
     align-items: stretch;
     flex-direction: column;
   }
-  .landing-demo-button {
+  .landing-primary-button {
     width: 100%;
   }
   .landing-preview__court {
@@ -715,7 +735,7 @@
 }
 
 @media (forced-colors: active) {
-  .landing-demo-button,
+  .landing-primary-button,
   .landing-link-button,
   .landing-final__actions button,
   .landing-final__actions a {

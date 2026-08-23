@@ -108,6 +108,15 @@ export function SessionProvider({ children }: SessionProviderProps) {
     () => completeAuthentication(() => auth.continueAsDemo()),
     [auth, completeAuthentication],
   );
+  const startDemoTrial = useCallback(
+    () => completeAuthentication(() => auth.startDemoTrial()),
+    [auth, completeAuthentication],
+  );
+  const assignDemoMatch = useCallback(
+    (matchId: string) =>
+      completeAuthentication(() => auth.assignDemoMatch(matchId)),
+    [auth, completeAuthentication],
+  );
   const signOut = useCallback(async () => {
     const request = ++requestVersion.current;
     try {
@@ -133,9 +142,20 @@ export function SessionProvider({ children }: SessionProviderProps) {
       register,
       signIn,
       continueAsDemo,
+      assignDemoMatch,
+      startDemoTrial,
       signOut,
     }),
-    [snapshot, restore, register, signIn, continueAsDemo, signOut],
+    [
+      snapshot,
+      restore,
+      register,
+      signIn,
+      continueAsDemo,
+      assignDemoMatch,
+      startDemoTrial,
+      signOut,
+    ],
   );
 
   return (
