@@ -109,6 +109,18 @@ a:focus-visible {
   width: min(100%, 1440px);
 }
 
+.app-viewport:has(> .landing-page) {
+  display: block;
+  padding: 0;
+}
+
+.app-viewport > .landing-page {
+  width: 100%;
+  min-height: 100vh;
+  border-inline: 0;
+  border-radius: 0;
+}
+
 .route-placeholder {
   display: grid;
   min-height: min(620px, calc(100vh - 64px));

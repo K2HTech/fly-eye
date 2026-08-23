@@ -56,9 +56,12 @@ describe("onboarding integration", () => {
     renderApp("/welcome");
     await waitForWelcome();
 
-    expect(
-      screen.getByRole("link", { name: /create account/i }),
-    ).toHaveAttribute("href", "/register");
+    expect(screen.getAllByRole("link", { name: /sign up/i })).toHaveLength(2);
+    for (const link of screen.getAllByRole("link", {
+      name: /sign up/i,
+    })) {
+      expect(link).toHaveAttribute("href", "/register");
+    }
     expect(screen.getByRole("link", { name: /^sign in$/i })).toHaveAttribute(
       "href",
       "/sign-in",
@@ -66,6 +69,15 @@ describe("onboarding integration", () => {
     expect(
       screen.getByRole("button", { name: /continue as demo/i }),
     ).toBeEnabled();
+    expect(
+      screen.getByRole("button", { name: /open demo workspace/i }),
+    ).toBeEnabled();
+    expect(
+      screen.getByRole("heading", { name: /setup to verdict/i }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("heading", { name: /evidence first/i }),
+    ).toBeVisible();
   });
 
   it("enters demo mode, reaches the dashboard, and signs out", async () => {

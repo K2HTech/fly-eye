@@ -86,15 +86,15 @@ describe("application routing", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("guards a protected route and explains the redirect", async () => {
+  it("guards a protected route", async () => {
     const router = renderRoute(matchRoutes.review("match-42"), anonymous);
 
     expect(
       await screen.findByRole("heading", { name: /see the line/i }),
     ).toBeVisible();
-    expect(screen.getByRole("status")).toHaveTextContent(
-      /sign in or continue as demo/i,
-    );
+    expect(
+      screen.queryByText(/sign in or continue as demo/i),
+    ).not.toBeInTheDocument();
     expect(router.state.location.pathname).toBe(routePaths.welcome);
   });
 
