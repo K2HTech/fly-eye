@@ -134,9 +134,10 @@ The first version collects:
 - Match format
 
 Singles requires one player name per side. Doubles requires two player names
-per side. The default badminton match format is best of three games to 21
-points. The format remains explicit in the data model so alternatives can be
-added later.
+per side. Operators can select either the current standard best-of-three games
+to 21 points or the BWF 2027 best-of-three games to 15 points. The 3x21 format
+remains the default during the transition period. The format remains explicit
+in the data model so further alternatives can be added later.
 
 The form must support validation, cancel back to dashboard, and successful
 creation. Successful creation stores a draft match and moves to hardware
