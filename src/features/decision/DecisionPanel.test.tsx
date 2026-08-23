@@ -49,23 +49,18 @@ describe("DecisionPanel", () => {
 
   it("routes each action to its typed callback", () => {
     const callbacks = {
-      onShowOnCourtScreen: vi.fn(),
       onRunAgain: vi.fn(),
       onSaveClip: vi.fn(),
       onBackToLive: vi.fn(),
     };
     render(<DecisionPanel {...callbacks} />);
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "Show on court screen" }),
-    );
     fireEvent.click(screen.getByRole("button", { name: "Run it again" }));
     fireEvent.click(
       screen.getByRole("button", { name: "Save clip to match folder" }),
     );
     fireEvent.click(screen.getByRole("button", { name: "Back to live" }));
 
-    expect(callbacks.onShowOnCourtScreen).toHaveBeenCalledOnce();
     expect(callbacks.onRunAgain).toHaveBeenCalledOnce();
     expect(callbacks.onSaveClip).toHaveBeenCalledOnce();
     expect(callbacks.onBackToLive).toHaveBeenCalledOnce();

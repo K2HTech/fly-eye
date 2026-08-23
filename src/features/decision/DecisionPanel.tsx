@@ -18,7 +18,6 @@ export interface DecisionResult {
 export interface DecisionPanelProps {
   /** A complete result may be supplied by the reconstruction service. */
   result?: Partial<DecisionResult>;
-  onShowOnCourtScreen?: () => void;
   onRunAgain?: () => void;
   onSaveClip?: () => void;
   onBackToLive?: () => void;
@@ -46,7 +45,6 @@ function Fact({ label, value }: { label: string; value: number | string }) {
 
 export function DecisionPanel({
   result: suppliedResult,
-  onShowOnCourtScreen,
   onRunAgain,
   onSaveClip,
   onBackToLive,
@@ -102,9 +100,9 @@ export function DecisionPanel({
         <button
           className="decision-panel__primary"
           type="button"
-          onClick={onShowOnCourtScreen}
+          onClick={onBackToLive}
         >
-          Show on court screen
+          Back to live <kbd aria-hidden="true">Esc</kbd>
         </button>
         <button
           className="decision-panel__ghost"
@@ -119,13 +117,6 @@ export function DecisionPanel({
           onClick={onSaveClip}
         >
           Save clip to match folder
-        </button>
-        <button
-          className="decision-panel__ghost"
-          type="button"
-          onClick={onBackToLive}
-        >
-          Back to live <kbd aria-hidden="true">Esc</kbd>
         </button>
       </div>
     </section>

@@ -1,4 +1,3 @@
-import type { AuthenticatedOperator } from "../../services";
 import type { MatchRecord, MatchStatus } from "../../domain";
 import { matchResumeLabel } from "./matchNavigation";
 
@@ -7,17 +6,13 @@ import "./matches.css";
 export type MatchCollectionStatus = "idle" | "loading" | "ready" | "error";
 
 export interface MatchDashboardProps {
-  identity: AuthenticatedOperator;
   matches: readonly MatchRecord[];
   status: MatchCollectionStatus;
   error: Error | null;
-  actionError?: string;
   notice?: string;
   onCreateMatch: () => void;
   onResumeMatch: (match: MatchRecord) => void;
   onRetry: () => void;
-  onSignOut: () => void;
-  isSigningOut?: boolean;
 }
 
 const statusLabels: Record<MatchStatus, string> = {
@@ -107,19 +102,14 @@ function MatchCard({
 }
 
 export function MatchDashboard({
-  identity,
   matches,
   status,
   error,
-  actionError,
   notice,
   onCreateMatch,
   onResumeMatch,
   onRetry,
-  onSignOut,
-  isSigningOut = false,
 }: MatchDashboardProps) {
-  const isDemo = identity.session.mode === "demo";
   const isLoading = status === "loading";
 
   return (
@@ -133,33 +123,11 @@ export function MatchDashboard({
             confidence.
           </p>
         </div>
-        <div className="matches-dashboard__account">
-          <span className="matches-dashboard__account-mode">
-            <span aria-hidden="true" />
-            {isDemo ? "Demo session" : "Local profile"}
-          </span>
-          <strong>{identity.profile.displayName}</strong>
-          <span>{identity.profile.email}</span>
-          <button
-            className="matches-dashboard__signout"
-            type="button"
-            disabled={isSigningOut}
-            onClick={onSignOut}
-          >
-            {isSigningOut ? "Signing out…" : "Sign out"}
-          </button>
-        </div>
       </header>
 
       {notice && (
         <p className="matches-dashboard__notice" role="status">
           {notice}
-        </p>
-      )}
-
-      {actionError && (
-        <p className="matches-dashboard__action-error" role="alert">
-          {actionError}
         </p>
       )}
 

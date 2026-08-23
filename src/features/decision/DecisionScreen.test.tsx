@@ -23,14 +23,13 @@ describe("DecisionScreen", () => {
     ).toBeVisible();
   });
 
-  it("provides honest simulated feedback for external UI actions", () => {
+  it("provides feedback for clip saving", () => {
     render(<DecisionScreen onRunAgain={vi.fn()} onBackToLive={vi.fn()} />);
 
-    fireEvent.click(
-      screen.getByRole("button", { name: /show on court screen/i }),
-    );
-    expect(screen.getByText(/court-screen preview ready/i)).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: /show on court screen/i }),
+    ).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /save clip/i }));
-    expect(screen.getByText(/clip save queued/i)).toBeVisible();
+    expect(screen.getByText(/clip added to the save queue/i)).toBeVisible();
   });
 });

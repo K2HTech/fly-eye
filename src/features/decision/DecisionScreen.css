@@ -19,27 +19,13 @@
 
 .decision-screen__topbar {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 14px;
   min-height: 58px;
   padding: 10px 14px;
   border-bottom: 1px solid var(--decision-line);
   background: var(--decision-panel);
-}
-
-.decision-screen__brand {
-  font-family: "Saira Condensed", Impact, sans-serif;
-  font-size: 19px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  white-space: nowrap;
-}
-
-.decision-screen__brand span {
-  margin-right: 6px;
-  color: var(--decision-cork);
-  font-size: 22px;
 }
 
 .decision-screen__topbar h1 {
@@ -49,7 +35,7 @@
   font-size: 15px;
   font-weight: 600;
   letter-spacing: 0.16em;
-  text-align: center;
+  text-align: left;
   text-transform: uppercase;
 }
 
@@ -142,8 +128,8 @@
     grid-template-columns: 1fr auto;
   }
   .decision-screen__topbar h1 {
-    grid-column: 1 / -1;
-    grid-row: 2;
+    grid-column: auto;
+    grid-row: auto;
   }
   .decision-screen__workspace {
     grid-template-columns: 1fr;

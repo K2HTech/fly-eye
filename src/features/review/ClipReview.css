@@ -19,28 +19,13 @@
 
 .clip-review__topbar {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 14px;
   min-height: 58px;
   padding: 10px 14px;
   border-bottom: 1px solid var(--review-line);
   background: var(--review-panel);
-}
-
-.clip-review__brand {
-  color: var(--review-chalk);
-  font-family: "Saira Condensed", Impact, sans-serif;
-  font-size: 19px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  white-space: nowrap;
-}
-
-.clip-review__brand span {
-  margin-right: 6px;
-  color: var(--review-cork);
-  font-size: 22px;
 }
 
 .clip-review__topbar h1 {
@@ -50,7 +35,7 @@
   font-size: 15px;
   font-weight: 600;
   letter-spacing: 0.16em;
-  text-align: center;
+  text-align: left;
   text-transform: uppercase;
 }
 
@@ -156,8 +141,8 @@
   }
 
   .clip-review__topbar h1 {
-    grid-column: 1 / -1;
-    grid-row: 2;
+    grid-column: auto;
+    grid-row: auto;
   }
 
   .clip-review__workspace {

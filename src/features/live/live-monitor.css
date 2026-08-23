@@ -41,7 +41,7 @@
   flex-wrap: wrap;
 }
 
-.live-monitor__brand,
+.live-monitor__mode,
 .live-monitor__team,
 .live-monitor__game,
 .live-monitor__review,
@@ -50,20 +50,12 @@
   text-transform: uppercase;
 }
 
-.live-monitor__brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--live-chalk);
-  font-size: 19px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  white-space: nowrap;
-}
-
-.live-monitor__brand-mark {
+.live-monitor__mode {
   color: var(--live-cork);
-  font-size: 22px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
 }
 
 .live-monitor__scoreboard {

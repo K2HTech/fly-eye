@@ -22,24 +22,12 @@
   background: rgb(10 14 20 / 78%);
 }
 
-.create-match__brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 11px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: #f2f4f0;
-  cursor: pointer;
+.create-match__context {
+  color: #9ca9ba;
   font-family: "Saira Condensed", sans-serif;
-  font-size: 1.55rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-}
-
-.create-match__brand span {
-  color: #f3aa3c;
-  font-size: 1.8rem;
+  font-size: 1rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .create-match__header > div {
