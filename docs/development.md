@@ -46,33 +46,33 @@ from the committed Cargo lockfile when the native checks run.
 Run `task --list` to see every available task, including Rust formatting and
 compile checks.
 
-## Development-only screen previews
+## Preview the operator flow
 
-Start `task dev`, then use these browser URLs:
+Start the browser development server:
 
-```text
-http://localhost:1420/#/matches/demo/live
-http://localhost:1420/#/matches/demo/review
-http://localhost:1420/#/matches/demo/decision
+```bash
+task dev
 ```
 
-The app uses hash routes for browser and Tauri compatibility and restores its
-versioned local demo data before opening protected routes. Signed-out users are
-redirected to the welcome screen. Create a local prototype profile, sign in
-locally, or choose demo mode before opening these protected preview routes.
+Open `http://localhost:1420`, then choose **Run the live demo** for an isolated
+demo match or sign in with a local profile. Protected match URLs contain a
+generated match identifier and cannot be opened before the corresponding
+session is established.
 
 ## Simulated operator flow
 
-The intended three-screen flow is:
+The intended operator flow is:
 
-1. **Live Monitor** — view the two simulated camera feeds and choose **Review
+1. **Hardware readiness** — connect both simulated cameras, select the known-good
+   calibration profile, and start monitoring. Demo setup is untimed; confirming
+   monitoring starts the 15-minute trial.
+2. **Live Monitor** — view the two simulated camera feeds and choose **Review
    last rally** (or use `F1`).
-2. **Clip Review** — step synchronized paused camera views, adjust the shared
+3. **Clip Review** — step synchronized paused camera views, adjust the shared
    range, choose automatic or manual landing-frame selection, and choose **Get
    the call** (or press `Enter`).
-3. **Decision** — inspect the simulated IN/OUT evidence, run the review again,
-   return to live with **Back to live** or `Escape`, and use the simulated
-   court-screen and save actions when needed.
+4. **Decision** — inspect the simulated IN/OUT evidence, save the clip, run the
+   review again, or return to live with **Back to live** or `Escape`.
 
 Every camera frame, trajectory, result, and external action in this flow is
 simulated for UI development; none writes video or match data to disk.
