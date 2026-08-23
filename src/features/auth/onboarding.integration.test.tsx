@@ -156,7 +156,7 @@ describe("onboarding integration", () => {
 
     await waitForDashboard();
     expect(router.state.location.pathname).toBe("/matches");
-    expect(screen.getByText("Local prototype profile")).toBeVisible();
+    expect(screen.getByText("Local profile")).toBeVisible();
   });
 
   it("clears the passphrase after a rejected local sign-in", async () => {

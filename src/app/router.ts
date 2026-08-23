@@ -8,7 +8,6 @@ import {
 import {
   DecisionRoute,
   LiveRoute,
-  MatchDashboardPlaceholder,
   Placeholder,
   PublicOnlyRoute,
   RequireSession,
@@ -18,6 +17,7 @@ import {
   type PlaceholderProps,
 } from "./RouteScreens";
 import { RegisterPage, SignInPage, WelcomePage } from "../features/auth";
+import { MatchDashboardPage } from "../features/matches";
 import { routePaths } from "./paths";
 
 function placeholder(props: PlaceholderProps) {
@@ -51,7 +51,7 @@ const appRoutes: RouteObject[] = [
     children: [
       {
         path: routePaths.matches,
-        element: createElement(MatchDashboardPlaceholder),
+        element: createElement(MatchDashboardPage),
       },
       {
         path: routePaths.newMatch,

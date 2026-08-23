@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { AppRouter } from "./App";
+import { MatchContext, type MatchContextValue } from "./app/matchContext";
 import { matchRoutes, routePaths } from "./app/paths";
 import { createAppHashRouter, createAppMemoryRouter } from "./app/router";
 import type { RouteAccessState } from "./app/routeAccess";
@@ -37,11 +38,23 @@ function sessionValue(access: RouteAccessState): SessionContextValue {
   };
 }
 
+const emptyMatches: MatchContextValue = {
+  matches: [],
+  status: "ready",
+  error: null,
+  refresh: vi.fn(async () => undefined),
+  create: vi.fn(),
+  update: vi.fn(),
+  updateStatus: vi.fn(),
+};
+
 function renderRoute(path: string, access: RouteAccessState = authenticated) {
   const router = createAppMemoryRouter([path]);
   render(
     <SessionContext.Provider value={sessionValue(access)}>
-      <AppRouter access={access} router={router} />
+      <MatchContext.Provider value={emptyMatches}>
+        <AppRouter access={access} router={router} />
+      </MatchContext.Provider>
     </SessionContext.Provider>,
   );
   return router;
@@ -90,7 +103,9 @@ describe("application routing", () => {
     const router = createAppHashRouter();
     render(
       <SessionContext.Provider value={sessionValue(authenticated)}>
-        <AppRouter access={authenticated} router={router} />
+        <MatchContext.Provider value={emptyMatches}>
+          <AppRouter access={authenticated} router={router} />
+        </MatchContext.Provider>
       </SessionContext.Provider>,
     );
 
