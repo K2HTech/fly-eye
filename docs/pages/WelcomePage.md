@@ -70,3 +70,11 @@ time-limited live demo without registration.
   before production release.
 - Frame-rate, capture-window, confidence, and accuracy values shown as product
   claims need confirmation as requirements or explicit illustrative targets.
+
+## Approved implementation gap
+
+The current landing page advertises an `INCONCLUSIVE` outcome inherited from
+an earlier redesign. The approved product supports only **IN** and **OUT**,
+with the evidence assisting an umpire who retains final authority. The
+conflicting landing content must be removed or replaced in a separate UI
+feature.

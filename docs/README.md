@@ -47,6 +47,9 @@ work](work/active/documentation-system/).
   match](pages/CreateMatchPage.md), and [hardware
   readiness](pages/HardwareReadinessPage.md)
 - [Match-preparation workflow](workflows/MatchPreparationWorkflow.md)
+- Line-call pages: [live monitor](pages/LiveMonitor.md), [clip
+  review](pages/ClipReview.md), and [decision](pages/DecisionScreen.md)
+- [Line-call review workflow](workflows/LineCallReviewWorkflow.md)
 
 ## Ownership rules
 
