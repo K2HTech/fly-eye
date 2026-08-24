@@ -9,7 +9,7 @@ export default tseslint.config(
     ignores: [
       ".venv",
       "dist",
-      "docs/mockups",
+      "docs/design/mockups",
       "node_modules",
       "src-tauri/gen",
       "src-tauri/target",

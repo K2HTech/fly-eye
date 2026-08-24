@@ -29,7 +29,7 @@ Examples:
   fix(demo): prevent cross-match navigation
   docs: document branching workflow
 
-See docs/commit-convention.md for details.
+See docs/development/COMMIT-CONVENTION.md for details.
 EOF
 
 exit 1

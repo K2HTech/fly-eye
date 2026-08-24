@@ -50,13 +50,13 @@ Project development guidelines:
 
 - [Documentation map](docs/README.md) — Product, workflow, technical,
   development, and active-work context for humans and coding agents.
-- [Developer guide](docs/development.md) — Setup, tasks, previews, and the
+- [Developer guide](docs/development/SETUP.md) — Setup, tasks, previews, and the
   simulated three-screen workflow.
-- [Commit convention](docs/commit-convention.md) — Commit message format and
-  validation hook.
-- [Branching strategy](docs/branching-strategy.md) — Branch roles, reviews,
+- [Commit convention](docs/development/COMMIT-CONVENTION.md) — Commit message
+  format and validation hook.
+- [Branching strategy](docs/development/BRANCHING.md) — Branch roles, reviews,
   merge methods, releases, and hotfixes.
-- [Dependency management](docs/dependency-management.md) — Locked npm and Cargo
-  dependencies and update workflow.
-- [CI/CD](docs/ci-cd.md) — Local checks, automated validation, security policy,
-  and release process.
+- [Dependency management](docs/development/DEPENDENCIES.md) — Locked npm and
+  Cargo dependencies and update workflow.
+- [CI/CD](docs/development/CI-CD.md) — Local checks, automated validation,
+  security policy, and release process.
