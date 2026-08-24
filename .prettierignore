@@ -4,7 +4,5 @@ dist/
 node_modules/
 src-tauri/gen/
 src-tauri/target/
-docs/mockups/
-docs/branching-strategy.md
-docs/commit-convention.md
+docs/design/mockups/
 package-lock.json

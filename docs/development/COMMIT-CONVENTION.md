@@ -14,19 +14,19 @@ Write the first line of each commit in this form:
 
 Use one of these types:
 
-| Type | Purpose |
-| --- | --- |
-| `feat` | Add or change user-facing functionality. |
-| `fix` | Correct a defect. |
-| `docs` | Change documentation only. |
-| `style` | Change formatting without changing behavior. |
+| Type       | Purpose                                                       |
+| ---------- | ------------------------------------------------------------- |
+| `feat`     | Add or change user-facing functionality.                      |
+| `fix`      | Correct a defect.                                             |
+| `docs`     | Change documentation only.                                    |
+| `style`    | Change formatting without changing behavior.                  |
 | `refactor` | Restructure code without adding a feature or fixing a defect. |
-| `perf` | Improve performance. |
-| `test` | Add or update tests. |
-| `build` | Change the build system or dependencies. |
-| `ci` | Change continuous-integration configuration. |
-| `chore` | Perform maintenance that does not fit another type. |
-| `revert` | Revert an earlier commit. |
+| `perf`     | Improve performance.                                          |
+| `test`     | Add or update tests.                                          |
+| `build`    | Change the build system or dependencies.                      |
+| `ci`       | Change continuous-integration configuration.                  |
+| `chore`    | Perform maintenance that does not fit another type.           |
+| `revert`   | Revert an earlier commit.                                     |
 
 The optional scope identifies the affected area, such as `ui`, `review`,
 `decision`, `tauri`, or `docs`. Write the description in the imperative mood,
