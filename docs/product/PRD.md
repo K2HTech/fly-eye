@@ -100,6 +100,16 @@ line-call decision does not end the match because the operator may return to
 monitoring for later rallies. Umpire-controlled scoring and automatic game or
 match completion are deferred.
 
+### Line-call authority
+
+Fly Eye supports two line-call results: **IN** and **OUT**. The system presents
+the available evidence and confidence information to help the umpire reach a
+decision, but the umpire retains final authority over the call.
+
+`INCONCLUSIVE` is not an approved line-call result. Missing evidence or a
+processing failure is a workflow failure that must offer a clear recovery
+path; it must not be recorded as a third verdict.
+
 ## Success criteria
 
 The product baseline is successful when an operator can understand the value
@@ -125,6 +135,10 @@ target are still coupled into best-of-three presets, local match records are
 still workstation-wide rather than separated by operator, and the live
 workspace does not yet provide **End match**. These are implementation gaps,
 not changes to the approved product rules above.
+
+The current landing page also advertises an `INCONCLUSIVE` result inherited
+from an earlier redesign. That copy conflicts with the approved IN/OUT-only
+model and must be corrected in a separate UI feature.
 
 Future work may replace the local adapters with backend authentication,
 authorization and ownership rules; synchronize matches and results; and add
