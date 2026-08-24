@@ -14,7 +14,7 @@ The decision screen presents the outcome of a reviewed line call together with
 the evidence context an operator needs to understand and communicate the
 result. It also provides explicit return, rerun, and clip-save actions.
 
-## Actors and entry conditions
+## Approved actors and entry conditions
 
 - A signed-in operator enters after requesting a call from clip review or when
   resuming a completed match.
@@ -22,6 +22,10 @@ result. It also provides explicit return, rerun, and clip-save actions.
   session.
 - The ordered review, decision, and return stages belong to the
   [line-call review workflow](../workflows/LineCallReviewWorkflow.md).
+
+These are the intended conditions. The current route does not yet validate the
+requested match's existence, ownership, and status completely; that shared gap
+is owned by the line-call review workflow.
 
 ## Business rules and current boundaries
 
@@ -56,7 +60,7 @@ result. It also provides explicit return, rerun, and clip-save actions.
 - **Save acknowledged:** The UI acknowledges a simulated request; no durable
   queue or external persistence is established.
 - **Evidence unavailable:** Missing evidence or failed processing requires a
-  recovery path and must not be recorded as an `INCONCLUSIVE` verdict.
+  recovery path and must not be recorded as a third verdict.
 
 ## Actions and consequences
 
@@ -85,4 +89,4 @@ result. It also provides explicit return, rerun, and clip-save actions.
 
 The product owner must define authoritative result provenance, confidence
 meaning, processing-failure recovery, durable clip ownership/export behavior,
-and the destination and confirmation behavior of the future End match action.
+and its retention policy.

@@ -79,6 +79,10 @@ is locked to one generated match; it cannot be used to create or work on a
 second match. After expiry, the operator must leave the demo or sign up to
 continue.
 
+Continued production access is expected to require a subscription, but plans,
+billing, entitlements, and enforcement are not defined or implemented in the
+current UI.
+
 ### Match lifecycle
 
 The initial product handles standalone matches. Its normal progression is

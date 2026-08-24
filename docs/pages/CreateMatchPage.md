@@ -85,5 +85,4 @@ must be changed to separate match length from the per-game point target.
 
 The product owner must confirm how a future backend represents event identity,
 participant identity, and ownership when tournament and organization support is
-introduced. Score-control work must define win-by-two, point-cap, and game
-completion rules; the current standalone form does not define them.
+introduced.

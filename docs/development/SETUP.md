@@ -32,16 +32,16 @@ from the committed Cargo lockfile when the native checks run.
 
 ## Common tasks
 
-| Command            | Purpose                                           |
-| ------------------ | ------------------------------------------------- |
-| `task dev`         | Run the Vite browser development server.          |
-| `task desktop:run` | Run the app in a native Tauri window.             |
-| `task format`      | Format web project files with Prettier.           |
-| `task lint`        | Run ESLint.                                       |
-| `task typecheck`   | Run the strict TypeScript build check.            |
-| `task test`        | Run the Vitest suite once.                        |
-| `task build`       | Build the production web app.                     |
-| `task check`       | Run the complete local CI-equivalent check suite. |
+| Command            | Purpose                                       |
+| ------------------ | --------------------------------------------- |
+| `task dev`         | Run the Vite browser development server.      |
+| `task desktop:run` | Run the app in a native Tauri window.         |
+| `task format`      | Format web project files with Prettier.       |
+| `task lint`        | Run ESLint.                                   |
+| `task typecheck`   | Run the strict TypeScript build check.        |
+| `task test`        | Run the Vitest suite once.                    |
+| `task build`       | Build the production web app.                 |
+| `task check`       | Run local quality, Rust, and security checks. |
 
 Run `task --list` to see every available task, including Rust formatting and
 compile checks.
@@ -59,23 +59,16 @@ demo match or sign in with a local profile. Protected match URLs contain a
 generated match identifier and cannot be opened before the corresponding
 session is established.
 
-## Simulated operator flow
+For a smoke test, complete readiness, enter monitoring, review the latest
+rally, and open its decision. The canonical behavior and restrictions are in
+the [demo-trial workflow](../workflows/DemoTrialWorkflow.md),
+[match-preparation workflow](../workflows/MatchPreparationWorkflow.md), and
+[line-call review workflow](../workflows/LineCallReviewWorkflow.md).
 
-The intended operator flow is:
-
-1. **Hardware readiness** — connect both simulated cameras, select the known-good
-   calibration profile, and start monitoring. Demo setup is untimed; confirming
-   monitoring starts the 15-minute trial.
-2. **Live Monitor** — view the two simulated camera feeds and choose **Review
-   last rally** (or use `F1`).
-3. **Clip Review** — step synchronized paused camera views, adjust the shared
-   range, choose automatic or manual landing-frame selection, and choose **Get
-   the call** (or press `Enter`).
-4. **Decision** — inspect the simulated IN/OUT evidence, save the clip, run the
-   review again, or return to live with **Back to live** or `Escape`.
-
-Every camera frame, trajectory, result, and external action in this flow is
-simulated for UI development; none writes video or match data to disk.
+Camera frames, trajectories, evidence, verdict generation, and clip-save
+actions are simulated. Local profile, session, match, and readiness metadata
+may be persisted by browser storage, but the current application does not save
+real media or adjudication artifacts.
 
 ## Branches and commits
 

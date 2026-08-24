@@ -30,8 +30,8 @@ git switch -c feature/camera-calibration
 ```
 
 Make focused commits that follow the
-[commit convention](COMMIT-CONVENTION.md). Before pushing, run the same checks
-used by CI:
+[commit convention](COMMIT-CONVENTION.md). Before pushing, run the local
+quality and security checks:
 
 ```bash
 task check
@@ -69,9 +69,9 @@ topic branch.
 
 ## Release to main
 
-When `develop` is stable, the release manager updates the version and release
-notes in the web app and Tauri host manifests, then runs `task check`. They
-then open a release pull request from `develop` into `main`.
+When `develop` is stable, the release manager updates the version in the web
+app and Tauri host manifests, then runs `task check`. They then open a release
+pull request from `develop` into `main`.
 
 Release PRs should receive two approvals when the team is large enough and must
 pass the complete CI suite. A designated maintainer merges the PR with **Create
