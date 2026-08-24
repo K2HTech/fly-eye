@@ -102,7 +102,9 @@ must not be presented as production authorization.
 
 The future end-match feature must also decide whether completion immediately
 opens a match summary, returns to the dashboard, or remains on the live
-workspace with a completed state.
+workspace with a completed state. Future score-control work must define
+win-by-two, point-cap, and game-completion rules; the current match format does
+not establish them.
 
 ## Evidence
 

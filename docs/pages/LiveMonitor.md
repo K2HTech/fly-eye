@@ -14,7 +14,7 @@ The live monitor is the operator's active match workspace. It keeps the
 operator oriented to the selected court and current play while providing a
 rapid path to inspect the most recent rally when a line call needs review.
 
-## Actors and entry conditions
+## Approved actors and entry conditions
 
 - A signed-in operator may enter for a match that has passed hardware
   readiness and entered live monitoring.
@@ -22,6 +22,10 @@ rapid path to inspect the most recent rally when a line call needs review.
   the [isolated demo-trial workflow](../workflows/DemoTrialWorkflow.md).
 - Resuming a live match from the dashboard and entering after readiness are
   owned by the [match-preparation workflow](../workflows/MatchPreparationWorkflow.md).
+
+These are the intended conditions. The current route does not yet validate the
+requested match's existence, ownership, and status completely; that shared gap
+is owned by the [line-call review workflow](../workflows/LineCallReviewWorkflow.md).
 
 ## Business rules and current boundaries
 

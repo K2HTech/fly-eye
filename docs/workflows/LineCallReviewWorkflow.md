@@ -42,7 +42,7 @@ future **End match** action.
 The only approved line-call results are **IN** and **OUT**. Fly Eye presents
 evidence and confidence information to assist the umpire, who retains final
 authority. Missing evidence or failed processing is a workflow failure, not an
-`INCONCLUSIVE` verdict.
+additional line-call result.
 
 ## Interaction invariants
 

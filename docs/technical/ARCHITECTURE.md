@@ -39,8 +39,8 @@ boundaries:
 - Domain rules remain framework-independent. Match status transitions and the
   readiness gate are enforced below the pages so invalid transitions cannot be
   created by navigation alone.
-- Local infrastructure supplies the current adapters. They are disposable UI
-  implementation infrastructure and are not a production authorization,
+- Local infrastructure supplies the current replaceable demonstration
+  adapters. They are not a production authorization,
   authentication, device, or synchronization boundary.
 
 Evidence: [service contracts](../../src/services/contracts.ts), [provider
@@ -58,9 +58,10 @@ not an authorization system: the current local adapter does not provide
 server-enforced identity or ownership.
 
 The authenticated shell owns cross-page session presentation and sign-out, but
-page-specific business rules remain in page and workflow documents. A demo
-session is deliberately constrained to its assigned match by route access and
-service checks rather than by hiding dashboard controls alone.
+page-specific business rules remain in page and workflow documents. Demo-match
+assignment is immutable in the authentication adapter, and route guards keep a
+demo session in its assigned workspace. The match repository itself is not
+session-aware, so these checks are not repository-level authorization.
 
 Evidence: [session provider](../../src/app/SessionProvider.tsx), [route access
 screens](../../src/app/RouteScreens.tsx), and [authentication workflow](../workflows/AuthenticationWorkflow.md).
@@ -93,8 +94,8 @@ Evidence: [local service composition](../../src/infrastructure/local/localAppSer
 The current UI-only authentication adapter is intentionally not a security
 boundary. Registration and sign-in exercise the session journey locally, while
 passwords and confirmations remain transient and are excluded from
-persistence-safe models. Passwords, hashes, tokens, and other secrets must not
-be stored, logged, or placed in navigation state.
+persistence-safe models. Security and privacy constraints are owned by the
+[quality requirements](QUALITY-REQUIREMENTS.md).
 
 Production authentication, credential verification, authorization, account
 recovery, token handling, and remote error policy belong to a future backend
@@ -150,5 +151,5 @@ by the PRD and workflows.
   readiness bypasses are rejected consistently.
 - Keep simulated behavior visibly distinct from real hardware, backend, and
   inference results.
-- Treat local adapters as prototype infrastructure, never as a security or
+- Treat local adapters as demonstration infrastructure, never as a security or
   production ownership boundary.

@@ -11,8 +11,8 @@ Choose the smallest relevant path:
 1. Read the product requirements for product-wide context.
 2. Read the document for each route-level page affected by the task.
 3. Follow links from those pages to any cross-page workflow.
-4. Read technical requirements or decisions only when the task crosses those
-   boundaries.
+4. Read applicable architecture, quality requirements, or architecture
+   decisions when the task crosses those boundaries.
 5. For active planned work, read its approved specification and plan before
    editing.
 
@@ -28,12 +28,8 @@ instructions](../AGENTS.md).
 | Workflows   | Journeys and rules spanning multiple pages                           | [`workflows/`](workflows/)                      |
 | Technical   | System boundaries, quality requirements, and significant decisions   | [Technical baseline](technical/ARCHITECTURE.md) |
 | Development | Setup and team operating agreements                                  | [`development/`](development/)                  |
-| Design      | Approved mockups used as visual references                           | [`design/mockups/`](design/mockups/)            |
+| Design      | Historical, non-authoritative visual references                      | [`design/mockups/`](design/mockups/)            |
 | Work        | Approved active specifications, plans, and historical specifications | [Work documentation](work/README.md)            |
-
-Planned locations are deliberately not linked until their canonical documents
-exist. The current backfill is tracked under [documentation-system
-work](work/active/documentation-system/).
 
 ## Current product documents
 
@@ -66,6 +62,8 @@ work](work/active/documentation-system/).
 - Uncertain intent is recorded as an open question for product-owner review.
 - Documentation changes in the same batch as the behavior or boundary it
   describes.
+- Mockups are historical visual evidence and do not establish current behavior
+  or override approved product rules.
 
 ## Development documents
 

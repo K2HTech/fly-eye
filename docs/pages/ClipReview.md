@@ -14,7 +14,7 @@ Clip review lets the operator inspect a disputed rally frame by frame, keep
 the two camera perspectives aligned, and identify the landing moment before
 requesting a line-call result.
 
-## Actors and entry conditions
+## Approved actors and entry conditions
 
 - A signed-in operator enters from a live match or resumes a live match through
   the match workspace.
@@ -22,6 +22,10 @@ requesting a line-call result.
 - The cross-page stages and access restrictions are owned by the
   [line-call review workflow](../workflows/LineCallReviewWorkflow.md) and the
   [isolated demo-trial workflow](../workflows/DemoTrialWorkflow.md).
+
+These are the intended conditions. The current route does not yet validate the
+requested match's existence, ownership, and status completely; that shared gap
+is owned by the line-call review workflow.
 
 ## Business rules and current boundaries
 

@@ -18,7 +18,7 @@ tracking, and inference are external system boundaries.
 - `src-tauri/` — Tauri v2 Rust host, capabilities, icons, and desktop
   configuration.
 - `scripts/` — Project automation used by local tasks and CI.
-- `docs/` — Product and development documentation.
+- `docs/` — Project documentation and historical decision context.
 - `.github/` — GitHub Actions and dependency-update configuration.
 
 ## Development
@@ -31,7 +31,7 @@ Install Node.js 24, stable Rust, the platform-specific
 task setup
 task dev          # Browser development
 task desktop:run  # Native Tauri window
-task check        # CI-equivalent local checks
+task check        # Local quality and security checks
 ```
 
 The app uses hash routes so navigation behaves consistently in browsers and the
@@ -49,9 +49,9 @@ inference integrations are also outside the current repository.
 Project development guidelines:
 
 - [Documentation map](docs/README.md) — Product, workflow, technical,
-  development, and active-work context for humans and coding agents.
-- [Developer guide](docs/development/SETUP.md) — Setup, tasks, previews, and the
-  simulated three-screen workflow.
+  development, and work context for humans and coding agents.
+- [Developer guide](docs/development/SETUP.md) — Setup, commands, and the
+  simulated operator flow.
 - [Commit convention](docs/development/COMMIT-CONVENTION.md) — Commit message
   format and validation hook.
 - [Branching strategy](docs/development/BRANCHING.md) — Branch roles, reviews,
