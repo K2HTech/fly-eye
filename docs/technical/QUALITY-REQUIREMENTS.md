@@ -1,0 +1,105 @@
+# Fly Eye Quality Requirements
+
+Status: Current baseline, implementation gaps, and unresolved targets
+
+This document owns measurable system-wide quality constraints. Product behavior
+remains canonical in the [product requirements](../product/PRD.md), while code,
+tests, configuration, and CI establish the current enforcement evidence.
+
+## Status vocabulary
+
+- **Enforced**: an automated test or required CI check currently verifies the
+  requirement.
+- **Partially enforced**: the requirement is approved, but automation covers
+  only identified surfaces or failure modes.
+- **Required, not enforced**: the requirement is approved, but no complete
+  automated gate exists.
+- **Unresolved**: no measurable target or integration contract has been
+  approved. An unresolved item is not a release claim.
+
+## Security and privacy
+
+| ID     | Requirement                                                                                                                                                                        | Status                 | Verification and evidence                                                                                                                                                                                                                                                                                                                                                                    |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SEC-01 | Passwords, password confirmations, tokens, hashes, and other authentication secrets must never enter persistence-safe domain models or persisted storage.                          | Enforced               | Registration, sign-in, and local-service tests inspect persisted values and reject secret-bearing records. See [service contracts](../../src/services/contracts.ts), [persistence-safe models](../../src/domain/models.ts), [onboarding tests](../../src/features/auth/onboarding.integration.test.tsx), and [local-service tests](../../src/infrastructure/local/localAppServices.test.ts). |
+| SEC-02 | UI components must reach browser storage only through application service contracts and replaceable adapters. The application composition root may supply the storage adapter.     | Required, not enforced | This boundary is approved in [agent instructions](../../AGENTS.md) and represented by [service contracts](../../src/services/contracts.ts), [local adapters](../../src/infrastructure/local/localAppServices.ts), and the [composition root](../../src/main.tsx). No architectural lint currently prevents a component from importing browser storage directly.                              |
+| SEC-03 | Every persisted payload must have a recognized schema version and exact validated shape before use or write. Malformed, incompatible, or unknown-field data must be rejected.      | Enforced               | The versioned adapter validates envelopes and payloads; tests cover malformed JSON, incompatible versions, invalid payloads, and unknown fields. See [versioned storage](../../src/infrastructure/local/versionedStorage.ts), [validators](../../src/infrastructure/local/validators.ts), and [storage tests](../../src/infrastructure/local/versionedStorage.test.ts).                      |
+| SEC-04 | Storage failures exposed to the UI or logs must identify the failed operation without exposing the raw stored value or retaining the underlying exception as a public cause.       | Enforced               | Read, write, and removal failure tests assert sanitized `LocalPersistenceError` values. See [storage tests](../../src/infrastructure/local/versionedStorage.test.ts) and [service errors](../../src/services/errors.ts).                                                                                                                                                                     |
+| SEC-05 | Locally generated record identifiers must use platform cryptographic randomness; creation must fail clearly when secure randomness is unavailable.                                 | Enforced               | Tests cover `crypto.randomUUID`, the `getRandomValues` UUID v4 fallback, uniqueness, and failure without either API. See [local-service implementation](../../src/infrastructure/local/localAppServices.ts) and [local-service tests](../../src/infrastructure/local/localAppServices.test.ts).                                                                                              |
+| SEC-06 | The desktop host must retain an explicit production content security policy and an explicit capability allowlist. The current baseline permits only Tauri core default capability. | Partially enforced     | The production build parses the [Tauri configuration](../../src-tauri/tauri.conf.json), and the current [capability file](../../src-tauri/capabilities/default.json) lists only `core:default`. CI does not separately test that a future policy or permission expansion is the minimum necessary.                                                                                           |
+| SEC-07 | Locked npm dependencies must have no high or critical audit findings; locked Rust dependencies must have no RustSec vulnerability advisories.                                      | Enforced               | CI runs both audits on pushes and pull requests and nightly at 02:17 UTC. npm fails at `high`; `cargo audit` fails on vulnerability advisories. See [CI workflow](../../.github/workflows/ci.yml), [Task checks](../../Taskfile.yml), and [CI policy](../development/CI-CD.md).                                                                                                              |
+| PRI-01 | Simulated registration and sign-in must not be presented as secure remote authentication, and no current UI behavior may claim a remote account or security boundary exists.       | Partially enforced     | The product boundary and wording obligation are approved in the [PRD](../product/PRD.md). Page and integration tests exercise simulated onboarding, but there is no automated repository-wide copy check for misleading security claims.                                                                                                                                                     |
+
+Future remote authentication, authorization, token handling, transport
+security, and data-retention rules are **unresolved** until a backend contract
+is approved. The local simulation is not evidence for those guarantees.
+
+## Accessibility
+
+| ID      | Requirement                                                                                                                                                                       | Status             | Verification and evidence                                                                                                                                                                                                                                                                                                                             |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A11Y-01 | All operator journeys must be usable by keyboard, use semantic controls, expose accessible names, communicate status without relying only on visuals, and preserve visible focus. | Partially enforced | This product-wide requirement is approved in the [PRD](../product/PRD.md). Component and integration tests query semantic roles, names, alerts, status regions, and focus behavior; shared styles define `:focus-visible`. See [onboarding tests](../../src/features/auth/onboarding.integration.test.tsx) and [global styles](../../src/styles.css). |
+| A11Y-02 | Automated Axe scans must report zero violations on every surface included in the accessibility suites.                                                                            | Enforced           | Current coverage includes welcome, registration, sign-in, live monitor, clip review, and decision. Color contrast is disabled because JSDOM has no layout engine. See [onboarding scans](../../src/features/auth/onboarding.integration.test.tsx) and [operator-screen scans](../../src/Accessibility.test.tsx).                                      |
+| A11Y-03 | A rejected form submission must focus the first invalid field and programmatically associate that field with its validation message.                                              | Partially enforced | Registration is directly covered by the [onboarding integration tests](../../src/features/auth/onboarding.integration.test.tsx); implementation exists for sign-in and registration. Complete form-by-form coverage is not yet present.                                                                                                               |
+
+The accessibility conformance standard and level, an automated color-contrast
+method, assistive-technology test matrix, and Axe coverage for the remaining
+route-level pages are **unresolved**. Visual review is the current contrast
+check; it is not a measurable conformance gate.
+
+## Cross-platform behavior
+
+| ID      | Requirement                                                                                                                                                                                | Status                 | Verification and evidence                                                                                                                                                                                                                 |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PLAT-01 | The operator journey must work consistently in a browser and the Tauri desktop webview.                                                                                                    | Required, not enforced | The requirement is approved in the [PRD](../product/PRD.md). Tests run in JSDOM and do not exercise either a real browser engine or packaged Tauri webview, so end-to-end parity is not currently proven.                                 |
+| PLAT-02 | Formatting, lint, strict TypeScript checking, Vitest, the production web build, Rust formatting, Clippy with warnings denied, and Rust compilation must pass on Linux, macOS, and Windows. | Enforced               | The required three-OS matrix and aggregate quality gate are defined in the [CI workflow](../../.github/workflows/ci.yml); the exact commands are owned by the [Taskfile](../../Taskfile.yml).                                             |
+| PLAT-03 | Application navigation must use hash-based routes that open directly and remain compatible with browser and Tauri hosting.                                                                 | Enforced               | The boundary is approved in [agent instructions](../../AGENTS.md), implemented by the [router](../../src/app/router.ts), and covered by a direct hash-route test in [application tests](../../src/App.test.tsx).                          |
+| PLAT-04 | A tagged desktop release must package Linux x64, macOS Apple Silicon, macOS Intel, and Windows x64 artifacts only after the full validation suite passes.                                  | Enforced               | The release workflow validates the version and full check suite before its packaging matrix creates draft release artifacts. See the [release workflow](../../.github/workflows/release.yml) and [CI/CD policy](../development/CI-CD.md). |
+
+A supported browser/version matrix, minimum operating-system versions, and a
+real browser/Tauri end-to-end test matrix are **unresolved**. Successful builds
+on three CI operating systems do not by themselves prove runtime behavior.
+
+## Resilience and local data integrity
+
+| ID     | Requirement                                                                                                                                             | Status                 | Verification and evidence                                                                                                                                                                                                                                                                                                      |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| RES-01 | Persistence-safe session, match, and readiness state must survive a new application service composition using the same local storage.                   | Enforced               | Restart restoration is covered by [local-service tests](../../src/infrastructure/local/localAppServices.test.ts) and protected-route restoration by [provider tests](../../src/app/providers.test.tsx).                                                                                                                        |
+| RES-02 | Missing, malformed, incompatible, or invalid data in one local store must resolve to that store's safe default and must not corrupt independent stores. | Enforced               | Storage and local-service tests cover safe defaults, clearing invalid envelopes, and readiness recovery without deleting matches. See [storage tests](../../src/infrastructure/local/versionedStorage.test.ts) and [local-service tests](../../src/infrastructure/local/localAppServices.test.ts).                             |
+| RES-03 | A storage restoration failure must not open protected state; it must leave the session anonymous and expose an actionable, sanitized error.             | Enforced               | See the restoration-failure case in [provider tests](../../src/app/providers.test.tsx) and sanitized-error coverage in [storage tests](../../src/infrastructure/local/versionedStorage.test.ts).                                                                                                                               |
+| RES-04 | A stale asynchronous restore or match refresh must not overwrite a newer authenticated session or repopulate data after sign-out.                       | Enforced               | Both race conditions are covered in [provider tests](../../src/app/providers.test.tsx).                                                                                                                                                                                                                                        |
+| RES-05 | Rejected state transitions and failed persistence writes must not silently report success or mutate the protected record being changed.                 | Partially enforced     | Match-transition tests verify rejected records remain unchanged, and adapter tests verify invalid payloads are not written. Multi-store registration can leave a recoverable profile when the subsequent session write fails, as documented by [local-service tests](../../src/infrastructure/local/localAppServices.test.ts). |
+| RES-06 | Missing line-call evidence or processing failure must be treated as a workflow failure with a clear recovery path, never as an `INCONCLUSIVE` verdict.  | Required, not enforced | This product rule is canonical in the [PRD](../product/PRD.md). Real evidence processing is outside the current boundary, so its failure and recovery contract cannot yet be exercised.                                                                                                                                        |
+
+Retry policy, offline synchronization, conflict resolution, backup and
+recovery, storage quotas, migration across schema versions, and remote-service
+failure semantics are **unresolved**. They require approved external contracts
+before implementation.
+
+## Performance
+
+No performance threshold is approved or enforced. Numbers shown in simulated
+UI copy, fixtures, or mockups are not performance requirements.
+
+The following targets are **unresolved** and must receive a measurement method,
+test environment, and pass/fail threshold before they become requirements:
+
+- Browser and Tauri startup time, including local-session restoration.
+- Response time for operator navigation, form submission, and review actions.
+- Rendering smoothness and resource usage during live monitoring and clip
+  review.
+- Camera synchronization, evidence reconstruction, and line-call processing
+  latency after real processing contracts exist.
+- Local storage capacity and acceptable performance as match history grows.
+
+## Engineering quality gates
+
+| ID      | Requirement                                                                                                                            | Status   | Verification and evidence                                                                                                                                                                                                                                                                     |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| QUAL-01 | Every proposed change must pass Prettier, ESLint, strict TypeScript checking, Vitest, and the production Vite build.                   | Enforced | `task check:quality` owns the local command sequence, and the three-OS CI matrix requires it. See the [Taskfile](../../Taskfile.yml), [TypeScript configuration](../../tsconfig.app.json), [ESLint configuration](../../eslint.config.js), and [CI workflow](../../.github/workflows/ci.yml). |
+| QUAL-02 | Tauri host changes must pass Rust formatting, compilation, and Clippy across all targets and features with warnings treated as errors. | Enforced | `task check:rust` owns the commands, and the three-OS CI matrix requires them. See the [Taskfile](../../Taskfile.yml) and [CI workflow](../../.github/workflows/ci.yml).                                                                                                                      |
+| QUAL-03 | Release tags must match both application version sources, and releases must repeat the complete quality and dependency-audit suite.    | Enforced | See the [release workflow](../../.github/workflows/release.yml), [release check script](../../scripts/check-release.mjs), and [CI/CD policy](../development/CI-CD.md).                                                                                                                        |
+
+No code-coverage percentage, mutation-testing threshold, bundle-size budget,
+or maximum test duration is approved. These remain **unresolved** rather than
+implicit release gates.
