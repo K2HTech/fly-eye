@@ -43,6 +43,10 @@ work](work/active/documentation-system/).
 - Entry workflows: [authentication and
   sessions](workflows/AuthenticationWorkflow.md) and [isolated demo
   trial](workflows/DemoTrialWorkflow.md)
+- Match preparation pages: [dashboard](pages/MatchDashboardPage.md), [create
+  match](pages/CreateMatchPage.md), and [hardware
+  readiness](pages/HardwareReadinessPage.md)
+- [Match-preparation workflow](workflows/MatchPreparationWorkflow.md)
 
 ## Ownership rules
 

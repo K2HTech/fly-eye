@@ -1,6 +1,6 @@
 # Fly Eye Product Requirements
 
-Status: Current product baseline
+Status: Current product baseline with approved implementation gaps
 
 ## Product problem and value
 
@@ -50,8 +50,8 @@ security or data-integrity guarantees.
   or an isolated demo entry.
 - Let an operator create and revisit standalone matches for singles or doubles
   competition.
-- Support the current 3-by-21 and 3-by-15 best-of-three scoring formats,
-  with 3-by-21 as the default during the transition period.
+- Let the operator choose match length independently as one game or best of
+  three games, and choose a 15-point or 21-point target for each game.
 - Guide the operator through camera and calibration readiness before
   monitoring can begin.
 - Present the live-monitoring, synchronized clip-review, evidence, and
@@ -88,8 +88,17 @@ calibration profile to report ready, even though those checks are simulated in
 the current UI. Other invalid status transitions are not permitted.
 
 Singles has one participant per side; doubles has two. The selected scoring
-format remains explicit for the match and is either best-of-three games to 21
-or best-of-three games to 15.
+format remains explicit for the match. Match length is either one game or best
+of three games; the per-game point target is independently either 15 or 21.
+
+Normal match lists are scoped to the signed-in operator. One operator must not
+see another operator's matches merely because they use the same computer. Demo
+matches remain isolated from every normal operator account.
+
+A match becomes completed only through a deliberate **End match** action. One
+line-call decision does not end the match because the operator may return to
+monitoring for later rallies. Umpire-controlled scoring and automatic game or
+match completion are deferred.
 
 ## Success criteria
 
@@ -111,15 +120,21 @@ track objects, infer line calls, or connect to a remote backend. Monitoring,
 review evidence, and recorded results therefore represent the operator journey
 and simulated data rather than a production adjudication system.
 
+Three approved product rules are not yet implemented: match length and point
+target are still coupled into best-of-three presets, local match records are
+still workstation-wide rather than separated by operator, and the live
+workspace does not yet provide **End match**. These are implementation gaps,
+not changes to the approved product rules above.
+
 Future work may replace the local adapters with backend authentication,
 authorization and ownership rules; synchronize matches and results; and add
 real camera, calibration, tracking, and inference integrations. Network DTOs,
 token handling, retries, synchronization policy, and recovery semantics remain
 undefined until those external contracts exist.
 
-Tournament management and additional user roles remain deferred. The product
-owner should decide the eventual organization, venue, and match-ownership
-model before backend integration is specified.
+Tournament management and additional user roles remain deferred. Backend
+integration must preserve operator-separated match lists while defining the
+eventual organization, venue, and tournament ownership model.
 
 ## Evidence
 
