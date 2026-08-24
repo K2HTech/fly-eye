@@ -21,15 +21,15 @@ instructions](../AGENTS.md).
 
 ## Documentation map
 
-| Area        | Responsibility                                                       | Current location                       |
-| ----------- | -------------------------------------------------------------------- | -------------------------------------- |
-| Product     | Product purpose, users, boundaries, and product-wide rules           | [Product requirements](product/PRD.md) |
-| Pages       | Non-obvious business behavior owned by route-level surfaces          | [`pages/`](pages/)                     |
-| Workflows   | Journeys and rules spanning multiple pages                           | [`workflows/`](workflows/)             |
-| Technical   | System boundaries, quality requirements, and significant decisions   | Planned in `technical/`                |
-| Development | Setup and team operating agreements                                  | [`development/`](development/)         |
-| Design      | Approved mockups used as visual references                           | [`design/mockups/`](design/mockups/)   |
-| Work        | Approved active specifications, plans, and historical specifications | [Work documentation](work/README.md)   |
+| Area        | Responsibility                                                       | Current location                                |
+| ----------- | -------------------------------------------------------------------- | ----------------------------------------------- |
+| Product     | Product purpose, users, boundaries, and product-wide rules           | [Product requirements](product/PRD.md)          |
+| Pages       | Non-obvious business behavior owned by route-level surfaces          | [`pages/`](pages/)                              |
+| Workflows   | Journeys and rules spanning multiple pages                           | [`workflows/`](workflows/)                      |
+| Technical   | System boundaries, quality requirements, and significant decisions   | [Technical baseline](technical/ARCHITECTURE.md) |
+| Development | Setup and team operating agreements                                  | [`development/`](development/)                  |
+| Design      | Approved mockups used as visual references                           | [`design/mockups/`](design/mockups/)            |
+| Work        | Approved active specifications, plans, and historical specifications | [Work documentation](work/README.md)            |
 
 Planned locations are deliberately not linked until their canonical documents
 exist. The current backfill is tracked under [documentation-system
@@ -50,6 +50,9 @@ work](work/active/documentation-system/).
 - Line-call pages: [live monitor](pages/LiveMonitor.md), [clip
   review](pages/ClipReview.md), and [decision](pages/DecisionScreen.md)
 - [Line-call review workflow](workflows/LineCallReviewWorkflow.md)
+- Technical baseline: [architecture](technical/ARCHITECTURE.md), [quality
+  requirements](technical/QUALITY-REQUIREMENTS.md), and [architecture decision
+  records](technical/decisions/README.md)
 
 ## Ownership rules
 
