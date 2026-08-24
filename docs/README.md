@@ -21,18 +21,18 @@ instructions](../AGENTS.md).
 
 ## Documentation map
 
-| Area        | Responsibility                                                       | Current location                                      |
-| ----------- | -------------------------------------------------------------------- | ----------------------------------------------------- |
-| Product     | Product purpose, users, boundaries, and product-wide rules           | Planned in `product/PRD.md`                           |
-| Pages       | Non-obvious business behavior owned by route-level surfaces          | Planned in `pages/`                                   |
-| Workflows   | Journeys and rules spanning multiple pages                           | Planned in `workflows/`                               |
-| Technical   | System boundaries, quality requirements, and significant decisions   | Planned in `technical/`                               |
-| Development | Setup and team operating agreements                                  | Current files in this directory; migration is planned |
-| Design      | Approved mockups used as visual references                           | Current `mockups/`; migration is planned              |
-| Work        | Approved active specifications, plans, and historical specifications | [Work documentation](work/README.md)                  |
+| Area        | Responsibility                                                       | Current location                     |
+| ----------- | -------------------------------------------------------------------- | ------------------------------------ |
+| Product     | Product purpose, users, boundaries, and product-wide rules           | Planned in `product/PRD.md`          |
+| Pages       | Non-obvious business behavior owned by route-level surfaces          | Planned in `pages/`                  |
+| Workflows   | Journeys and rules spanning multiple pages                           | Planned in `workflows/`              |
+| Technical   | System boundaries, quality requirements, and significant decisions   | Planned in `technical/`              |
+| Development | Setup and team operating agreements                                  | [`development/`](development/)       |
+| Design      | Approved mockups used as visual references                           | [`design/mockups/`](design/mockups/) |
+| Work        | Approved active specifications, plans, and historical specifications | [Work documentation](work/README.md) |
 
 Planned locations are deliberately not linked until their canonical documents
-exist. The current reorganization is tracked under [documentation-system
+exist. The current backfill is tracked under [documentation-system
 work](work/active/documentation-system/).
 
 ## Ownership rules
@@ -48,13 +48,12 @@ work](work/active/documentation-system/).
 - Documentation changes in the same batch as the behavior or boundary it
   describes.
 
-## Current development documents
+## Development documents
 
-- [Developer guide](development.md)
-- [Branching strategy](branching-strategy.md)
-- [Commit convention](commit-convention.md)
-- [Dependency management](dependency-management.md)
-- [Continuous integration and delivery](ci-cd.md)
+- [Developer guide](development/SETUP.md)
+- [Branching strategy](development/BRANCHING.md)
+- [Commit convention](development/COMMIT-CONVENTION.md)
+- [Dependency management](development/DEPENDENCIES.md)
+- [Continuous integration and delivery](development/CI-CD.md)
 
-These paths remain canonical until the approved development-document migration
-is completed.
+These documents preserve team agreements and non-obvious operational knowledge.

@@ -6,15 +6,15 @@ pull request; contributors do not push directly to them.
 
 ## Branch roles
 
-| Branch | Purpose | Normal source |
-| --- | --- | --- |
-| `main` | Stable, released code | Release PRs from `develop` |
-| `develop` | Integrated work for the next release | Feature and fix PRs |
-| `feature/<name>` | New functionality | Branched from `develop` |
-| `fix/<name>` | Non-urgent defect correction | Branched from `develop` |
-| `docs/<name>` | Documentation-only work | Branched from `develop` |
-| `chore/<name>` | Maintenance work | Branched from `develop` |
-| `hotfix/<name>` | Urgent correction to released code | Branched from `main` |
+| Branch           | Purpose                              | Normal source              |
+| ---------------- | ------------------------------------ | -------------------------- |
+| `main`           | Stable, released code                | Release PRs from `develop` |
+| `develop`        | Integrated work for the next release | Feature and fix PRs        |
+| `feature/<name>` | New functionality                    | Branched from `develop`    |
+| `fix/<name>`     | Non-urgent defect correction         | Branched from `develop`    |
+| `docs/<name>`    | Documentation-only work              | Branched from `develop`    |
+| `chore/<name>`   | Maintenance work                     | Branched from `develop`    |
+| `hotfix/<name>`  | Urgent correction to released code   | Branched from `main`       |
 
 Use lowercase, hyphen-separated branch names, such as
 `feature/camera-calibration` or `fix/empty-video-selection`.
@@ -30,7 +30,7 @@ git switch -c feature/camera-calibration
 ```
 
 Make focused commits that follow the
-[commit convention](commit-convention.md). Before pushing, run the same checks
+[commit convention](COMMIT-CONVENTION.md). Before pushing, run the same checks
 used by CI:
 
 ```bash

@@ -16,7 +16,7 @@ Install:
 - The [platform-specific Tauri prerequisites](https://v2.tauri.app/start/prerequisites/).
 
 For dependency installation details and native Linux packages, see
-[dependency management](dependency-management.md).
+[dependency management](DEPENDENCIES.md).
 
 ## First setup
 
@@ -85,7 +85,7 @@ Create topic branches from `develop` and open a pull request back into
 released-code fixes use `hotfix/<name>` from `main` and are subsequently
 backported to `develop`.
 
-Write [Conventional Commits](commit-convention.md), enable the repository hook,
+Write [Conventional Commits](COMMIT-CONVENTION.md), enable the repository hook,
 and run `task check` before requesting review. See the complete
-[branching and review strategy](branching-strategy.md) for merge authority,
+[branching and review strategy](BRANCHING.md) for merge authority,
 release, and hotfix rules.
