@@ -48,6 +48,8 @@ inference integrations are also outside the current repository.
 
 Project development guidelines:
 
+- [Documentation map](docs/README.md) — Product, workflow, technical,
+  development, and active-work context for humans and coding agents.
 - [Developer guide](docs/development.md) — Setup, tasks, previews, and the
   simulated three-screen workflow.
 - [Commit convention](docs/commit-convention.md) — Commit message format and
