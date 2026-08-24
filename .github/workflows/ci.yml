@@ -15,12 +15,16 @@ permissions:
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Editing PR metadata must not cancel checks already running for its commit.
+  cancel-in-progress: ${{ github.event.action != 'edited' }}
 
 jobs:
   commits:
     name: Commit convention
-    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    if: >-
+      github.event_name == 'push' ||
+      (github.event_name == 'pull_request' &&
+        (github.event.action != 'edited' || github.event.changes.title != null))
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -55,7 +59,9 @@ jobs:
 
   quality:
     name: Web and Tauri quality (${{ matrix.os }})
-    if: github.event_name != 'schedule'
+    if: >-
+      github.event_name != 'schedule' &&
+      (github.event_name != 'pull_request' || github.event.action != 'edited')
     strategy:
       fail-fast: false
       matrix:
@@ -108,7 +114,10 @@ jobs:
 
   quality-gate:
     name: Quality
-    if: github.event_name != 'schedule' && always()
+    if: >-
+      always() &&
+      github.event_name != 'schedule' &&
+      (github.event_name != 'pull_request' || github.event.action != 'edited')
     needs: quality
     runs-on: ubuntu-22.04
     steps:
@@ -119,6 +128,7 @@ jobs:
 
   security:
     name: Dependency vulnerabilities
+    if: github.event_name != 'pull_request' || github.event.action != 'edited'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
