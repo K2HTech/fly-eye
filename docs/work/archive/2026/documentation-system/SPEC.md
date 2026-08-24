@@ -1,6 +1,26 @@
 # Fly Eye Documentation System Specification
 
-Status: Approved
+Status: Implemented
+
+Completed: 2026-08-24
+
+## Delivery record
+
+The documentation system was delivered in reviewable batches through these
+commits:
+
+- `756a872` — establish documentation entry points
+- `6aa3d53` — reorganize development and design references
+- `6ed8493` — document product entry and demo behavior
+- `e256fe8` — document match preparation
+- `08e3f61` — document the line-call workflow
+- `8d40cb9` — record technical boundaries, quality requirements, and decisions
+
+Two product clarifications discovered during backfill were recorded as current
+rules and implementation gaps: match length and point target are independent,
+and line-call verdicts are limited to IN and OUT. The structure and lifecycle
+defined by this specification were otherwise delivered without material
+deviation.
 
 ## 1. Purpose
 

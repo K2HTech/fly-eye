@@ -32,8 +32,11 @@ proposed commits.
 
 Current active work:
 
-- [Documentation system specification](active/documentation-system/SPEC.md)
-- [Documentation system plan](active/documentation-system/PLAN.md)
+- None.
+
+Completed historical specifications:
+
+- [Documentation system](archive/2026/documentation-system/SPEC.md)
 
 ## Approval rules
 

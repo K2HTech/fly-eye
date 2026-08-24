@@ -13,7 +13,8 @@ external boundaries unless an approved specification changes that scope.
 2. Read the product PRD when the task affects product-wide behavior.
 3. Read the document for each route-level page affected by the task.
 4. Read workflows linked by those page documents.
-5. Read applicable technical requirements and architecture decisions.
+5. Read applicable architecture, quality requirements, and architecture
+   decisions.
 6. For planned work, read its approved `SPEC.md` and `PLAN.md` under
    `docs/work/active/` before editing.
 
@@ -61,7 +62,7 @@ task setup        # Install locked npm dependencies and cargo-audit
 task dev          # Start the browser development server
 task desktop:run  # Start the native Tauri application
 task check:quality
-task check        # Full local CI-equivalent validation
+task check        # Full local quality and security validation
 ```
 
 Use the smallest validation appropriate while developing, then run the exact

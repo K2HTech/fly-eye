@@ -26,7 +26,7 @@ time-limited live demo without registration.
 
 - Sign-up and sign-in are the normal account entry paths.
 - **Run the live demo** remains available without registration so a prospective
-  operator can experience the product before subscribing.
+  operator can experience the product before registering.
 - Entering the demo creates one isolated demonstration match and opens its
   hardware-readiness step. It does not expose the normal match dashboard or
   another match.
@@ -68,8 +68,6 @@ time-limited live demo without registration.
 - The current landing copy refers to real match footage while the implemented
   monitor uses simulated court imagery. The approved wording must be resolved
   before production release.
-- Frame-rate, capture-window, confidence, and accuracy values shown as product
-  claims need confirmation as requirements or explicit illustrative targets.
 
 ## Approved implementation gap
 
