@@ -32,7 +32,10 @@ proposed commits.
 
 Current active work:
 
-- None.
+- [Browser camera pairing](active/browser-camera-pairing/SPEC.md) — approved
+  specification, [implementation plan](active/browser-camera-pairing/PLAN.md),
+  and historical [signaling-server
+  handoff](active/browser-camera-pairing/SIGNALING-SERVER-HANDOFF.md).
 
 Completed historical specifications:
 

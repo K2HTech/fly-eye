@@ -46,6 +46,10 @@ instructions](../AGENTS.md).
 - Line-call pages: [live monitor](pages/LiveMonitor.md), [clip
   review](pages/ClipReview.md), and [decision](pages/DecisionScreen.md)
 - [Line-call review workflow](workflows/LineCallReviewWorkflow.md)
+- Active work: [browser camera pairing
+  specification](work/active/browser-camera-pairing/SPEC.md) and
+  [implementation plan](work/active/browser-camera-pairing/PLAN.md), with the
+  [backend signaling handoff](work/active/browser-camera-pairing/SIGNALING-SERVER-HANDOFF.md)
 - Technical baseline: [architecture](technical/ARCHITECTURE.md), [quality
   requirements](technical/QUALITY-REQUIREMENTS.md), and [architecture decision
   records](technical/decisions/README.md)
