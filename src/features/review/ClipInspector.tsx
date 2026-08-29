@@ -50,7 +50,7 @@ export function ClipInspector({
   // for a call; pressing the action starts a fresh deterministic run.
   const [progress, setProgress] = useState(68);
   const [isRunning, setIsRunning] = useState(false);
-  const timerRef = useRef<ReturnType<typeof window.setInterval> | null>(null);
+  const timerRef = useRef<number | null>(null);
   const onDecisionRef = useRef(onDecision);
 
   useEffect(() => {

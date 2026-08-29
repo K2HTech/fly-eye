@@ -10,6 +10,7 @@ import type {
   OperatorProfile,
   Session,
 } from "../domain";
+import type { PairingSession } from "../features/cameras";
 
 export interface AuthenticatedOperator {
   profile: OperatorProfile;
@@ -109,10 +110,16 @@ export interface CameraRegistry {
   prepare(matchId: string): Promise<PreparedCameraPair>;
 }
 
+export interface PairingService {
+  create(matchId: string, cameraId: string): Promise<PairingSession>;
+  cancel(sessionId: string): Promise<void>;
+}
+
 export interface AppServices {
   auth: AuthService;
   matches: MatchRepository;
   readiness: ReadinessService;
   /** Present when the normal backend camera boundary is configured. */
   cameras?: CameraRegistry;
+  pairing?: PairingService;
 }

@@ -10,6 +10,7 @@ import {
   createBackendMatchRepository,
   MemoryCredentialStore,
 } from "./backend";
+import { createBackendPairingClient } from "./browser/cameras";
 import { createHybridAuthService, UnavailableNormalAuthService } from "./auth";
 import { HybridMatchRepository, UnavailableMatchRepository } from "./matches";
 import {
@@ -83,5 +84,6 @@ export function createBrowserAppServices(
       auth.getActiveSessionMode(),
     ),
     cameras: createBackendCameraRegistry({ client }),
+    pairing: createBackendPairingClient(client, environment.signalingUrl),
   };
 }
