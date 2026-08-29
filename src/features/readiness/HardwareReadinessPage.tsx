@@ -13,6 +13,7 @@ import {
   type HardwareReadiness,
   type MatchRecord,
 } from "../../domain";
+import type { CameraRecord, PreparedCameraPair } from "../../services";
 import "./hardware-readiness.css";
 
 const knownGoodCalibrationProfile: CalibrationProfile = {
@@ -86,6 +87,8 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
   const [loadingState, setLoadingState] = useState<LoadingState>("loading");
   const [match, setMatch] = useState<MatchRecord | null>(null);
   const [readiness, setReadiness] = useState<HardwareReadiness | null>(null);
+  const [cameraPair, setCameraPair] = useState<PreparedCameraPair | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [pendingControl, setPendingControl] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [showDemoTrialDialog, setShowDemoTrialDialog] = useState(false);
@@ -93,11 +96,23 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
   useEffect(() => {
     let active = true;
 
+    const isBackendSession = session.identity?.session.mode === "backend";
+    const preparedCameras = isBackendSession
+      ? services.cameras
+        ? services.cameras.prepare(matchId)
+        : Promise.reject(
+            new Error(
+              "Camera setup is unavailable. Check the public endpoint configuration.",
+            ),
+          )
+      : Promise.resolve(null);
+
     void Promise.all([
       services.matches.get(matchId),
       services.readiness.get(matchId),
+      preparedCameras,
     ])
-      .then(([record, savedReadiness]) => {
+      .then(([record, savedReadiness, pair]) => {
         if (!active) return;
         if (!record) {
           setLoadingState("not-found");
@@ -105,17 +120,30 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
         }
         setMatch(record);
         setReadiness(savedReadiness);
+        setCameraPair(pair);
+        setLoadError(null);
         setLoadingState("ready");
       })
-      .catch(() => {
+      .catch((error: unknown) => {
         if (!active) return;
+        setLoadError(
+          error instanceof Error
+            ? error.message
+            : "The saved match setup could not be loaded.",
+        );
         setLoadingState("error");
       });
 
     return () => {
       active = false;
     };
-  }, [matchId, services.matches, services.readiness]);
+  }, [
+    matchId,
+    services.cameras,
+    services.matches,
+    services.readiness,
+    session.identity?.session.mode,
+  ]);
 
   const saveCamera = async (camera: CameraKey, status: CameraStatus) => {
     if (!readiness || pendingControl) return;
@@ -232,7 +260,7 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
   if (loadingState === "error" || !match || !readiness) {
     return (
       <ReadinessMessage title="Readiness unavailable">
-        The saved match setup could not be loaded.
+        {loadError ?? "The saved match setup could not be loaded."}
         <button type="button" onClick={() => navigate(routePaths.matches)}>
           Return to match dashboard
         </button>
@@ -301,8 +329,9 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
         <div className="readiness__grid">
           <CameraCard
             camera="cameraA"
-            label="Camera A"
-            location="Sideline"
+            label={cameraPair ? "Left camera" : "Camera A"}
+            location={cameraPair ? "Sideline left" : "Sideline"}
+            cameraRecord={cameraPair?.left}
             pending={pendingControl === "cameraA"}
             readiness={readiness.cameraA}
             disabled={isBusy}
@@ -310,8 +339,9 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
           />
           <CameraCard
             camera="cameraB"
-            label="Camera B"
-            location="Baseline"
+            label={cameraPair ? "Right camera" : "Camera B"}
+            location={cameraPair ? "Sideline right" : "Baseline"}
+            cameraRecord={cameraPair?.right}
             pending={pendingControl === "cameraB"}
             readiness={readiness.cameraB}
             disabled={isBusy}
@@ -413,6 +443,7 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
 
 interface CameraCardProps {
   camera: CameraKey;
+  cameraRecord?: CameraRecord;
   disabled: boolean;
   label: string;
   location: string;
@@ -423,6 +454,7 @@ interface CameraCardProps {
 
 function CameraCard({
   camera,
+  cameraRecord,
   disabled,
   label,
   location,
@@ -451,10 +483,18 @@ function CameraCard({
         </div>
         <div>
           <dt>Target stream</dt>
-          <dd>1280×720 · 120 fps</dd>
+          <dd>
+            {cameraRecord
+              ? `${cameraRecord.resolution.width}×${cameraRecord.resolution.height} · ${cameraRecord.targetFps} fps`
+              : "1280×720 · 120 fps"}
+          </dd>
         </div>
       </dl>
-      <p>{readiness.message ?? statusDescriptions[readiness.status]}</p>
+      <p>
+        {readiness.message ?? statusDescriptions[readiness.status]}
+        {cameraRecord &&
+          " Camera records are saved to Fly Eye; connection checks remain simulated until camera pairing is available."}
+      </p>
       <div className="readiness__device-actions">
         <button
           type="button"

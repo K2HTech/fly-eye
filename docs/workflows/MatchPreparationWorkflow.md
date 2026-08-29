@@ -11,7 +11,7 @@ documented by [MatchDashboardPage](../pages/MatchDashboardPage.md),
 ## Actors and entry conditions
 
 - A normal signed-in operator enters through the match dashboard and may create
-  or resume locally available matches.
+  or resume backend-authorized matches.
 - A demo operator bypasses the dashboard and receives one automatically
   generated match. Its ownership and restrictions are defined by the
   [demo-trial workflow](DemoTrialWorkflow.md).
@@ -20,16 +20,18 @@ documented by [MatchDashboardPage](../pages/MatchDashboardPage.md),
 
 ## Normal match preparation
 
-1. The dashboard presents locally available matches or a first-match entry
+1. The dashboard presents backend-owned matches or a first-match entry
    when none exist.
 2. The operator may resume an existing match according to its current status or
    begin creating a new standalone match.
 3. Match creation establishes the event, court, competition type,
    participants, and scoring format before anything is persisted.
-4. Successful creation stores a draft match and continues to hardware
+4. Successful creation creates a backend draft match and continues to hardware
    readiness. Cancellation before creation returns to the dashboard without
    creating a match.
-5. The operator completes both camera checks and selects a calibration profile.
+5. Readiness obtains exactly one backend left-sideline and one right-sideline
+   device-camera record, then the operator completes the still-simulated
+   camera checks and selects a calibration profile.
    Each successful readiness update is retained independently.
 6. Monitoring remains blocked until the complete readiness gate succeeds.
 7. Starting monitoring advances the match through valid ready and live states,
@@ -41,9 +43,11 @@ documented by [MatchDashboardPage](../pages/MatchDashboardPage.md),
   side.
 - Match length is independently one game or best of three games. The per-game
   point target is independently 15 or 21.
-- A normal match belongs to the operator who created it, and normal operators
-  using the same computer have separate match lists. A demo match belongs only
-  to its isolated demo session.
+- A normal match belongs to the backend-authorized operator. A demo match
+  belongs only to its isolated demo session.
+- The backend does not yet store scoring fields. The UI locally supplements a
+  backend UUID with match length and point target; an unknown backend match
+  defaults to best-of-three/21 until backend scoring synchronization is added.
 - Readiness requires both camera paths and one applicable calibration profile.
 - Simulated readiness must not be interpreted as connected physical hardware.
 
@@ -78,15 +82,11 @@ completion based on games won are deferred.
   progress.
 - Failure to enter monitoring leaves the operator at readiness with an
   actionable retry path.
-- A missing local match returns a normal operator to the dashboard rather than
+- A missing or unavailable backend match returns a normal operator to the dashboard rather than
   opening a mismatched workspace.
 
 ## Approved implementation gaps
 
-- The current creation form couples match length and point target into 3x21 and
-  3x15 presets.
-- The current local match repository is workstation-wide rather than separated
-  by operator.
 - The current live workspace has no **End match** action.
 
 These gaps require a separate approved feature specification; they are not
@@ -94,11 +94,10 @@ silently implemented as part of this documentation batch.
 
 ## Deferred ownership
 
-The future backend must preserve operator ownership while defining how
+The backend must continue to preserve operator ownership while defining how
 organizations, venues, and tournaments may share access; who may create, edit,
-resume, or close a match; how local records synchronize; and what happens when
-local and remote state disagree. Until that contract exists, local availability
-must not be presented as production authorization.
+resume, or close a match; how the local scoring supplement synchronizes; and
+what happens when local and remote state disagree.
 
 The future end-match feature must also decide whether completion immediately
 opens a match summary, returns to the dashboard, or remains on the live

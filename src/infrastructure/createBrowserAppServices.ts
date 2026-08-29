@@ -5,11 +5,17 @@ import {
 import type { AppServices } from "../services";
 import {
   createBackendAuthService,
+  createBackendCameraRegistry,
   createBackendHttpClient,
+  createBackendMatchRepository,
   MemoryCredentialStore,
 } from "./backend";
 import { createHybridAuthService, UnavailableNormalAuthService } from "./auth";
-import { createLocalAppServices } from "./local";
+import { HybridMatchRepository, UnavailableMatchRepository } from "./matches";
+import {
+  createLocalAppServices,
+  createSupplementalScoringStore,
+} from "./local";
 import type { StorageLike } from "./local";
 
 type FetchLike = (
@@ -30,28 +36,52 @@ export function createBrowserAppServices(
 ): AppServices {
   const local = createLocalAppServices(storage, { now: options.now });
   const environment = options.environment ?? getRuntimeEnvironment();
+  if (environment.status !== "available") {
+    const auth = createHybridAuthService(
+      new UnavailableNormalAuthService(
+        "Backend authentication is unavailable. Check the public endpoint configuration.",
+      ),
+      local.auth,
+    );
+    return {
+      ...local,
+      auth,
+      matches: new HybridMatchRepository(
+        new UnavailableMatchRepository(),
+        local.matches,
+        () => auth.getActiveSessionMode(),
+      ),
+    };
+  }
 
-  const normalAuth =
-    environment.status === "available"
-      ? (() => {
-          const credentials = new MemoryCredentialStore();
-          const client = createBackendHttpClient({
-            baseUrl: environment.apiBaseUrl,
-            credentials,
-            fetchImpl: options.fetchImpl,
-          });
-          return createBackendAuthService({
-            client,
-            credentials,
-            now: options.now,
-          });
-        })()
-      : new UnavailableNormalAuthService(
-          "Backend authentication is unavailable. Check the public endpoint configuration.",
-        );
+  const credentials = new MemoryCredentialStore();
+  const client = createBackendHttpClient({
+    baseUrl: environment.apiBaseUrl,
+    credentials,
+    fetchImpl: options.fetchImpl,
+  });
+  const auth = createHybridAuthService(
+    createBackendAuthService({
+      client,
+      credentials,
+      now: options.now,
+    }),
+    local.auth,
+  );
+  const scoring = createSupplementalScoringStore(storage, { now: options.now });
+  const normalMatches = createBackendMatchRepository({
+    client,
+    readiness: local.readiness,
+    scoring,
+    now: options.now,
+  });
 
   return {
     ...local,
-    auth: createHybridAuthService(normalAuth, local.auth),
+    auth,
+    matches: new HybridMatchRepository(normalMatches, local.matches, () =>
+      auth.getActiveSessionMode(),
+    ),
+    cameras: createBackendCameraRegistry({ client }),
   };
 }

@@ -6,6 +6,7 @@ import type {
 } from "../../services";
 
 type SessionSource = "normal" | "demo";
+export type ActiveSessionMode = "backend" | "demo";
 
 /**
  * Keeps production authentication and the anonymous demo on separate service
@@ -70,14 +71,24 @@ export class HybridAuthService implements AuthService {
     this.activeSource = null;
   }
 
+  getActiveSessionMode(): ActiveSessionMode | null {
+    if (this.activeSource === "normal") return "backend";
+    return this.activeSource;
+  }
+
   onSessionInvalidated(listener: () => void): () => void {
-    return this.normal.onSessionInvalidated?.(listener) ?? (() => undefined);
+    return (
+      this.normal.onSessionInvalidated?.(() => {
+        this.activeSource = null;
+        listener();
+      }) ?? (() => undefined)
+    );
   }
 }
 
 export function createHybridAuthService(
   normal: AuthService,
   demo: AuthService,
-): AuthService {
+): HybridAuthService {
   return new HybridAuthService(normal, demo);
 }

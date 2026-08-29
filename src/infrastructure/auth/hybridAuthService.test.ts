@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 
 import type { AuthenticatedOperator, AuthService } from "../../services";
-import { createHybridAuthService } from "./hybridAuthService";
+import {
+  HybridAuthService,
+  createHybridAuthService,
+} from "./hybridAuthService";
 
 const normalIdentity: AuthenticatedOperator = {
   profile: {
@@ -114,5 +117,31 @@ describe("HybridAuthService", () => {
     expect(demo.startDemoTrial).toHaveBeenCalledOnce();
     expect(demo.signOut).toHaveBeenCalledOnce();
     expect(normal.signOut).not.toHaveBeenCalled();
+  });
+
+  it("exposes the active repository mode and clears it on invalidation", async () => {
+    let invalidate: (() => void) | undefined;
+    const normal = authService({
+      onSessionInvalidated: (listener) => {
+        invalidate = listener;
+        return () => {
+          invalidate = undefined;
+        };
+      },
+    });
+    const service = new HybridAuthService(normal, authService());
+    const notified = vi.fn();
+    service.onSessionInvalidated(notified);
+
+    await service.signIn({
+      email: "operator@example.com",
+      password: "password-secret",
+    });
+    expect(service.getActiveSessionMode()).toBe("backend");
+
+    invalidate?.();
+
+    expect(service.getActiveSessionMode()).toBeNull();
+    expect(notified).toHaveBeenCalledOnce();
   });
 });

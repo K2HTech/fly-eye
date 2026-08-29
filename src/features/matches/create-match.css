@@ -421,6 +421,33 @@
   font-size: 0.72rem;
 }
 
+.create-match__format-groups {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.create-match__format-group {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid #303c4d;
+  border-radius: 8px;
+  background: rgb(13 20 31 / 62%);
+}
+
+.create-match__format-group legend {
+  padding: 0 4px;
+  color: #aebbd0;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .create-match__format-options {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -621,6 +648,7 @@
   }
 
   .create-match__format,
+  .create-match__format-groups,
   .create-match__format-options {
     grid-column: auto;
     grid-template-columns: 1fr;

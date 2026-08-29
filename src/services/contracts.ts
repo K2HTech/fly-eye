@@ -80,8 +80,39 @@ export interface ReadinessService {
   ): Promise<HardwareReadiness>;
 }
 
+export type CameraRole = "SIDELINE_LEFT" | "SIDELINE_RIGHT";
+
+export interface CameraRecord {
+  readonly id: string;
+  readonly matchId: string;
+  readonly name: string;
+  readonly role: CameraRole;
+  readonly sourceType: "device";
+  readonly sourceRef: string;
+  readonly resolution: {
+    readonly width: number;
+    readonly height: number;
+  };
+  readonly targetFps: number;
+  readonly isActive: boolean;
+  readonly calibration: Record<string, unknown> | null;
+  readonly createdAt: string;
+}
+
+export interface PreparedCameraPair {
+  readonly left: CameraRecord;
+  readonly right: CameraRecord;
+}
+
+export interface CameraRegistry {
+  list(matchId: string): Promise<CameraRecord[]>;
+  prepare(matchId: string): Promise<PreparedCameraPair>;
+}
+
 export interface AppServices {
   auth: AuthService;
   matches: MatchRepository;
   readiness: ReadinessService;
+  /** Present when the normal backend camera boundary is configured. */
+  cameras?: CameraRegistry;
 }
