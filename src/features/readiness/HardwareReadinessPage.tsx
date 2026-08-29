@@ -14,6 +14,8 @@ import {
   type MatchRecord,
 } from "../../domain";
 import type { CameraRecord, PreparedCameraPair } from "../../services";
+import type { PairingSession } from "../cameras";
+import { CameraPairingDialog } from "./CameraPairingDialog";
 import "./hardware-readiness.css";
 
 const knownGoodCalibrationProfile: CalibrationProfile = {
@@ -92,6 +94,7 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
   const [pendingControl, setPendingControl] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [showDemoTrialDialog, setShowDemoTrialDialog] = useState(false);
+  const [pairing, setPairing] = useState<PairingSession | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -182,6 +185,34 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
       );
     } finally {
       setPendingControl(null);
+    }
+  };
+
+  const openPairing = async (camera: CameraRecord) => {
+    if (!services.pairing || pendingControl) return;
+    setPendingControl(camera.id);
+    setActionError(null);
+    try {
+      setPairing(await services.pairing.create(matchId, camera.id));
+    } catch {
+      setActionError(
+        "Unable to create a camera pairing code. Please try again.",
+      );
+    } finally {
+      setPendingControl(null);
+    }
+  };
+
+  const cancelPairing = async () => {
+    const current = pairing;
+    setPairing(null);
+    if (!current || !services.pairing) return;
+    try {
+      await services.pairing.cancel(current.sessionId);
+    } catch {
+      setActionError(
+        "The pairing code could not be cancelled. It will expire shortly.",
+      );
     }
   };
 
@@ -332,6 +363,11 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
             label={cameraPair ? "Left camera" : "Camera A"}
             location={cameraPair ? "Sideline left" : "Sideline"}
             cameraRecord={cameraPair?.left}
+            onPair={
+              cameraPair?.left
+                ? () => void openPairing(cameraPair.left)
+                : undefined
+            }
             pending={pendingControl === "cameraA"}
             readiness={readiness.cameraA}
             disabled={isBusy}
@@ -342,6 +378,11 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
             label={cameraPair ? "Right camera" : "Camera B"}
             location={cameraPair ? "Sideline right" : "Baseline"}
             cameraRecord={cameraPair?.right}
+            onPair={
+              cameraPair?.right
+                ? () => void openPairing(cameraPair.right)
+                : undefined
+            }
             pending={pendingControl === "cameraB"}
             readiness={readiness.cameraB}
             disabled={isBusy}
@@ -437,6 +478,19 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
           </section>
         </div>
       )}
+      {pairing && (
+        <CameraPairingDialog
+          pairing={pairing}
+          onCancel={() => void cancelPairing()}
+          onRegenerate={() => {
+            const camera =
+              cameraPair?.left.id === pairing.cameraId
+                ? cameraPair.left
+                : cameraPair?.right;
+            void cancelPairing().then(() => camera && openPairing(camera));
+          }}
+        />
+      )}
     </section>
   );
 }
@@ -450,6 +504,7 @@ interface CameraCardProps {
   pending: boolean;
   readiness: CameraReadiness;
   onChange: (status: CameraStatus) => void;
+  onPair?: () => void;
 }
 
 function CameraCard({
@@ -461,6 +516,7 @@ function CameraCard({
   pending,
   readiness,
   onChange,
+  onPair,
 }: CameraCardProps) {
   return (
     <article
@@ -496,6 +552,11 @@ function CameraCard({
           " Camera records are saved to Fly Eye; connection checks remain simulated until camera pairing is available."}
       </p>
       <div className="readiness__device-actions">
+        {onPair && (
+          <button type="button" disabled={disabled} onClick={onPair}>
+            Pair phone
+          </button>
+        )}
         <button
           type="button"
           disabled={disabled}
