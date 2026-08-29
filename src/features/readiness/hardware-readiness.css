@@ -460,6 +460,23 @@
   margin-top: 28px;
 }
 
+.readiness__qr {
+  display: grid;
+  width: min(100%, 280px);
+  aspect-ratio: 1;
+  place-items: center;
+  margin: 22px auto;
+  padding: 14px;
+  border-radius: 12px;
+  background: #f4f8ff;
+}
+
+.readiness__qr svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 .readiness__dialog-actions button {
   min-height: 44px;
   padding: 0 17px;

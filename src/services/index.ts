@@ -7,6 +7,7 @@ export type {
   CameraRole,
   CreateMatchInput,
   MatchRepository,
+  PairingService,
   PreparedCameraPair,
   ReadinessService,
   RegistrationInput,
