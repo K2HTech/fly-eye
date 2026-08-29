@@ -68,11 +68,3 @@ time-limited live demo without registration.
 - The current landing copy refers to real match footage while the implemented
   monitor uses simulated court imagery. The approved wording must be resolved
   before production release.
-
-## Approved implementation gap
-
-The current landing page advertises an `INCONCLUSIVE` outcome inherited from
-an earlier redesign. The approved product supports only **IN** and **OUT**,
-with the evidence assisting an umpire who retains final authority. The
-conflicting landing content must be removed or replaced in a separate UI
-feature.
