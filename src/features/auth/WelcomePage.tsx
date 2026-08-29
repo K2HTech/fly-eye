@@ -27,10 +27,10 @@ const systemMetrics = [
     "Recent footage is ready before the operator presses capture.",
   ],
   [
-    "03",
+    "02",
     "",
     "Decision outcomes",
-    "IN, OUT, or INCONCLUSIVE keeps every result unambiguous.",
+    "IN or OUT, supported by clear evidence for the umpire.",
   ],
 ] as const;
 
@@ -342,22 +342,22 @@ export function WelcomePage() {
             Confidence earned.
           </h2>
           <p className="landing-trust__lead">
-            When the evidence is unclear, FLY EYE returns INCONCLUSIVE with a
-            plain-language reason instead of pretending to know.
+            FLY EYE presents the available evidence and confidence clearly,
+            helping the umpire make the final IN or OUT call.
           </p>
         </div>
         <div className="landing-trust__panel" aria-label="Decision principles">
           <div>
-            <span>Occluded landing</span>
-            <strong>Explain</strong>
+            <span>Available evidence</span>
+            <strong>Clearly shown</strong>
           </div>
           <div>
-            <span>Uncalibrated area</span>
-            <strong>Inconclusive</strong>
+            <span>Decision support</span>
+            <strong>IN or OUT</strong>
           </div>
           <div>
-            <span>Supporting evidence</span>
-            <strong>Always visible</strong>
+            <span>Final authority</span>
+            <strong>Umpire</strong>
           </div>
         </div>
       </section>
