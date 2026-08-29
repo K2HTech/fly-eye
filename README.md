@@ -11,8 +11,8 @@ tracking, and inference are external system boundaries.
 - `src/domain/` — UI-facing models and framework-independent workflow rules.
 - `src/features/` — Auth, matches, readiness, live monitoring, review, and
   decision screens. Tests and feature styles live beside their components.
-- `src/infrastructure/` — Replaceable adapters, currently including versioned
-  browser storage for the local UI implementation.
+- `src/infrastructure/` — Replaceable backend and versioned browser-storage
+  adapters.
 - `src/services/` — Contracts between the UI and infrastructure adapters.
 - `src/assets/` — Application icons and locally bundled fonts.
 - `src-tauri/` — Tauri v2 Rust host, capabilities, icons, and desktop
@@ -35,16 +35,15 @@ task check        # Local quality and security checks
 ```
 
 The app uses hash routes so navigation behaves consistently in browsers and the
-Tauri webview. It restores versioned local UI data before opening protected
-routes. Signed-out users can create an account-shaped local profile, sign in,
-or run an isolated demo without registration. Demo setup is untimed; the
-15-minute trial begins only after the operator confirms **Start monitoring**.
-Each demo session is restricted to its generated match.
+Tauri webview. Normal registration and sign-in use the Fly Eye backend, with
+access and refresh tokens kept in memory only. The anonymous demo remains local
+and requires no registration. Demo setup is untimed; the 15-minute trial begins
+only after the operator confirms **Start monitoring**, and each demo session is
+restricted to its generated match.
 
-Authentication and match persistence are local adapters prepared for future
-backend replacement. Passwords are intentionally neither stored nor verified
-in this UI-only implementation. Camera capture, calibration, tracking, and
-inference integrations are also outside the current repository.
+Match persistence remains local until its approved backend-integration batch.
+Camera capture, calibration, tracking, and inference integrations are also
+outside the current repository.
 
 Project development guidelines:
 

@@ -14,7 +14,6 @@ async function renderWorkflow(pathFor: (matchId: string) => string) {
     now: () => new Date().toISOString(),
   });
   await services.auth.register({
-    displayName: "Test Operator",
     email: "operator@example.com",
     password: "test-password",
     passwordConfirmation: "test-password",

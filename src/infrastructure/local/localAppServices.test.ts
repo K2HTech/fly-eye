@@ -89,14 +89,13 @@ describe("local authentication service", () => {
   it("registers and restores only persistence-safe identity data", async () => {
     const { services, storage } = setup();
     const identity = await services.auth.register({
-      displayName: "Khoa Tran",
       email: " KHOA@example.com ",
       password: "NeverStoreThis!",
       passwordConfirmation: "NeverStoreThis!",
     });
 
     expect(identity.profile).toMatchObject({
-      displayName: "Khoa Tran",
+      displayName: "khoa@example.com",
       email: "khoa@example.com",
     });
     expect(await services.auth.getCurrentSession()).toEqual(identity);
@@ -110,7 +109,6 @@ describe("local authentication service", () => {
   it("signs out without deleting profiles or matches", async () => {
     const { services, storage } = setup();
     await services.auth.register({
-      displayName: "Khoa Tran",
       email: "khoa@example.com",
       password: "temporary",
       passwordConfirmation: "temporary",
@@ -196,7 +194,6 @@ describe("local authentication service", () => {
   it("rejects an email that does not match a local profile", async () => {
     const { services } = setup();
     await services.auth.register({
-      displayName: "Khoa",
       email: "khoa@example.com",
       password: "temporary",
       passwordConfirmation: "temporary",
@@ -264,7 +261,6 @@ describe("local authentication service", () => {
     });
     await expect(
       services.auth.register({
-        displayName: "Khoa",
         email: "khoa@example.com",
         password: "discarded",
         passwordConfirmation: "discarded",
@@ -276,7 +272,9 @@ describe("local authentication service", () => {
         email: "khoa@example.com",
         password: "discarded",
       }),
-    ).resolves.toMatchObject({ profile: { displayName: "Khoa" } });
+    ).resolves.toMatchObject({
+      profile: { displayName: "khoa@example.com" },
+    });
   });
 
   it("clears a malformed session independently", async () => {

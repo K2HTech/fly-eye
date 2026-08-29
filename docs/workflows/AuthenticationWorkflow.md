@@ -32,28 +32,34 @@ These access rules apply in both the browser and the Tauri desktop application.
 
 ## Normal registration and sign-in
 
-1. A prospective operator submits the registration information described by
-   [RegisterPage](../pages/RegisterPage.md). Accepted registration creates an
-   operator identity and starts a simulated session.
-2. A returning operator submits the sign-in information described by
-   [SignInPage](../pages/SignInPage.md). Accepted sign-in starts a simulated
-   session for the matching local operator identity.
+1. A prospective operator submits the email and password information described
+   by [RegisterPage](../pages/RegisterPage.md). The backend creates the account,
+   then the client signs in to establish the normal session.
+2. A returning operator submits the email and password information described by
+   [SignInPage](../pages/SignInPage.md). The backend verifies the credentials and
+   issues the normal session tokens.
 3. Either successful path enters the match workspace. Invalid input or a
    rejected operation leaves the visitor anonymous and allows a safe retry.
-4. Sign-out ends the session and returns to welcome. It does not delete the
-   local operator profile or that profile's locally available matches.
+4. Sign-out revokes the refresh token on a best-effort basis, clears the
+   in-memory credentials, and returns to welcome.
 
-The current local adapter normalizes email for matching. Its account-shaped
-registration behavior may update an existing local profile with the same email;
-duplicate-account policy is intentionally deferred to the future backend.
+The backend normalizes email addresses and rejects duplicate registration with a
+structured error. The browser-only client keeps access and refresh tokens in
+memory; refreshing or closing the browser requires the operator to sign in
+again.
 
 ## Authentication boundary
 
-The current provider is a local simulation for exercising the product journey,
-not production authentication. It does not establish a remote account or
-securely verify a production credential. A future backend provider will own
-credential verification, account recovery, authorization, and remote failure
-semantics behind the same replaceable application boundary.
+Normal registration and sign-in use the backend authentication provider. It
+owns account creation, credential verification, authorization, refresh-token
+rotation, and remote failure semantics behind the replaceable application
+boundary. The local provider remains for the isolated anonymous demo journey
+and must not be presented as secure authentication.
+
+Protected requests use the in-memory access token. Concurrent unauthorized
+responses share one refresh operation; a successful rotation replaces both
+tokens and retries each request once. A failed refresh clears credentials and
+returns the operator to public entry.
 
 The [PRD's product-wide security invariant](../product/PRD.md#sessions-and-authentication)
 applies throughout this workflow. In particular, rejected operations must not
@@ -61,18 +67,19 @@ create a session, and password input must be discarded after rejection.
 
 ## Recovery and unresolved integration work
 
-If restored session data is absent, invalid, expired, or no longer has a local
-profile, the application treats the visitor as anonymous and returns to public
-entry. A sign-out failure leaves the session visible so the operator can retry
-and does not silently claim that access ended.
+If the in-memory normal credentials are absent, expired, invalid, or rejected
+by the backend, the application treats the visitor as anonymous and returns to
+public entry. A logout network failure is best effort: local credentials are
+still cleared and the operator returns to welcome without exposing raw response
+details. Passwords and tokens are never persisted or logged.
 
-The backend integration must define real credential and duplicate-account
-behavior, account recovery, authorization and ownership, token handling, and
-network error recovery before local simulation can be replaced.
+Account recovery, email verification, and subscription entitlements remain
+outside this workflow.
 
 ## Evidence
 
 Current access and session behavior is covered by the [onboarding integration
 tests](../../src/features/auth/onboarding.integration.test.tsx), [route access
-logic](../../src/app/RouteScreens.tsx), and [local authentication
+logic](../../src/app/RouteScreens.tsx), [backend authentication
+adapter](../../src/infrastructure/backend/auth.ts), and [local demo
 service](../../src/infrastructure/local/localAppServices.ts).

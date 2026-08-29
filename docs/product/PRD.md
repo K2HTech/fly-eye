@@ -10,9 +10,10 @@ play, inspecting synchronized evidence, and recording the resulting call. Its
 value is a clear review journey that helps an operator reach and explain a
 decision without relying on an informal replay process.
 
-The current product is a production-oriented UI demonstration. It makes the
-operator journey concrete while keeping device processing and account services
-replaceable until their external contracts are defined.
+The current product is a production-oriented UI with replaceable service
+adapters. The backend owns normal accounts, while match data remains local
+until the next approved integration batch and device processing remains
+outside this repository until its external contracts are implemented.
 
 ## Target operator
 
@@ -28,15 +29,17 @@ their permissions and workflows are not yet product requirements.
 ## Product scope and boundaries
 
 Fly Eye owns the operator-facing interface and the journey from entry through
-match review. The current release includes local, replaceable adapters so the
-journey can be exercised without a remote service or connected camera system.
+match review. Normal accounts use a replaceable adapter for the remote backend;
+match state, the anonymous demo, and UI-only processing journeys still use
+local adapters until their approved integration batches are delivered.
 
 The following are outside the current product boundary:
 
 - Camera capture, calibration, tracking, shuttle/ball inference, and any other
   physical-device or processing implementation.
-- A remote authentication service, account security boundary, or backend match
-  synchronization.
+- The backend services themselves. Fly Eye currently consumes authentication
+  through an application adapter; approved later batches add match, camera,
+  and pairing adapters without moving server ownership into this repository.
 - Tournament structure, brackets, scheduling, venues, officials, rosters, and
   bulk match creation.
 
@@ -46,7 +49,7 @@ security or data-integrity guarantees.
 
 ## Major capabilities
 
-- Introduce Fly Eye and offer account-shaped sign-up, returning-user sign-in,
+- Introduce Fly Eye and offer backend account sign-up, returning-user sign-in,
   or an isolated demo entry.
 - Let an operator create and revisit standalone matches for singles or doubles
   competition.
@@ -63,12 +66,17 @@ security or data-integrity guarantees.
 
 ### Sessions and authentication
 
-Normal registration and sign-in are local simulations in this release. A
-registration creates an account-shaped local operator profile and session;
-sign-in starts a simulated session subject to the local profile rules. The UI
-must not imply that a secure remote account has been created or that a password
-has been securely verified. Passwords, hashes, tokens, and other authentication
-secrets are never persisted.
+Normal registration and sign-in use the backend authentication service. A
+registration sends an email and 12-to-128-character password, then signs in to
+establish the normal session. Sign-in verifies the same credentials through the
+backend. The browser keeps access and refresh tokens in memory only; a browser
+refresh requires sign-in again during this browser-only phase. Passwords,
+hashes, tokens, and other authentication secrets are never persisted, logged,
+or exposed in UI errors. The backend user has no display name, so the
+authenticated email is the normal operator identity.
+
+The local authentication adapter remains only for the isolated anonymous demo
+path and must not be presented as secure remote authentication.
 
 ### Demo access
 
@@ -119,7 +127,7 @@ path; it must not be recorded as a third verdict.
 The product baseline is successful when an operator can understand the value
 of Fly Eye and complete the full entry-to-decision journey in the UI; when a
 new demo user can begin without registration and is constrained by the stated
-trial rules; when a normal local session can create and resume standalone
+trial rules; when a normal backend session can create and resume standalone
 matches; and when simulated hardware and evidence are clearly presented as
 simulated rather than claimed as live processing.
 
@@ -130,9 +138,10 @@ the Tauri desktop webview.
 ## Current limitations and deferred integrations
 
 The current UI does not capture camera input, calibrate physical devices,
-track objects, infer line calls, or connect to a remote backend. Monitoring,
-review evidence, and recorded results therefore represent the operator journey
-and simulated data rather than a production adjudication system.
+track objects, infer line calls, record evidence, or provide a production
+adjudication system. Monitoring, review evidence, and recorded results still
+represent the operator journey and simulated data until those integrations are
+implemented.
 
 Three approved product rules are not yet implemented: match length and point
 target are still coupled into best-of-three presets, local match records are
@@ -140,11 +149,10 @@ still workstation-wide rather than separated by operator, and the live
 workspace does not yet provide **End match**. These are implementation gaps,
 not changes to the approved product rules above.
 
-Future work may replace the local adapters with backend authentication,
-authorization and ownership rules; synchronize matches and results; and add
-real camera, calibration, tracking, and inference integrations. Network DTOs,
-token handling, retries, synchronization policy, and recovery semantics remain
-undefined until those external contracts exist.
+Future work may add account recovery, email verification, subscription
+entitlements, result synchronization, and real camera, calibration, tracking,
+and inference integrations. Network retries, synchronization policy, and
+processing recovery semantics remain subject to their external contracts.
 
 Tournament management and additional user roles remain deferred. Backend
 integration must preserve operator-separated match lists while defining the
@@ -154,6 +162,7 @@ eventual organization, venue, and tournament ownership model.
 
 The current implementation and behavioral tests provide evidence for this
 baseline, including the [authentication and demo surfaces](../../src/features/auth/WelcomePage.tsx),
+[backend authentication adapter](../../src/infrastructure/backend/auth.ts),
 [demo trial rules](../../src/domain/demoTrial.ts),
 [match transition rules](../../src/domain/matchTransitions.ts), and
 [local-service behavior](../../src/infrastructure/local/localAppServices.ts).

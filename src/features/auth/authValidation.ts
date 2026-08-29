@@ -1,5 +1,4 @@
 export interface RegistrationFormValues {
-  displayName: string;
   email: string;
   password: string;
   passwordConfirmation: string;
@@ -27,7 +26,8 @@ export interface SignInValidation {
   errors: FieldErrors<SignInField>;
 }
 
-const minimumPasswordLength = 8;
+export const minimumPasswordLength = 12;
+export const maximumPasswordLength = 128;
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** Normalizes an email for consistent account lookup. */
@@ -52,6 +52,9 @@ function validatePassword(password: string): string | undefined {
   if (password.length < minimumPasswordLength) {
     return `Use at least ${minimumPasswordLength} characters for the password.`;
   }
+  if (password.length > maximumPasswordLength) {
+    return `Use no more than ${maximumPasswordLength} characters for the password.`;
+  }
   return undefined;
 }
 
@@ -59,12 +62,6 @@ export function validateRegistration(
   values: RegistrationFormValues,
 ): RegistrationValidation {
   const errors: FieldErrors<RegistrationField> = {};
-  const displayName = values.displayName.trim();
-
-  if (!displayName) errors.displayName = "Enter your display name.";
-  else if (displayName.length > 80) {
-    errors.displayName = "Display name must be 80 characters or fewer.";
-  }
 
   const emailError = validateEmail(values.email);
   if (emailError) errors.email = emailError;

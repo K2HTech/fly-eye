@@ -53,9 +53,9 @@ The router has public onboarding routes and session-protected operator routes.
 Session restoration has an explicit intermediate state before access decisions
 are made; this prevents protected content from flashing for an anonymous user.
 The route layer handles anonymous redirects, public-only redirects, demo-match
-isolation, and safe handling of unknown locations. It is an access boundary,
-not an authorization system: the current local adapter does not provide
-server-enforced identity or ownership.
+isolation, and safe handling of unknown locations. It is an access boundary;
+server-enforced identity and ownership remain the responsibility of the backend
+adapter and API.
 
 The authenticated shell owns cross-page session presentation and sign-out, but
 page-specific business rules remain in page and workflow documents. Demo-match
@@ -69,16 +69,17 @@ screens](../../src/app/RouteScreens.tsx), and [authentication workflow](../workf
 ## Persistence boundary
 
 React pages and components must not access browser storage directly. The
-composition layer injects `AppServices`; the current local composition passes a
-storage adapter to versioned local repositories. This allows a future backend
-or native adapter to replace persistence without moving storage concerns into
-product surfaces.
+composition layer injects `AppServices`; the local composition passes a storage
+adapter to versioned local repositories while backend composition owns normal
+remote data. This keeps storage and transport replaceable without moving those
+concerns into product surfaces.
 
 Current local persistence uses schema-versioned envelopes, runtime payload
 validation, safe clearing of malformed or incompatible values, and explicit
-copying at service boundaries. Profiles, sessions, match records, and readiness
-are local UI data. A restart can restore the demonstration workspace, but local
-availability is not proof of durable production ownership or synchronization.
+copying at service boundaries. It remains the storage path for the isolated
+demo workspace and UI-only supplemental data. Normal backend authentication
+tokens are intentionally not persisted; a browser restart cannot restore that
+normal session.
 
 The approved operator-ownership rule is not fully implemented: current local
 match records are workstation-wide rather than separated by normal operator.
@@ -91,20 +92,21 @@ Evidence: [local service composition](../../src/infrastructure/local/localAppSer
 
 ## Security boundary
 
-The current UI-only authentication adapter is intentionally not a security
-boundary. Registration and sign-in exercise the session journey locally, while
-passwords and confirmations remain transient and are excluded from
-persistence-safe models. Security and privacy constraints are owned by the
-[quality requirements](QUALITY-REQUIREMENTS.md).
+Normal registration and sign-in use a backend adapter; the backend API remains
+the authentication and authorization boundary. Access and refresh tokens are
+held in memory for the browser-only client. The adapter coordinates refresh
+rotation, logout, and sanitized remote errors, while the backend verifies
+credentials. Passwords and confirmations remain transient and are excluded
+from persistence-safe models. Security and privacy constraints are owned by
+the [quality requirements](QUALITY-REQUIREMENTS.md).
 
-Production authentication, credential verification, authorization, account
-recovery, token handling, and remote error policy belong to a future backend
-adapter. Until that exists, local session state must be described as simulated
-and must not be presented as a secure account or authorization decision.
+The local authentication adapter remains a demo-only simulation and must not be
+presented as a secure account or authorization decision.
 
-Evidence: [authentication contracts](../../src/services/contracts.ts), [local
-authentication adapter](../../src/infrastructure/local/localAppServices.ts),
-and [authentication workflow](../workflows/AuthenticationWorkflow.md).
+Evidence: [authentication contracts](../../src/services/contracts.ts),
+[backend authentication adapter](../../src/infrastructure/backend/auth.ts),
+[local demo adapter](../../src/infrastructure/local/localAppServices.ts), and
+[authentication workflow](../workflows/AuthenticationWorkflow.md).
 
 ## Hardware and processing boundary
 
@@ -130,12 +132,13 @@ readiness adapter](../../src/infrastructure/local/localAppServices.ts), and
 
 ## Deferred backend seam
 
-The service interfaces are the intended replacement seam for a backend adapter:
-authentication/session operations, match CRUD and status operations, and
-readiness state operations are kept behind application contracts. Backend DTO
-mapping, synchronization and conflict policy, retries, network failures,
-organization/venue ownership, and authorization are intentionally unspecified
-until an external API and product decision exist.
+The service interfaces keep authentication/session operations, match CRUD and
+status operations, and readiness state operations behind application
+contracts. Authentication DTO mapping, token rotation, and authorized retry
+are implemented at the backend adapter boundary. Backend match DTO mapping,
+synchronization and conflict policy, and organization/venue ownership remain
+deferred to the next approved integration batch. The backend server remains an
+external system and its implementation is not part of this repository.
 
 No page should bypass these contracts to call HTTP, Tauri commands, storage, or
 device APIs directly. A future integration may change the adapter and its

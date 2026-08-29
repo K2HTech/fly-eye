@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 
 import App from "./App";
 import { createAppHashRouter } from "./app/router";
-import { createLocalAppServices } from "./infrastructure/local";
+import { createBrowserAppServices } from "./infrastructure/createBrowserAppServices";
 import "./styles.css";
 
 const rootElement = document.getElementById("root");
@@ -13,7 +13,7 @@ if (!rootElement) {
 }
 
 const router = createAppHashRouter();
-const services = createLocalAppServices(window.localStorage);
+const services = createBrowserAppServices(window.localStorage);
 
 createRoot(rootElement).render(
   <StrictMode>

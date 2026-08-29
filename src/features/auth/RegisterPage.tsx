@@ -12,14 +12,12 @@ import {
 } from "./authValidation";
 
 const initialValues: RegistrationFormValues = {
-  displayName: "",
   email: "",
   password: "",
   passwordConfirmation: "",
 };
 
 const fieldOrder: readonly RegistrationField[] = [
-  "displayName",
   "email",
   "password",
   "passwordConfirmation",
@@ -59,7 +57,6 @@ export function RegisterPage() {
     setIsSubmitting(true);
     try {
       await session.register({
-        displayName: values.displayName.trim(),
         email: validation.normalizedEmail,
         password: values.password,
         passwordConfirmation: values.passwordConfirmation,
@@ -84,7 +81,7 @@ export function RegisterPage() {
   return (
     <AuthShell eyebrow="New operator" title="Create your account">
       <p className="auth-shell__lead auth-shell__lead--compact">
-        Set up your operator identity to create and manage matches.
+        Create an account to set up and manage your matches.
       </p>
 
       <form
@@ -92,18 +89,6 @@ export function RegisterPage() {
         noValidate
         onSubmit={(event) => void submit(event)}
       >
-        <AuthInput
-          autoComplete="name"
-          error={errors.displayName}
-          inputRef={(element) => {
-            fields.current.displayName = element;
-          }}
-          label="Display name"
-          name="displayName"
-          onChange={updateField}
-          placeholder="Khoa Tran"
-          value={values.displayName}
-        />
         <AuthInput
           autoComplete="email"
           error={errors.email}
