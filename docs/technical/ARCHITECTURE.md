@@ -138,14 +138,17 @@ the Flutter offer, exchanges trickle ICE, receives a video track and approved
 control channel, samples bounded diagnostics, and closes resources
 idempotently. Mobile and viewer tokens, SDP, ICE candidates, and TURN
 credentials are deliberately excluded from persistence-safe models and browser
-storage. Application lifecycle ownership and UI pairing controls remain later
-integration work.
+storage. An application-level provider now owns the two ephemeral role
+snapshots above same-match readiness, live, review, and decision routes, and
+clears them on sign-out, match switch, workflow exit, or provider teardown.
+UI pairing controls remain later integration work.
 
 Evidence: [readiness service contract](../../src/services/contracts.ts), [local
 readiness adapter](../../src/infrastructure/local/localAppServices.ts),
 [pairing protocol](../../src/features/cameras/protocol.ts), [ephemeral camera
 state model](../../src/features/cameras/sessionModel.ts), [browser camera
-adapter](../../src/infrastructure/browser/cameras), and [line-call review
+adapter](../../src/infrastructure/browser/cameras), [camera lifecycle
+provider](../../src/app/CameraProvider.tsx), and [line-call review
 workflow](../workflows/LineCallReviewWorkflow.md).
 
 ## Deferred backend seam
