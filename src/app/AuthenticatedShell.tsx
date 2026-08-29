@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 
 import { BrandMark } from "../components/BrandMark";
+import { CameraProvider } from "./CameraProvider";
 import { demoTrialRemainingMs } from "../domain";
 import { matchRoutes, routePaths } from "./paths";
 import { useSession } from "./sessionContext";
@@ -153,9 +154,11 @@ export function AuthenticatedShell() {
         </p>
       )}
 
-      <div className="app-shell__content">
-        <Outlet />
-      </div>
+      <CameraProvider>
+        <div className="app-shell__content">
+          <Outlet />
+        </div>
+      </CameraProvider>
     </div>
   );
 }
