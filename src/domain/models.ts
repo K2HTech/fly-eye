@@ -6,7 +6,7 @@
  * adapter boundary and must never be represented by a persisted model.
  */
 
-export type SessionMode = "simulated" | "demo";
+export type SessionMode = "backend" | "simulated" | "demo";
 export type MatchStatus = "draft" | "ready" | "live" | "completed";
 export type CompetitionType = "singles" | "doubles";
 export type CameraStatus = "disconnected" | "connecting" | "ready" | "error";

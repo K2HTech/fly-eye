@@ -19,7 +19,6 @@ export interface AuthenticatedOperator {
 // Credential fields are transient inputs. They must never be passed to a
 // persistence adapter or included in a persistence-safe domain model.
 export interface RegistrationInput {
-  displayName: string;
   email: string;
   password: string;
   passwordConfirmation: string;
@@ -38,6 +37,7 @@ export interface AuthService {
   assignDemoMatch(matchId: string): Promise<AuthenticatedOperator>;
   startDemoTrial(): Promise<AuthenticatedOperator>;
   signOut(): Promise<void>;
+  onSessionInvalidated?(listener: () => void): () => void;
 }
 
 export interface CreateMatchInput {

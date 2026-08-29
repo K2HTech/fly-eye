@@ -10,8 +10,8 @@ Status: Current
 
 ## Purpose
 
-The registration page lets a new operator establish the account identity used
-to create and manage matches.
+The registration page lets a new operator create the backend account used to
+create and manage matches.
 
 ## Actors and entry conditions
 
@@ -22,14 +22,18 @@ to create and manage matches.
 
 ## Business rules
 
-- Registration collects the operator's display name, email, password, and
-  password confirmation.
-- The current UI-only implementation creates a local operator identity; the
-  future backend will own real account creation and credential verification.
-- Credential handling and secret-persistence invariants are owned by the
-  [authentication workflow](../workflows/AuthenticationWorkflow.md).
-- Registration starts an operator session only after the active registration
-  provider accepts the submission.
+- Registration collects an email address, password, and password confirmation.
+- The backend owns account creation and credential verification. The browser
+  sends only the email and password required by the backend registration
+  contract; password confirmation is a transient client-side guard.
+- The backend requires passwords from 12 through 128 characters. The page
+  validates the minimum before making a request.
+- A successful registration is followed by backend login so registration and
+  sign-in produce the same authenticated workspace state.
+- No backend display-name field exists. Normal operator identity is presented
+  using the authenticated email address.
+- Password input and confirmation are cleared after a rejected submission and
+  are never persisted, logged, or included in public error details.
 - Shared registration and session rules are owned by the
   [authentication workflow](../workflows/AuthenticationWorkflow.md).
 
@@ -39,15 +43,16 @@ to create and manage matches.
   sign-in.
 - **Invalid input:** The first actionable problem is identified without an
   account or session being created.
-- **Registration rejected:** The operator remains signed out, non-secret input
-  remains recoverable where safe, and password fields are cleared.
+- **Registration rejected:** The operator remains signed out, safe non-secret
+  input remains recoverable, password fields are cleared, and a sanitized
+  error is announced.
 - **Submitting:** Duplicate account-creation requests are prevented.
 
 ## Actions and consequences
 
 | Action         | Business consequence                                                  |
 | -------------- | --------------------------------------------------------------------- |
-| Create account | Creates the operator identity and starts a session when accepted.     |
+| Create account | Creates the backend account and starts a session when accepted.       |
 | Sign in        | Leaves new-account entry and opens returning-operator authentication. |
 
 ## Navigation
@@ -59,6 +64,5 @@ to create and manage matches.
 
 ## Open questions
 
-- The local adapter currently reuses an existing email and updates its display
-  name instead of reporting that the account already exists. Production
-  duplicate-account behavior must be specified with backend integration.
+- Account recovery, email verification, and subscription entitlements are not
+  part of the current registration journey.

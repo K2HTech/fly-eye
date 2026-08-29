@@ -8,7 +8,6 @@ import {
 } from "./authValidation";
 
 const validRegistration = {
-  displayName: "Khoa Tran",
   email: " KHOA@example.com ",
   password: "demo-only-passphrase",
   passwordConfirmation: "demo-only-passphrase",
@@ -49,7 +48,6 @@ describe("registration validation", () => {
 
   it("returns useful field-level errors for missing values", () => {
     const result = validateRegistration({
-      displayName: " ",
       email: "bad-email",
       password: "short",
       passwordConfirmation: "different",
@@ -57,9 +55,8 @@ describe("registration validation", () => {
 
     expect(result.valid).toBe(false);
     expect(result.errors).toMatchObject({
-      displayName: "Enter your display name.",
       email: "Enter a valid email address.",
-      password: "Use at least 8 characters for the password.",
+      password: "Use at least 12 characters for the password.",
       passwordConfirmation: "Passwords do not match.",
     });
   });
@@ -74,17 +71,6 @@ describe("registration validation", () => {
     expect(result.errors.passwordConfirmation).toBe("Confirm your password.");
   });
 
-  it("rejects a display name that is too long", () => {
-    const result = validateRegistration({
-      ...validRegistration,
-      displayName: "x".repeat(81),
-    });
-
-    expect(result.errors.displayName).toBe(
-      "Display name must be 80 characters or fewer.",
-    );
-  });
-
   it("rejects a whitespace-only password", () => {
     const result = validateRegistration({
       ...validRegistration,
@@ -93,6 +79,19 @@ describe("registration validation", () => {
     });
 
     expect(result.errors.password).toMatch(/enter your password/i);
+  });
+
+  it("rejects a password longer than the backend maximum", () => {
+    const password = "x".repeat(129);
+    const result = validateRegistration({
+      ...validRegistration,
+      password,
+      passwordConfirmation: password,
+    });
+
+    expect(result.errors.password).toBe(
+      "Use no more than 128 characters for the password.",
+    );
   });
 });
 
@@ -116,7 +115,7 @@ describe("sign-in validation", () => {
     expect(result.valid).toBe(false);
     expect(result.errors).toEqual({
       email: "Enter your email address.",
-      password: "Use at least 8 characters for the password.",
+      password: "Use at least 12 characters for the password.",
     });
   });
 

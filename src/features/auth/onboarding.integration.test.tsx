@@ -7,6 +7,12 @@ import App from "../../App";
 import { matchRoutes } from "../../app/paths";
 import { createAppMemoryRouter } from "../../app/router";
 import { createLocalAppServices } from "../../infrastructure/local";
+import type {
+  AppServices,
+  AuthenticatedOperator,
+  RegistrationInput,
+  SignInInput,
+} from "../../services";
 import { MemoryStorage } from "../../test/MemoryStorage";
 
 function renderApp(path: string, storage = new MemoryStorage()) {
@@ -14,6 +20,58 @@ function renderApp(path: string, storage = new MemoryStorage()) {
   const router = createAppMemoryRouter([path]);
   render(<App router={router} services={services} />);
   return { router, services, storage };
+}
+
+function createBackendAuthTestServices(storage = new MemoryStorage()) {
+  const local = createLocalAppServices(storage);
+  const accounts = new Set<string>();
+  let identity: AuthenticatedOperator | null = null;
+  const authenticate = (email: string): AuthenticatedOperator => {
+    identity = {
+      profile: {
+        id: `backend-${email}`,
+        displayName: email,
+        email,
+        createdAt: "2026-08-29T00:00:00.000Z",
+      },
+      session: {
+        profileId: `backend-${email}`,
+        mode: "backend",
+        startedAt: "2026-08-29T00:00:00.000Z",
+      },
+    };
+    return identity;
+  };
+  const services: AppServices = {
+    ...local,
+    auth: {
+      getCurrentSession: async () => identity,
+      register: async (input: RegistrationInput) => {
+        accounts.add(input.email);
+        return authenticate(input.email);
+      },
+      signIn: async (input: SignInInput) => {
+        if (!accounts.has(input.email)) {
+          throw new Error("The email or password is incorrect.");
+        }
+        return authenticate(input.email);
+      },
+      continueAsDemo: () => local.auth.continueAsDemo(),
+      assignDemoMatch: (matchId) => local.auth.assignDemoMatch(matchId),
+      startDemoTrial: () => local.auth.startDemoTrial(),
+      signOut: async () => {
+        identity = null;
+      },
+    },
+  };
+  return { accounts, services, storage };
+}
+
+function renderBackendAuthApp(path: string, storage = new MemoryStorage()) {
+  const testServices = createBackendAuthTestServices(storage);
+  const router = createAppMemoryRouter([path]);
+  render(<App router={router} services={testServices.services} />);
+  return { ...testServices, router };
 }
 
 async function waitForWelcome() {
@@ -138,10 +196,8 @@ describe("onboarding integration", () => {
 
   it("lets an authenticated operator sign out", async () => {
     const user = userEvent.setup();
-    const storage = new MemoryStorage();
-    const services = createLocalAppServices(storage);
+    const { services } = createBackendAuthTestServices();
     await services.auth.register({
-      displayName: "Khoa Tran",
       email: "khoa@example.com",
       password: "secure-password",
       passwordConfirmation: "secure-password",
@@ -168,22 +224,19 @@ describe("onboarding integration", () => {
 
     await user.click(screen.getByRole("button", { name: /create account/i }));
 
-    const displayName = screen.getByLabelText("Display name");
-    expect(displayName).toHaveFocus();
-    expect(displayName).toHaveAttribute("aria-invalid", "true");
-    expect(displayName).toHaveAttribute(
-      "aria-describedby",
-      "displayName-error",
-    );
-    expect(screen.getByText("Enter your display name.")).toBeVisible();
+    const email = screen.getByLabelText("Email");
+    expect(email).toHaveFocus();
+    expect(email).toHaveAttribute("aria-invalid", "true");
+    expect(email).toHaveAttribute("aria-describedby", "email-error");
+    expect(screen.getByText("Enter your email address.")).toBeVisible();
+    expect(screen.queryByLabelText("Display name")).not.toBeInTheDocument();
   });
 
   it("registers an account without persisting the submitted password", async () => {
     const user = userEvent.setup();
-    const { router, storage } = renderApp("/register");
+    const { router, storage } = renderBackendAuthApp("/register");
     await screen.findByRole("heading", { name: /create your account/i });
 
-    await user.type(screen.getByLabelText("Display name"), "Khoa Tran");
     await user.type(screen.getByLabelText("Email"), " KHOA@example.com ");
     await user.type(screen.getByLabelText("Password"), "demo-secret-123");
     await user.type(
@@ -194,17 +247,15 @@ describe("onboarding integration", () => {
 
     await waitForDashboard();
     expect(router.state.location.pathname).toBe("/matches");
-    expect(screen.getByText("Khoa Tran")).toBeVisible();
+    expect(screen.getByText("khoa@example.com")).toBeVisible();
     const persisted = [...storage.entries()].flat().join("\n");
     expect(persisted).not.toContain("demo-secret-123");
     expect(persisted).not.toMatch(/password|confirmation|token|hash/i);
   });
 
   it("signs in an existing account with normalized email", async () => {
-    const storage = new MemoryStorage();
-    const services = createLocalAppServices(storage);
+    const { services } = createBackendAuthTestServices();
     await services.auth.register({
-      displayName: "Local Operator",
       email: "operator@example.com",
       password: "discarded-demo-passphrase",
       passwordConfirmation: "discarded-demo-passphrase",
@@ -230,7 +281,7 @@ describe("onboarding integration", () => {
 
   it("clears the password after a rejected sign-in", async () => {
     const user = userEvent.setup();
-    renderApp("/sign-in");
+    renderBackendAuthApp("/sign-in");
     await screen.findByRole("heading", { name: /resume your workspace/i });
 
     await user.type(screen.getByLabelText("Email"), "missing@example.com");
@@ -239,7 +290,7 @@ describe("onboarding integration", () => {
     await user.click(screen.getByRole("button", { name: /^sign in$/i }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      /create an account/i,
+      /email or password is incorrect/i,
     );
     expect(password).toHaveValue("");
   });

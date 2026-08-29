@@ -1,9 +1,10 @@
 # Developer guide
 
-Fly Eye is a UI-only React 19 and TypeScript application built with Vite and
-hosted as a desktop app by Tauri v2. The screens use deterministic simulated
-data. Camera capture, calibration, shuttle tracking, inference, and clip
-storage are outside the current application boundary.
+Fly Eye is a React 19 and TypeScript client built with Vite and hosted as a
+desktop app by Tauri v2. Normal authentication uses the external Fly Eye
+backend; the anonymous demo and unfinished processing surfaces use
+deterministic simulated data. Camera capture, calibration, shuttle tracking,
+inference, and clip storage are outside the current application boundary.
 
 ## Prerequisites
 
@@ -30,6 +31,20 @@ This installs the locked npm dependency graph with `npm ci` and installs the
 latest compatible `cargo-audit` CLI. Rust application dependencies are resolved
 from the committed Cargo lockfile when the native checks run.
 
+Copy `.env.example` to an ignored `.env.local` and supply the public endpoints:
+
+```dotenv
+VITE_API_BASE_URL=https://your-backend.example
+VITE_SIGNALING_URL=wss://your-backend.example/api/v1/signal
+VITE_CAMERA_SIMULATOR_ENABLED=false
+```
+
+The API value may include `/api/v1`; the client adds it when absent. Never put
+passwords, tokens, TURN credentials, or other secrets in a `VITE_*` value,
+because Vite exposes those values to browser code. Without valid endpoint
+configuration, normal authentication reports that the backend is unavailable
+while the isolated demo remains usable.
+
 ## Common tasks
 
 | Command            | Purpose                                       |
@@ -55,9 +70,11 @@ task dev
 ```
 
 Open `http://localhost:1420`, then choose **Run the live demo** for an isolated
-demo match or sign in with a local profile. Protected match URLs contain a
-generated match identifier and cannot be opened before the corresponding
-session is established.
+demo match or register/sign in through the configured backend. Backend
+credentials are entered only through the authentication forms and are not
+stored in environment files. Protected match URLs contain a generated match
+identifier and cannot be opened before the corresponding session is
+established.
 
 For a smoke test, complete readiness, enter monitoring, review the latest
 rally, and open its decision. The canonical behavior and restrictions are in
@@ -66,9 +83,9 @@ the [demo-trial workflow](../workflows/DemoTrialWorkflow.md),
 [line-call review workflow](../workflows/LineCallReviewWorkflow.md).
 
 Camera frames, trajectories, evidence, verdict generation, and clip-save
-actions are simulated. Local profile, session, match, and readiness metadata
-may be persisted by browser storage, but the current application does not save
-real media or adjudication artifacts.
+actions are simulated. Normal authentication tokens are memory-only; demo,
+match, and readiness metadata may be persisted by browser storage. The current
+application does not save real media or adjudication artifacts.
 
 ## Branches and commits
 

@@ -215,4 +215,46 @@ describe("application providers", () => {
       expect(screen.getByLabelText("Match count")).toHaveTextContent("0");
     });
   });
+
+  it("closes protected state when backend credentials are invalidated", async () => {
+    const base = createLocalAppServices(new MemoryStorage());
+    const identity = await base.auth.register({
+      email: "operator@example.com",
+      password: "password-secret",
+      passwordConfirmation: "password-secret",
+    });
+    let invalidate: (() => void) | undefined;
+    const services: AppServices = {
+      ...base,
+      auth: {
+        ...base.auth,
+        getCurrentSession: async () => ({
+          ...identity,
+          session: { ...identity.session, mode: "backend" },
+        }),
+        register: (input) => base.auth.register(input),
+        signIn: (input) => base.auth.signIn(input),
+        continueAsDemo: () => base.auth.continueAsDemo(),
+        assignDemoMatch: (matchId) => base.auth.assignDemoMatch(matchId),
+        startDemoTrial: () => base.auth.startDemoTrial(),
+        signOut: () => base.auth.signOut(),
+        onSessionInvalidated: (listener) => {
+          invalidate = listener;
+          return () => {
+            invalidate = undefined;
+          };
+        },
+      },
+    };
+    renderProviders(services);
+    expect(await screen.findByLabelText("Session status")).toHaveTextContent(
+      "authenticated",
+    );
+
+    act(() => invalidate?.());
+
+    expect(screen.getByLabelText("Session status")).toHaveTextContent(
+      "anonymous",
+    );
+  });
 });
