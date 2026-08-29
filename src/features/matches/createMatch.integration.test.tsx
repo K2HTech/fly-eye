@@ -105,7 +105,8 @@ describe("create-match workflow", () => {
 
     const playerOnes = screen.getAllByRole("textbox", { name: /player 1/i });
     const playerTwos = screen.getAllByRole("textbox", { name: /player 2/i });
-    await user.click(screen.getByRole("radio", { name: /bwf 2027 3×15/i }));
+    await user.click(screen.getByRole("radio", { name: /one game/i }));
+    await user.click(screen.getByRole("radio", { name: /15 points/i }));
     await user.type(playerOnes[0], "Nguyen");
     await user.type(playerTwos[0], "Pham");
     await user.type(playerOnes[1], "Tran");
@@ -126,7 +127,7 @@ describe("create-match workflow", () => {
             displayName: "Tran / Le",
             players: ["Tran", "Le"],
           },
-          format: { bestOfGames: 3, pointsToWin: 15 },
+          format: { bestOfGames: 1, pointsToWin: 15 },
         }),
       ]);
     });

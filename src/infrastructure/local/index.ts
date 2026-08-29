@@ -8,3 +8,8 @@ export {
   VersionedLocalStorage,
   type StorageLike,
 } from "./versionedStorage";
+export {
+  createSupplementalScoringStore,
+  LocalSupplementalScoringStore,
+  type SupplementalScoringStore,
+} from "./scoring/supplementalScoring";

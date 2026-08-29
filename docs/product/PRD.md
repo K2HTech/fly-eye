@@ -11,9 +11,9 @@ value is a clear review journey that helps an operator reach and explain a
 decision without relying on an informal replay process.
 
 The current product is a production-oriented UI with replaceable service
-adapters. The backend owns normal accounts, while match data remains local
-until the next approved integration batch and device processing remains
-outside this repository until its external contracts are implemented.
+adapters. The backend owns normal accounts and normal matches, while device
+processing remains outside this repository until its external contracts are
+implemented.
 
 ## Target operator
 
@@ -29,17 +29,18 @@ their permissions and workflows are not yet product requirements.
 ## Product scope and boundaries
 
 Fly Eye owns the operator-facing interface and the journey from entry through
-match review. Normal accounts use a replaceable adapter for the remote backend;
-match state, the anonymous demo, and UI-only processing journeys still use
-local adapters until their approved integration batches are delivered.
+match review. Normal accounts and standalone matches use replaceable
+remote-backend adapters. The anonymous demo, readiness progress, and UI-only
+scoring supplements use local adapters until their approved integration
+batches are delivered.
 
 The following are outside the current product boundary:
 
 - Camera capture, calibration, tracking, shuttle/ball inference, and any other
   physical-device or processing implementation.
-- The backend services themselves. Fly Eye currently consumes authentication
-  through an application adapter; approved later batches add match, camera,
-  and pairing adapters without moving server ownership into this repository.
+- The backend services themselves. Fly Eye consumes authentication, matches,
+  and camera records through application adapters; later batches add pairing
+  without moving server ownership into this repository.
 - Tournament structure, brackets, scheduling, venues, officials, rosters, and
   bulk match creation.
 
@@ -103,9 +104,15 @@ Singles has one participant per side; doubles has two. The selected scoring
 format remains explicit for the match. Match length is either one game or best
 of three games; the per-game point target is independently either 15 or 21.
 
-Normal match lists are scoped to the signed-in operator. One operator must not
-see another operator's matches merely because they use the same computer. Demo
-matches remain isolated from every normal operator account.
+Normal match lists are backend-scoped to the signed-in operator. One operator
+must not see another operator's matches merely because they use the same
+computer. Demo matches remain isolated from every normal operator account.
+
+The backend match contract does not yet store match length or the point target.
+The UI stores only those two selected scoring values locally, keyed by the
+backend match UUID. An unknown backend match uses best-of-three/21 locally;
+this is a temporary non-synchronized limitation, not a claim about the
+match's official rules.
 
 A match becomes completed only through a deliberate **End match** action. One
 line-call decision does not end the match because the operator may return to
@@ -143,11 +150,8 @@ adjudication system. Monitoring, review evidence, and recorded results still
 represent the operator journey and simulated data until those integrations are
 implemented.
 
-Three approved product rules are not yet implemented: match length and point
-target are still coupled into best-of-three presets, local match records are
-still workstation-wide rather than separated by operator, and the live
-workspace does not yet provide **End match**. These are implementation gaps,
-not changes to the approved product rules above.
+The live workspace does not yet provide **End match**. This is an
+implementation gap, not a change to the approved product rules above.
 
 Future work may add account recovery, email verification, subscription
 entitlements, result synchronization, and real camera, calibration, tracking,

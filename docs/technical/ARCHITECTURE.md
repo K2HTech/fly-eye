@@ -34,8 +34,8 @@ boundaries:
   state, expose loading/error states, and prevent stale requests from
   overwriting newer state.
 - Service contracts define the application-facing seams for authentication,
-  match records/status, and readiness. Pages depend on these contracts rather
-  than on a persistence or transport implementation.
+  match records/status, readiness, and backend camera records. Pages depend on
+  these contracts rather than on a persistence or transport implementation.
 - Domain rules remain framework-independent. Match status transitions and the
   readiness gate are enforced below the pages so invalid transitions cannot be
   created by navigation alone.
@@ -81,10 +81,11 @@ demo workspace and UI-only supplemental data. Normal backend authentication
 tokens are intentionally not persisted; a browser restart cannot restore that
 normal session.
 
-The approved operator-ownership rule is not fully implemented: current local
-match records are workstation-wide rather than separated by normal operator.
-This is a documented implementation gap, not permission to infer ownership
-from local storage behavior.
+Normal match ownership is enforced by the backend adapter and backend API;
+the local repository remains only for the isolated demo. The backend contract
+does not yet include selected scoring rules, so only `bestOfGames` and
+`pointsToWin` are kept in a versioned local supplement keyed by backend match
+UUID. That supplement is not a synchronization or authorization boundary.
 
 Evidence: [local service composition](../../src/infrastructure/local/localAppServices.ts),
 [versioned storage](../../src/infrastructure/local/versionedStorage.ts), and
@@ -110,11 +111,12 @@ Evidence: [authentication contracts](../../src/services/contracts.ts),
 
 ## Hardware and processing boundary
 
-Readiness is currently a replaceable application service whose camera and
-calibration states are explicitly simulated. The domain gate requires both
-camera paths and a calibration profile before monitoring entry, but passing the
-gate does not mean a physical device was discovered or that captured data is
-valid.
+Readiness is currently a replaceable application service whose connection
+checks and calibration state are explicitly simulated. For normal backend
+matches, a camera registry obtains exactly the two supported device records:
+`SIDELINE_LEFT` and `SIDELINE_RIGHT`, with 1280x720/30-FPS preview metadata.
+Those records establish later pairing identity only; passing the local gate
+does not mean a physical device was discovered or that captured data is valid.
 
 Live views, rolling-buffer segments, synchronized frames, reconstructed
 evidence, and decision values are likewise simulated UI behavior in the current
@@ -133,12 +135,12 @@ readiness adapter](../../src/infrastructure/local/localAppServices.ts), and
 ## Deferred backend seam
 
 The service interfaces keep authentication/session operations, match CRUD and
-status operations, and readiness state operations behind application
-contracts. Authentication DTO mapping, token rotation, and authorized retry
-are implemented at the backend adapter boundary. Backend match DTO mapping,
-synchronization and conflict policy, and organization/venue ownership remain
-deferred to the next approved integration batch. The backend server remains an
-external system and its implementation is not part of this repository.
+status operations, readiness state operations, and camera-record preparation
+behind application contracts. Authentication DTO mapping, token rotation,
+authorized match CRUD, camera-record validation, and retry are implemented at
+the backend adapter boundary. Scoring synchronization, pairing, and conflict
+policy remain deferred. The backend server remains an external system and its
+implementation is not part of this repository.
 
 No page should bypass these contracts to call HTTP, Tauri commands, storage, or
 device APIs directly. A future integration may change the adapter and its
