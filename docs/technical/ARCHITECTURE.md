@@ -132,15 +132,20 @@ The approved camera-pairing protocol is represented by framework-light runtime
 validators and an ephemeral per-role state model. It validates the server
 pairing response, locally serializes the mobile-only QR payload, and rejects
 stale, cross-session, malformed, or unsupported signaling/control messages
-before they can change a camera snapshot. Mobile and viewer tokens, SDP, ICE
-candidates, and TURN credentials are deliberately excluded from
-persistence-safe models and browser storage. Browser networking, peer
-connections, and UI pairing controls remain later integration work.
+before they can change a camera snapshot. A browser-only adapter now creates
+or cancels backend pairing sessions, authenticates the viewer socket, accepts
+the Flutter offer, exchanges trickle ICE, receives a video track and approved
+control channel, samples bounded diagnostics, and closes resources
+idempotently. Mobile and viewer tokens, SDP, ICE candidates, and TURN
+credentials are deliberately excluded from persistence-safe models and browser
+storage. Application lifecycle ownership and UI pairing controls remain later
+integration work.
 
 Evidence: [readiness service contract](../../src/services/contracts.ts), [local
 readiness adapter](../../src/infrastructure/local/localAppServices.ts),
 [pairing protocol](../../src/features/cameras/protocol.ts), [ephemeral camera
-state model](../../src/features/cameras/sessionModel.ts), and [line-call review
+state model](../../src/features/cameras/sessionModel.ts), [browser camera
+adapter](../../src/infrastructure/browser/cameras), and [line-call review
 workflow](../workflows/LineCallReviewWorkflow.md).
 
 ## Deferred backend seam
