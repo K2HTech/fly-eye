@@ -1,6 +1,6 @@
 # MatchDashboardPage
 
-Status: Current behavior with an approved implementation gap
+Status: Current
 
 - Route: `#/matches`
 - Primary source: [`MatchDashboardPage.tsx`](../../src/features/matches/MatchDashboardPage.tsx)
@@ -27,14 +27,15 @@ already in progress or completed.
 
 - When no matches exist, the dashboard offers creation of the operator's first
   standalone match.
-- When matches exist, the dashboard presents recent locally available matches
+- When matches exist, the dashboard presents the signed-in operator's
+  backend-owned recent matches
   as resumable workspaces. The match's current state determines the safe
   continuation action; lifecycle and readiness rules belong to the
   [match-preparation workflow](../workflows/MatchPreparationWorkflow.md).
 - Creating a match is the normal path into preparation. Sign-out is an access
   action, not a request to delete the operator's backend account or matches.
-- A normal operator's match list is private to that operator. Another local
-  profile on the same computer must have a separate list. Future backend
+- A normal operator's match list is private to that operator through backend
+  authorization. Future backend
   organization rules may grant additional explicitly authorized visibility.
 
 ## Meaningful states
@@ -70,13 +71,6 @@ already in progress or completed.
 - [Match preparation](../workflows/MatchPreparationWorkflow.md)
 - [Authentication and sessions](../workflows/AuthenticationWorkflow.md)
 - [Isolated demo trial](../workflows/DemoTrialWorkflow.md)
-
-## Approved implementation gap
-
-The current local repository returns a workstation-wide match collection. It
-must associate normal matches with their creating operator before the dashboard
-can enforce the approved separate-list rule. Demo isolation already has its own
-access boundary.
 
 ## Open questions
 

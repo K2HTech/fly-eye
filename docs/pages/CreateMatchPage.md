@@ -1,6 +1,6 @@
 # CreateMatchPage
 
-Status: Current behavior with approved implementation gaps
+Status: Current
 
 - Route: `#/matches/new`
 - Primary source: [`CreateMatchPage.tsx`](../../src/features/matches/CreateMatchPage.tsx)
@@ -39,6 +39,11 @@ competition type, and scoring format as one explicit standalone match record.
   readiness. Match lifecycle and readiness gates are owned by the
   [match-preparation workflow](../workflows/MatchPreparationWorkflow.md), not
   by this page.
+- Normal match identity, participants, competition type, and lifecycle are
+  backend-owned. The selected match length and point target are saved locally
+  against the returned backend match UUID because the current backend contract
+  has no scoring fields. An existing backend match without that local record
+  uses the clearly documented best-of-three/21 fallback.
 - Canceling leaves the preparation journey without creating or persisting a
   draft. A failure while saving leaves the entered information available for a
   retry rather than claiming that a match exists.
@@ -75,11 +80,6 @@ competition type, and scoring format as one explicit standalone match record.
 - [Match preparation](../workflows/MatchPreparationWorkflow.md)
 - [Authentication and sessions](../workflows/AuthenticationWorkflow.md)
 - [Isolated demo trial](../workflows/DemoTrialWorkflow.md)
-
-## Approved implementation gap
-
-The current form still exposes only best-of-three 3x21 and 3x15 presets. It
-must be changed to separate match length from the per-game point target.
 
 ## Open questions
 

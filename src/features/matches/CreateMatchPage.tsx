@@ -12,7 +12,8 @@ import {
   type MatchFormErrors,
   type MatchFormField,
   type MatchFormValues,
-  type ScoringFormatPreset,
+  type MatchLength,
+  type PointsToWin,
 } from "./createMatchValidation";
 import "./create-match.css";
 
@@ -20,7 +21,8 @@ const initialValues: MatchFormValues = {
   eventName: "",
   court: "",
   competitionType: "singles",
-  scoringFormat: "standard-3x21",
+  bestOfGames: 3,
+  pointsToWin: 21,
   sideAPlayer1: "",
   sideAPlayer2: "",
   sideBPlayer1: "",
@@ -64,8 +66,13 @@ export function CreateMatchPage() {
     setServiceError(null);
   };
 
-  const updateScoringFormat = (scoringFormat: ScoringFormatPreset) => {
-    setValues((current) => ({ ...current, scoringFormat }));
+  const updateBestOfGames = (bestOfGames: MatchLength) => {
+    setValues((current) => ({ ...current, bestOfGames }));
+    setServiceError(null);
+  };
+
+  const updatePointsToWin = (pointsToWin: PointsToWin) => {
+    setValues((current) => ({ ...current, pointsToWin }));
     setServiceError(null);
   };
 
@@ -191,7 +198,8 @@ export function CreateMatchPage() {
               registerField={registerField}
               values={values}
               onChange={updateField}
-              onScoringFormatChange={updateScoringFormat}
+              onBestOfGamesChange={updateBestOfGames}
+              onPointsToWinChange={updatePointsToWin}
             />
           )}
 
@@ -311,7 +319,8 @@ function ParticipantsStep({
   registerField,
   values,
   onChange,
-  onScoringFormatChange,
+  onBestOfGamesChange,
+  onPointsToWinChange,
 }: ParticipantsStepProps) {
   const isDoubles = values.competitionType === "doubles";
   return (
@@ -338,21 +347,49 @@ function ParticipantsStep({
       <fieldset className="create-match__format">
         <legend>Scoring format</legend>
         <p>Choose the rules used for this match.</p>
-        <div className="create-match__format-options">
-          <ScoringOption
-            checked={values.scoringFormat === "standard-3x21"}
-            detail="Best of 3 games · 21 points per game"
-            label="Standard 3×21"
-            value="standard-3x21"
-            onChange={onScoringFormatChange}
-          />
-          <ScoringOption
-            checked={values.scoringFormat === "bwf-2027-3x15"}
-            detail="Best of 3 games · 15 points per game"
-            label="BWF 2027 3×15"
-            value="bwf-2027-3x15"
-            onChange={onScoringFormatChange}
-          />
+        <div className="create-match__format-groups">
+          <fieldset className="create-match__format-group">
+            <legend>Match length</legend>
+            <div className="create-match__format-options">
+              <ScoringOption
+                checked={values.bestOfGames === 1}
+                detail="One game only"
+                label="One game"
+                name="bestOfGames"
+                value={1}
+                onChange={onBestOfGamesChange}
+              />
+              <ScoringOption
+                checked={values.bestOfGames === 3}
+                detail="First to win 2 games"
+                label="Best of 3 games"
+                name="bestOfGames"
+                value={3}
+                onChange={onBestOfGamesChange}
+              />
+            </div>
+          </fieldset>
+          <fieldset className="create-match__format-group">
+            <legend>Points to win each game</legend>
+            <div className="create-match__format-options">
+              <ScoringOption
+                checked={values.pointsToWin === 15}
+                detail="15 points per game"
+                label="15 points"
+                name="pointsToWin"
+                value={15}
+                onChange={onPointsToWinChange}
+              />
+              <ScoringOption
+                checked={values.pointsToWin === 21}
+                detail="21 points per game"
+                label="21 points"
+                name="pointsToWin"
+                value={21}
+                onChange={onPointsToWinChange}
+              />
+            </div>
+          </fieldset>
         </div>
       </fieldset>
     </div>
@@ -360,7 +397,8 @@ function ParticipantsStep({
 }
 
 interface ParticipantsStepProps extends StepProps {
-  onScoringFormatChange: (format: ScoringFormatPreset) => void;
+  onBestOfGamesChange: (bestOfGames: MatchLength) => void;
+  onPointsToWinChange: (pointsToWin: PointsToWin) => void;
 }
 
 interface ParticipantSideProps extends StepProps {
@@ -498,26 +536,28 @@ function CompetitionOption({
   );
 }
 
-interface ScoringOptionProps {
+interface ScoringOptionProps<T extends MatchLength | PointsToWin> {
   checked: boolean;
   detail: string;
   label: string;
-  value: ScoringFormatPreset;
-  onChange: (value: ScoringFormatPreset) => void;
+  name: string;
+  value: T;
+  onChange: (value: T) => void;
 }
 
-function ScoringOption({
+function ScoringOption<T extends MatchLength | PointsToWin>({
   checked,
   detail,
   label,
+  name,
   value,
   onChange,
-}: ScoringOptionProps) {
+}: ScoringOptionProps<T>) {
   return (
     <label className="create-match__format-option">
       <input
         checked={checked}
-        name="scoringFormat"
+        name={name}
         type="radio"
         value={value}
         onChange={() => onChange(value)}

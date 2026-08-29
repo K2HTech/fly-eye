@@ -9,13 +9,15 @@ export type MatchFormField =
   | "sideBPlayer1"
   | "sideBPlayer2";
 
-export type ScoringFormatPreset = "standard-3x21" | "bwf-2027-3x15";
+export type MatchLength = 1 | 3;
+export type PointsToWin = 15 | 21;
 
 export interface MatchFormValues {
   eventName: string;
   court: string;
   competitionType: CompetitionType;
-  scoringFormat: ScoringFormatPreset;
+  bestOfGames: MatchLength;
+  pointsToWin: PointsToWin;
   sideAPlayer1: string;
   sideAPlayer2: string;
   sideBPlayer1: string;
@@ -112,8 +114,8 @@ export function toCreateMatchInput(values: MatchFormValues): CreateMatchInput {
     sideA: { displayName: displayName(sideAPlayers), players: sideAPlayers },
     sideB: { displayName: displayName(sideBPlayers), players: sideBPlayers },
     format: {
-      bestOfGames: 3,
-      pointsToWin: values.scoringFormat === "bwf-2027-3x15" ? 15 : 21,
+      bestOfGames: values.bestOfGames,
+      pointsToWin: values.pointsToWin,
     },
   };
 }

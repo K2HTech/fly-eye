@@ -16,7 +16,7 @@ calibration.
 
 ## Actors and entry conditions
 
-- A signed-in operator may prepare a locally available match.
+- A signed-in operator may prepare a backend-authorized match.
 - A demo operator may prepare only the match assigned to that demo session.
 - The requested match and its saved readiness state must be available on the
   current device.
@@ -29,6 +29,11 @@ calibration.
   are all ready.
 - Camera and calibration progress is saved independently so successful work is
   not lost when another check fails or the page is reopened.
+- For normal matches, opening readiness obtains exactly one backend
+  `SIDELINE_LEFT` and one `SIDELINE_RIGHT` device-camera record. The left and
+  right cards use those role directions and their backend 1280x720/30-FPS
+  preview metadata. Unexpected, duplicate, inactive, or incompatible records
+  block setup with an actionable error rather than being guessed at.
 - The current camera checks and calibration profile are simulated. Their
   simulated status must remain clear and must not be represented as proof of
   physical hardware readiness.

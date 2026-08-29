@@ -12,7 +12,8 @@ const validValues: MatchFormValues = {
   eventName: " Fly Eye Open ",
   court: " Court 2 ",
   competitionType: "singles",
-  scoringFormat: "standard-3x21",
+  bestOfGames: 3,
+  pointsToWin: 21,
   sideAPlayer1: " Nguyen ",
   sideAPlayer2: " Pham ",
   sideBPlayer1: " Tran ",
@@ -86,12 +87,21 @@ describe("create-match validation", () => {
     });
   });
 
-  it("maps the BWF 2027 preset to best-of-three games to 15", () => {
-    expect(
-      toCreateMatchInput({
-        ...validValues,
-        scoringFormat: "bwf-2027-3x15",
-      }).format,
-    ).toEqual({ bestOfGames: 3, pointsToWin: 15 });
-  });
+  it.each([
+    [1, 15],
+    [1, 21],
+    [3, 15],
+    [3, 21],
+  ] as const)(
+    "maps %s game(s) and %s points independently to the match format",
+    (bestOfGames, pointsToWin) => {
+      expect(
+        toCreateMatchInput({
+          ...validValues,
+          bestOfGames,
+          pointsToWin,
+        }).format,
+      ).toEqual({ bestOfGames, pointsToWin });
+    },
+  );
 });

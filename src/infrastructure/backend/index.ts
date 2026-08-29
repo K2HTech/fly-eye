@@ -2,6 +2,15 @@ export { BackendAuthService, createBackendAuthService } from "./auth";
 export { MemoryCredentialStore } from "./credentials";
 export { createBackendHttpClient } from "./httpClient";
 export {
+  BackendCameraRegistry,
+  CameraRegistryError,
+  createBackendCameraRegistry,
+} from "./cameras/registry";
+export {
+  BackendMatchRepository,
+  createBackendMatchRepository,
+} from "./matches/backendMatchRepository";
+export {
   parseBackendTokenPair,
   parseBackendUser,
   mapBackendUser,
