@@ -146,10 +146,10 @@ class LocalAuthService implements AuthService {
       (profile) => normalizedEmail(profile.email) === email,
     );
     const profile: OperatorProfile = existing
-      ? { ...existing, displayName: input.displayName.trim(), email }
+      ? { ...existing, displayName: email, email }
       : {
           id: this.createId("operator"),
-          displayName: input.displayName.trim(),
+          displayName: email,
           email,
           createdAt: this.now(),
         };

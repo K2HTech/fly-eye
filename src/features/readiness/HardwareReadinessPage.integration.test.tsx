@@ -42,7 +42,6 @@ async function readinessApp(options?: {
     await services.auth.continueAsDemo();
   } else {
     await services.auth.register({
-      displayName: "Test Operator",
       email: "operator@example.com",
       password: "test-password",
       passwordConfirmation: "test-password",
@@ -362,7 +361,6 @@ describe("hardware readiness", () => {
   it("shows a recoverable state for an unknown match", async () => {
     const services = createLocalAppServices(new MemoryStorage());
     await services.auth.register({
-      displayName: "Test Operator",
       email: "operator@example.com",
       password: "test-password",
       passwordConfirmation: "test-password",

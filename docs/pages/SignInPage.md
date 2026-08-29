@@ -10,9 +10,8 @@ Status: Current
 
 ## Purpose
 
-The sign-in page lets a returning operator resume their match workspace using
-the standard email-and-password interaction expected by the future production
-service.
+The sign-in page lets a returning operator authenticate with the Fly Eye
+backend and resume their match workspace.
 
 ## Actors and entry conditions
 
@@ -23,11 +22,16 @@ service.
 
 ## Business rules
 
-- Email and password are required as the intended production authentication
-  credentials.
-- The current UI-only implementation uses a local operator profile and does not
-  provide production authentication. This boundary is owned by the
-  [authentication workflow](../workflows/AuthenticationWorkflow.md).
+- Sign-in collects an email address and password.
+- The backend normalizes email addresses and verifies credentials. The page
+  performs client-side validation before making a request.
+- The backend requires passwords from 12 through 128 characters.
+- A successful sign-in establishes an in-memory access/refresh-token session;
+  tokens are not persisted in browser storage.
+- After a browser refresh, the normal session is unavailable and the operator
+  must sign in again during this browser-only phase.
+- Password input is cleared after a rejected submission and is never persisted,
+  logged, or included in public error details.
 - Credential handling and rejected-attempt invariants are owned by the
   [authentication workflow](../workflows/AuthenticationWorkflow.md).
 
@@ -37,7 +41,7 @@ service.
 - **Invalid input:** The operator receives actionable field guidance without a
   session being created.
 - **Authentication rejected:** The operator remains signed out, receives a
-  non-sensitive error, and can retry.
+  sanitized non-sensitive error, and can retry.
 - **Submitting:** Duplicate sign-in attempts are prevented.
 
 ## Actions and consequences
@@ -56,6 +60,5 @@ service.
 
 ## Open questions
 
-No page-specific product questions are currently open. Production credential
-verification, account recovery, and remote errors will be specified with the
-backend authentication integration.
+- Account recovery and email verification are not part of the current sign-in
+  journey.

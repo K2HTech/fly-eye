@@ -32,7 +32,7 @@ already in progress or completed.
   continuation action; lifecycle and readiness rules belong to the
   [match-preparation workflow](../workflows/MatchPreparationWorkflow.md).
 - Creating a match is the normal path into preparation. Sign-out is an access
-  action, not a request to delete the operator's local profile or matches.
+  action, not a request to delete the operator's backend account or matches.
 - A normal operator's match list is private to that operator. Another local
   profile on the same computer must have a separate list. Future backend
   organization rules may grant additional explicitly authorized visibility.

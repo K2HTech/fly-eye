@@ -17,7 +17,6 @@ async function renderWizard(services?: AppServices) {
       now: () => new Date().toISOString(),
     });
   await appServices.auth.register({
-    displayName: "Test Operator",
     email: "operator@example.com",
     password: "test-password",
     passwordConfirmation: "test-password",

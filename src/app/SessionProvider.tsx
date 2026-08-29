@@ -68,6 +68,13 @@ export function SessionProvider({ children }: SessionProviderProps) {
     };
   }, [restore]);
 
+  useEffect(() => {
+    return auth.onSessionInvalidated?.(() => {
+      requestVersion.current += 1;
+      setSnapshot({ status: "anonymous", identity: null, error: null });
+    });
+  }, [auth]);
+
   const completeAuthentication = useCallback(
     async (
       operation: () => Promise<AuthenticatedOperator>,
