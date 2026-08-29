@@ -79,6 +79,10 @@ describe("onboarding integration", () => {
     expect(
       screen.getByRole("heading", { name: /evidence first/i }),
     ).toBeVisible();
+    expect(
+      screen.getByText(/umpire make the final in or out call/i),
+    ).toBeVisible();
+    expect(screen.queryByText(/inconclusive/i)).not.toBeInTheDocument();
   });
 
   it("starts a temporary demo match at camera readiness", async () => {
