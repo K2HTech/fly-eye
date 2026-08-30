@@ -42,8 +42,9 @@ The approved outcome is:
    records, ordered by `SIDELINE_LEFT` and `SIDELINE_RIGHT`.
 4. The operator pairs one phone to each backend camera record.
 5. Fly Eye shows the state and health of each connection independently.
-6. Monitoring remains blocked until both phones are delivering a visible live
-   video track and a calibration profile is selected.
+6. For this POC, monitoring remains blocked until at least one phone is
+   delivering a visible live video track. Calibration is shown as a simulated
+   placeholder and does not block monitoring.
 7. Normal navigation into the live workspace preserves both peer connections.
 8. The live workspace renders the two real preview streams and clearly
    distinguishes them from the still-simulated rolling-buffer and review
@@ -225,9 +226,9 @@ route-level components.
 - Camera connection state is ephemeral and is not restored from local storage
   after a page refresh, sign-out, browser close, or application restart.
 - Calibration remains the existing explicitly simulated selection until a
-  separate calibration integration is approved.
-- Monitoring requires both current camera connections plus the selected
-  calibration profile.
+  separate calibration integration is approved and does not gate this POC.
+- Monitoring requires at least one current camera connection with a decoded
+  live preview. The other camera may remain unavailable and is shown as such.
 
 ### 5.6 Match and demo behavior
 
@@ -237,9 +238,9 @@ route-level components.
   simulated cameras remain unchanged.
 - The development camera simulator is explicitly labelled, disabled in
   production, and cannot satisfy normal production readiness.
-- A live match that no longer has two active camera connections cannot silently
-  bypass readiness. The operator is offered a return to camera setup before
-  resuming useful monitoring.
+- A normal live match without an active current preview cannot silently bypass
+  readiness. After sign-in, refresh, restart, or loss of every preview, Fly Eye
+  returns directly to camera setup for a fresh pairing.
 
 ### 5.7 Preview is not recorded evidence
 
@@ -571,8 +572,9 @@ tests cannot prove media latency or browser interoperability.
 - No password, JWT, pairing token, TURN credential, or other secret is a Vite
   environment variable because every `VITE_*` value is public browser code.
 - Production builds reject a non-secure signaling URL.
-- Development builds may allow a private-network `ws://` URL only through an
-  explicit development flag.
+- Development builds may allow a `ws://` URL only through the explicit
+  `VITE_ALLOW_INSECURE_PUBLIC_SIGNALING=true` flag. This is for trusted shared
+  development only; production always requires `wss://`.
 - STUN/TURN URLs and credentials come from signaling responses, never from the
   committed frontend bundle.
 - Missing or invalid configuration produces an unavailable state rather than a
@@ -592,8 +594,8 @@ The React feature is accepted when:
    two backend camera UUIDs.
 5. Scanning each QR with the Flutter application results in the correct phone
    video appearing in the correct readiness and live-monitor panels.
-6. Both real streams plus the existing calibration selection are required
-   before a normal match can start monitoring.
+6. At least one real stream is required before a normal match can start
+   monitoring; calibration is a visible simulated placeholder.
 7. Anonymous demo behavior remains unchanged and does not call protected
    pairing APIs.
 8. Cancelling, expiry, invalid messages, duplicate attempts, network loss,

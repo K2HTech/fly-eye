@@ -115,6 +115,22 @@ export interface PairingService {
   cancel(sessionId: string): Promise<void>;
 }
 
+export interface CameraConnectionCallbacks {
+  onPairing(pairing: PairingSession): void;
+  onStream(stream: MediaStream): void;
+  onState(state: "negotiating" | "connected" | "reconnecting" | "error"): void;
+  onError(): void;
+}
+
+export interface CameraConnection {
+  begin(matchId: string, camera: CameraRecord): Promise<PairingSession>;
+  close(): void;
+}
+
+export interface CameraConnectionFactory {
+  create(callbacks: CameraConnectionCallbacks): CameraConnection;
+}
+
 export interface AppServices {
   auth: AuthService;
   matches: MatchRepository;
@@ -122,4 +138,5 @@ export interface AppServices {
   /** Present when the normal backend camera boundary is configured. */
   cameras?: CameraRegistry;
   pairing?: PairingService;
+  cameraConnections?: CameraConnectionFactory;
 }

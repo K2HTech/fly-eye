@@ -4,6 +4,7 @@ export interface BackendEnvironment {
   apiBaseUrl: string;
   signalingUrl: string;
   cameraSimulatorEnabled: boolean;
+  insecurePublicSignalingAllowed: boolean;
 }
 
 export interface UnavailableEnvironment {
@@ -64,14 +65,22 @@ function normalizeApiBase(value: string, mode: string): string {
   return url.toString().replace(/\/$/, "");
 }
 
-function normalizeSignalingUrl(value: string, mode: string): string {
+function normalizeSignalingUrl(
+  value: string,
+  mode: string,
+  insecurePublicSignalingAllowed: boolean,
+): string {
   const url = new URL(value);
   const secure = url.protocol === "wss:";
   const developmentPrivate =
     mode !== "production" &&
     url.protocol === "ws:" &&
     isPrivateDevelopmentHost(url.hostname);
-  if (!secure && !developmentPrivate) {
+  const developmentPublicException =
+    mode !== "production" &&
+    url.protocol === "ws:" &&
+    insecurePublicSignalingAllowed;
+  if (!secure && !developmentPrivate && !developmentPublicException) {
     throw new Error(
       "Signaling URL must use wss (private-network ws is development-only).",
     );
@@ -103,6 +112,18 @@ export function parseEnvironment(
   const issues: string[] = [];
   let apiBaseUrl = "";
   let signalingUrl = "";
+  const insecurePublicSignalingValue = parseBoolean(
+    raw.VITE_ALLOW_INSECURE_PUBLIC_SIGNALING,
+  );
+  if (insecurePublicSignalingValue === null) {
+    issues.push("VITE_ALLOW_INSECURE_PUBLIC_SIGNALING must be true or false.");
+  }
+  const insecurePublicSignalingAllowed = insecurePublicSignalingValue === true;
+  if (mode === "production" && insecurePublicSignalingAllowed) {
+    issues.push(
+      "VITE_ALLOW_INSECURE_PUBLIC_SIGNALING cannot be enabled in production.",
+    );
+  }
 
   const apiValue =
     typeof raw.VITE_API_BASE_URL === "string"
@@ -128,7 +149,11 @@ export function parseEnvironment(
   if (!signalingValue) issues.push("VITE_SIGNALING_URL is missing.");
   else {
     try {
-      signalingUrl = normalizeSignalingUrl(signalingValue, mode);
+      signalingUrl = normalizeSignalingUrl(
+        signalingValue,
+        mode,
+        insecurePublicSignalingAllowed,
+      );
     } catch (error) {
       issues.push(
         error instanceof Error
@@ -154,6 +179,7 @@ export function parseEnvironment(
     apiBaseUrl,
     signalingUrl,
     cameraSimulatorEnabled,
+    insecurePublicSignalingAllowed,
   };
 }
 
