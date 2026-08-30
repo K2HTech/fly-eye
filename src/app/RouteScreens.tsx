@@ -8,7 +8,9 @@ import {
 } from "react-router-dom";
 
 import { DecisionScreen, type DecisionResult } from "../features/decision";
-import { LiveMonitor } from "../features/live";
+import { LiveMonitor, type CameraFeed } from "../features/live";
+import { simulatedCameras } from "../features/live/live-monitor.data";
+import { useCameraSessions } from "./cameraContext";
 import { ClipReview, type ClipDecision } from "../features/review";
 import { matchRoutes, routePaths } from "./paths";
 import { useRouteAccess } from "./routeAccess";
@@ -155,8 +157,52 @@ function useMatchId(): string {
 export function LiveRoute() {
   const matchId = useMatchId();
   const navigate = useNavigate();
+  const session = useSession();
+  const { sessions, streams } = useCameraSessions();
+  const isBackendSession = session.identity?.session.mode === "backend";
+  const cameras = isBackendSession
+    ? simulatedCameras.map((camera, index) => {
+        const stream =
+          index === 0 ? streams.SIDELINE_LEFT : streams.SIDELINE_RIGHT;
+        const sessionState =
+          index === 0
+            ? sessions.SIDELINE_LEFT.state
+            : sessions.SIDELINE_RIGHT.state;
+        const status: CameraFeed["status"] =
+          sessionState === "reconnecting"
+            ? "reconnecting"
+            : stream
+              ? "online"
+              : "offline";
+        return stream
+          ? { ...camera, stream, status, frameRate: 30 }
+          : { ...camera, status };
+      })
+    : simulatedCameras;
+  const hasNormalLivePreview =
+    streams.SIDELINE_LEFT !== null || streams.SIDELINE_RIGHT !== null;
 
-  return <LiveMonitor onReview={() => navigate(matchRoutes.review(matchId))} />;
+  if (isBackendSession && !hasNormalLivePreview) {
+    return (
+      <Navigate
+        replace
+        state={{ message: "Pair a camera before opening the live monitor." }}
+        to={matchRoutes.readiness(matchId)}
+      />
+    );
+  }
+
+  return (
+    <LiveMonitor
+      cameras={cameras}
+      onReview={() => navigate(matchRoutes.review(matchId))}
+      onReturnToSetup={
+        isBackendSession
+          ? () => navigate(matchRoutes.readiness(matchId))
+          : undefined
+      }
+    />
+  );
 }
 
 export function ReviewRoute() {

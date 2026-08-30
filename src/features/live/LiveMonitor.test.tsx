@@ -19,7 +19,7 @@ describe("LiveMonitor", () => {
     ).toBeVisible();
     expect(
       screen.getByRole("img", {
-        name: /last 30 seconds recorded with 3 detected rallies/i,
+        name: /simulated 30-second review buffer with 3 displayed rallies/i,
       }),
     ).toBeVisible();
     expect(
@@ -51,5 +51,42 @@ describe("LiveMonitor", () => {
 
     expect(screen.getByRole("region", { name: "Camera feeds" })).toBeVisible();
     expect(screen.getAllByRole("status")).toHaveLength(3);
+  });
+
+  it("renders a live preview and offers setup recovery only when requested", () => {
+    const onReturnToSetup = vi.fn();
+    render(
+      <LiveMonitor
+        cameras={[
+          {
+            id: "A",
+            name: "Cam A",
+            position: "sideline",
+            resolution: "1280×720",
+            frameRate: 30,
+            latencyMs: 0,
+            status: "online",
+            stream: {} as MediaStream,
+          },
+          {
+            id: "B",
+            name: "Cam B",
+            position: "baseline",
+            resolution: "1280×720",
+            frameRate: 30,
+            latencyMs: 0,
+            status: "offline",
+          },
+        ]}
+        onReturnToSetup={onReturnToSetup}
+        onReview={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByLabelText(/cam a live camera preview/i)).toBeVisible();
+    fireEvent.click(
+      screen.getByRole("button", { name: /return to camera setup/i }),
+    );
+    expect(onReturnToSetup).toHaveBeenCalledOnce();
   });
 });
