@@ -471,6 +471,14 @@
   background: #f4f8ff;
 }
 
+.readiness__pairing-preview {
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  width: 1px;
+}
+
 .readiness__qr svg {
   display: block;
   width: 100%;

@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { useMatches } from "../../app/matchContext";
+import { useCameraSessions } from "../../app/cameraContext";
 import { matchRoutes, routePaths } from "../../app/paths";
 import { useSession } from "../../app/sessionContext";
 import { useAppServices } from "../../app/servicesContext";
@@ -14,7 +15,7 @@ import {
   type MatchRecord,
 } from "../../domain";
 import type { CameraRecord, PreparedCameraPair } from "../../services";
-import type { PairingSession } from "../cameras";
+import type { CameraConnectionState, PairingSession } from "../cameras";
 import { CameraPairingDialog } from "./CameraPairingDialog";
 import "./hardware-readiness.css";
 
@@ -86,6 +87,7 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
   const services = useAppServices();
   const session = useSession();
   const matches = useMatches();
+  const cameraSessions = useCameraSessions();
   const [loadingState, setLoadingState] = useState<LoadingState>("loading");
   const [match, setMatch] = useState<MatchRecord | null>(null);
   const [readiness, setReadiness] = useState<HardwareReadiness | null>(null);
@@ -95,6 +97,13 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
   const [actionError, setActionError] = useState<string | null>(null);
   const [showDemoTrialDialog, setShowDemoTrialDialog] = useState(false);
   const [pairing, setPairing] = useState<PairingSession | null>(null);
+  const isBackendSession = session.identity?.session.mode === "backend";
+  const hasNormalLivePreview =
+    cameraSessions.streams.SIDELINE_LEFT !== null ||
+    cameraSessions.streams.SIDELINE_RIGHT !== null;
+  const monitoringReady = isBackendSession
+    ? hasNormalLivePreview
+    : readiness !== null && isHardwareReady(readiness);
 
   useEffect(() => {
     let active = true;
@@ -189,11 +198,11 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
   };
 
   const openPairing = async (camera: CameraRecord) => {
-    if (!services.pairing || pendingControl) return;
+    if (pendingControl) return;
     setPendingControl(camera.id);
     setActionError(null);
     try {
-      setPairing(await services.pairing.create(matchId, camera.id));
+      setPairing(await cameraSessions.begin(camera.role, matchId, camera));
     } catch {
       setActionError(
         "Unable to create a camera pairing code. Please try again.",
@@ -206,9 +215,9 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
   const cancelPairing = async () => {
     const current = pairing;
     setPairing(null);
-    if (!current || !services.pairing) return;
+    if (!current) return;
     try {
-      await services.pairing.cancel(current.sessionId);
+      cameraSessions.disconnect(current.cameraRole);
     } catch {
       setActionError(
         "The pairing code could not be cancelled. It will expire shortly.",
@@ -219,21 +228,26 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
   const startMonitoring = async () => {
     if (!match || !readiness || pendingControl) return;
     if (match.status === "live") {
-      navigate(matchRoutes.live(match.id));
+      if (!isBackendSession || hasNormalLivePreview) {
+        navigate(matchRoutes.live(match.id));
+      }
       return;
     }
     if (match.status === "completed") {
       navigate(matchRoutes.decision(match.id));
       return;
     }
-    if (!isHardwareReady(readiness)) return;
+    if (!monitoringReady) return;
 
     setPendingControl("start");
     setActionError(null);
     try {
       let current = match;
       if (current.status === "draft") {
-        current = await matches.updateStatus(current.id, "ready");
+        current = await matches.updateStatus(
+          current.id,
+          isBackendSession ? "live" : "ready",
+        );
         setMatch(current);
       }
       if (current.status === "ready") {
@@ -249,7 +263,7 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
       navigate(matchRoutes.live(current.id), { replace: true });
     } catch {
       setActionError(
-        "Monitoring could not start. Recheck the saved camera and calibration states.",
+        "Monitoring could not start. Recheck the available camera preview and try again.",
       );
     } finally {
       setPendingControl(null);
@@ -299,32 +313,73 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
     );
   }
 
-  const ready = isHardwareReady(readiness);
-  const missing = missingRequirements(readiness);
+  const leftCameraPreview = cameraSessions.streams.SIDELINE_LEFT !== null;
+  const rightCameraPreview = cameraSessions.streams.SIDELINE_RIGHT !== null;
+  const currentReadiness: HardwareReadiness = isBackendSession
+    ? {
+        ...readiness,
+        cameraA: {
+          status: cameraStatus(
+            cameraSessions.sessions.SIDELINE_LEFT.state,
+            leftCameraPreview,
+          ),
+          simulated: false,
+          message: cameraMessage(
+            cameraSessions.sessions.SIDELINE_LEFT.state,
+            leftCameraPreview,
+          ),
+        },
+        cameraB: {
+          status: cameraStatus(
+            cameraSessions.sessions.SIDELINE_RIGHT.state,
+            rightCameraPreview,
+          ),
+          simulated: false,
+          message: cameraMessage(
+            cameraSessions.sessions.SIDELINE_RIGHT.state,
+            rightCameraPreview,
+          ),
+        },
+      }
+    : readiness;
+  const ready = monitoringReady;
+  const missing = isBackendSession
+    ? hasNormalLivePreview
+      ? []
+      : ["One decoded live camera preview"]
+    : missingRequirements(currentReadiness);
   const isBusy = pendingControl !== null;
   const isLive = match.status === "live";
   const isCompleted = match.status === "completed";
-  const workflowResolved = isLive || isCompleted;
+  const workflowResolved =
+    isCompleted || (isLive && (!isBackendSession || hasNormalLivePreview));
+  const resumingLiveWithoutPreview = isLive && !workflowResolved;
   const gatePositive = ready || workflowResolved;
   const gateEyebrow = isCompleted
     ? "Match complete"
-    : isLive
-      ? "Monitoring active"
-      : ready
-        ? "All checks passed"
-        : "Setup incomplete";
+    : resumingLiveWithoutPreview
+      ? "Camera connection required"
+      : isLive
+        ? "Monitoring active"
+        : ready
+          ? "All checks passed"
+          : "Setup incomplete";
   const gateTitle = isCompleted
     ? "Review completed decision"
-    : isLive
-      ? "Live monitor is active"
-      : ready
-        ? "Ready to monitor"
-        : "Complete hardware checks";
+    : resumingLiveWithoutPreview
+      ? "Reconnect a camera"
+      : isLive
+        ? "Live monitor is active"
+        : ready
+          ? "Ready to monitor"
+          : "Complete hardware checks";
   const primaryLabel = isCompleted
     ? "View decision"
-    : isLive
+    : isLive && workflowResolved
       ? "Return to live monitor"
-      : "Start monitoring";
+      : isLive
+        ? "Pair a camera to resume"
+        : "Start monitoring";
 
   return (
     <section className="readiness" aria-labelledby="readiness-title">
@@ -369,8 +424,9 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
                 : undefined
             }
             pending={pendingControl === "cameraA"}
-            readiness={readiness.cameraA}
+            readiness={currentReadiness.cameraA}
             disabled={isBusy}
+            showSimulatorControls={!isBackendSession}
             onChange={(status) => void saveCamera("cameraA", status)}
           />
           <CameraCard
@@ -384,8 +440,9 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
                 : undefined
             }
             pending={pendingControl === "cameraB"}
-            readiness={readiness.cameraB}
+            readiness={currentReadiness.cameraB}
             disabled={isBusy}
+            showSimulatorControls={!isBackendSession}
             onChange={(status) => void saveCamera("cameraB", status)}
           />
           <CalibrationCard
@@ -408,10 +465,16 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
             <h2 id="readiness-gate-title">{gateTitle}</h2>
             {isCompleted ? (
               <p>This match is closed. Open its recorded decision evidence.</p>
-            ) : isLive ? (
+            ) : isLive && workflowResolved ? (
               <p>This match is already running in the live monitor.</p>
+            ) : isLive ? (
+              <p>Pair a phone again before returning to live monitoring.</p>
             ) : ready ? (
-              <p>Both cameras and the calibration profile are saved.</p>
+              <p>
+                {isBackendSession
+                  ? "At least one live camera preview is ready for this POC."
+                  : "Both cameras and the calibration profile are saved."}
+              </p>
             ) : (
               <p>
                 Remaining: <span>{missing.join(" · ")}</span>
@@ -431,8 +494,8 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
           </button>
           {!ready && !workflowResolved && (
             <span id="readiness-start-help" className="readiness__sr-only">
-              Complete both camera health checks and select a calibration
-              profile before starting monitoring.
+              Pair a phone and wait for a decoded live preview before returning
+              to monitoring.
             </span>
           )}
         </section>
@@ -481,7 +544,9 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
       {pairing && (
         <CameraPairingDialog
           pairing={pairing}
+          stream={cameraSessions.streams[pairing.cameraRole]}
           onCancel={() => void cancelPairing()}
+          onPreviewReady={() => setPairing(null)}
           onRegenerate={() => {
             const camera =
               cameraPair?.left.id === pairing.cameraId
@@ -503,6 +568,7 @@ interface CameraCardProps {
   location: string;
   pending: boolean;
   readiness: CameraReadiness;
+  showSimulatorControls: boolean;
   onChange: (status: CameraStatus) => void;
   onPair?: () => void;
 }
@@ -515,6 +581,7 @@ function CameraCard({
   location,
   pending,
   readiness,
+  showSimulatorControls,
   onChange,
   onPair,
 }: CameraCardProps) {
@@ -549,7 +616,8 @@ function CameraCard({
       <p>
         {readiness.message ?? statusDescriptions[readiness.status]}
         {cameraRecord &&
-          " Camera records are saved to Fly Eye; connection checks remain simulated until camera pairing is available."}
+          !showSimulatorControls &&
+          " Pair this phone and keep its live preview connected before monitoring can start."}
       </p>
       <div className="readiness__device-actions">
         {onPair && (
@@ -557,16 +625,44 @@ function CameraCard({
             Pair phone
           </button>
         )}
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={() => onChange(nextCameraStatus(readiness.status))}
-        >
-          {pending ? "Saving state…" : cameraActionLabel(readiness.status)}
-        </button>
+        {showSimulatorControls && (
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => onChange(nextCameraStatus(readiness.status))}
+          >
+            {pending ? "Saving state…" : cameraActionLabel(readiness.status)}
+          </button>
+        )}
       </div>
     </article>
   );
+}
+
+function cameraMessage(
+  state: CameraConnectionState,
+  hasStream: boolean,
+): string {
+  if (hasStream) return "Live camera preview is connected.";
+  if (state === "awaiting-scan")
+    return "Waiting for the phone to scan the pairing code.";
+  if (state === "negotiating")
+    return "Phone connected. Establishing the live preview…";
+  if (state === "reconnecting")
+    return "Live preview was lost. Pair this phone again.";
+  if (state === "error")
+    return "Camera connection failed. Generate a new pairing code.";
+  return "Pair a phone to verify its live preview.";
+}
+
+function cameraStatus(
+  state: CameraConnectionState,
+  hasStream: boolean,
+): CameraStatus {
+  if (hasStream) return "ready";
+  if (state === "error") return "error";
+  if (state === "disconnected") return "disconnected";
+  return "connecting";
 }
 
 interface CalibrationCardProps {

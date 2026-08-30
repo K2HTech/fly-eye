@@ -1,12 +1,19 @@
 import { createContext, useContext } from "react";
 
 import type { CameraSessionSnapshot } from "../features/cameras";
-import type { CameraRole } from "../services";
+import type { CameraRecord, CameraRole } from "../services";
+import type { PairingSession } from "../features/cameras";
 
 export interface CameraContextValue {
   readonly sessions: Readonly<Record<CameraRole, CameraSessionSnapshot>>;
   disconnect(role: CameraRole): void;
   disconnectAll(): void;
+  begin(
+    role: CameraRole,
+    matchId: string,
+    camera: CameraRecord,
+  ): Promise<PairingSession>;
+  streams: Readonly<Record<CameraRole, MediaStream | null>>;
 }
 
 export const CameraContext = createContext<CameraContextValue | null>(null);
