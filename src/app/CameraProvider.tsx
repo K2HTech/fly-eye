@@ -10,12 +10,15 @@ import { useLocation } from "react-router-dom";
 
 import {
   initialCameraSession,
+  publicSignalingError,
   reduceCameraSession,
   type CameraSessionSnapshot,
 } from "../features/cameras";
-import type { CameraRole } from "../services";
+import type { CameraConnection, CameraRecord, CameraRole } from "../services";
+import type { PairingSession } from "../features/cameras";
 import { CameraContext } from "./cameraContext";
 import { useSession } from "./sessionContext";
+import { useAppServices } from "./servicesContext";
 
 interface CameraProviderProps {
   children: ReactNode;
@@ -43,21 +46,132 @@ function activeMatchId(pathname: string): string | null {
 export function CameraProvider({ children }: CameraProviderProps) {
   const location = useLocation();
   const session = useSession();
+  const services = useAppServices();
   const [sessions, setSessions] = useState(snapshots);
   const currentMatch = activeMatchId(location.pathname);
   const ownedMatch = useRef<string | null>(null);
+  const connections = useRef<Partial<Record<CameraRole, CameraConnection>>>({});
+  const sessionIds = useRef<Partial<Record<CameraRole, string>>>({});
+  const [streams, setStreams] = useState<
+    Record<CameraRole, MediaStream | null>
+  >({ SIDELINE_LEFT: null, SIDELINE_RIGHT: null });
 
   const disconnectAll = useCallback(() => {
     ownedMatch.current = null;
+    Object.values(connections.current).forEach((connection) =>
+      connection?.close(),
+    );
+    connections.current = {};
+    sessionIds.current = {};
+    setStreams({ SIDELINE_LEFT: null, SIDELINE_RIGHT: null });
     setSessions(snapshots());
   }, []);
 
   const disconnect = useCallback((role: CameraRole) => {
+    connections.current[role]?.close();
+    delete connections.current[role];
+    delete sessionIds.current[role];
+    setStreams((current) => ({ ...current, [role]: null }));
     setSessions((current) => ({
       ...current,
       [role]: reduceCameraSession(current[role], { type: "disconnect" }),
     }));
   }, []);
+
+  const begin = useCallback(
+    async (
+      role: CameraRole,
+      matchId: string,
+      camera: CameraRecord,
+    ): Promise<PairingSession> => {
+      if (!services.cameraConnections)
+        throw new Error("Camera pairing is unavailable.");
+      disconnect(role);
+      setSessions((current) => ({
+        ...current,
+        [role]: reduceCameraSession(current[role], { type: "create" }),
+      }));
+      const connection = services.cameraConnections.create({
+        onPairing: (pairing) => {
+          sessionIds.current[role] = pairing.sessionId;
+          setSessions((current) => ({
+            ...current,
+            [role]: reduceCameraSession(current[role], {
+              type: "created",
+              pairing,
+            }),
+          }));
+        },
+        onStream: (stream) =>
+          setStreams((current) => ({ ...current, [role]: stream })),
+        onState: (state) => {
+          const sessionId = sessionIds.current[role];
+          if (!sessionId) return;
+          if (state === "error") {
+            setStreams((current) => ({ ...current, [role]: null }));
+          }
+          const event =
+            state === "negotiating"
+              ? { type: "camera-joined" as const, sessionId }
+              : state === "connected"
+                ? { type: "connected" as const, sessionId }
+                : state === "reconnecting"
+                  ? { type: "connection-lost" as const, sessionId }
+                  : {
+                      type: "failed" as const,
+                      sessionId,
+                      error: publicSignalingError(
+                        "SIGNALING_UNAVAILABLE",
+                        true,
+                      ),
+                    };
+          setSessions((current) => ({
+            ...current,
+            [role]: reduceCameraSession(current[role], event),
+          }));
+        },
+        onError: () => {
+          const sessionId = sessionIds.current[role];
+          if (!sessionId) return;
+          setStreams((current) => ({ ...current, [role]: null }));
+          setSessions((current) => ({
+            ...current,
+            [role]: reduceCameraSession(current[role], {
+              type: "failed",
+              sessionId,
+              error: {
+                code: "CONNECTION_FAILED",
+                message:
+                  "The camera connection could not be completed. Generate a new code to try again.",
+                retryable: true,
+              },
+            }),
+          }));
+        },
+      });
+      connections.current[role] = connection;
+      try {
+        return await connection.begin(matchId, camera);
+      } catch (error) {
+        delete connections.current[role];
+        setSessions((current) => ({
+          ...current,
+          [role]: reduceCameraSession(current[role], {
+            type: "failed",
+            sessionId: sessionIds.current[role] ?? "",
+            error: {
+              code: "CONNECTION_FAILED",
+              message:
+                "The camera pairing code could not be created. Please try again.",
+              retryable: true,
+            },
+          }),
+        }));
+        throw error;
+      }
+    },
+    [disconnect, services.cameraConnections],
+  );
 
   useEffect(() => {
     if (
@@ -85,8 +199,8 @@ export function CameraProvider({ children }: CameraProviderProps) {
   useEffect(() => () => disconnectAll(), [disconnectAll]);
 
   const value = useMemo(
-    () => ({ sessions, disconnect, disconnectAll }),
-    [disconnect, disconnectAll, sessions],
+    () => ({ sessions, streams, begin, disconnect, disconnectAll }),
+    [begin, disconnect, disconnectAll, sessions, streams],
   );
   return (
     <CameraContext.Provider value={value}>{children}</CameraContext.Provider>

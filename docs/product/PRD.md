@@ -96,9 +96,11 @@ current UI.
 
 The initial product handles standalone matches. Its normal progression is
 `draft` to `ready` to `live` to `completed`; returning from readiness setup may
-move a ready match back to draft. Readiness requires both cameras and a selected
-calibration profile to report ready, even though those checks are simulated in
-the current UI. Other invalid status transitions are not permitted.
+move a ready match back to draft. For the current normal-camera POC, the UI
+verifies one decoded live camera preview then advances the backend directly from
+`draft` to `live`; backend status has no persisted `ready` state. Calibration
+remains a visible simulated placeholder and the second camera may be unavailable.
+Other invalid status transitions are not permitted.
 
 Singles has one participant per side; doubles has two. The selected scoring
 format remains explicit for the match. Match length is either one game or best

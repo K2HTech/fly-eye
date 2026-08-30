@@ -156,6 +156,21 @@ describe("BackendMatchRepository", () => {
     ).toEqual({ status: "finished" });
   });
 
+  it("allows a backend draft match to start directly as live after the UI gate", async () => {
+    const request = vi
+      .fn()
+      .mockResolvedValueOnce(response())
+      .mockResolvedValueOnce(response({ status: "live" }));
+    const repository = new BackendMatchRepository({ client: client(request) });
+
+    await expect(repository.updateStatus(id, "live")).resolves.toMatchObject({
+      status: "live",
+    });
+    expect(
+      JSON.parse(String((request.mock.calls[1][1] as RequestInit).body)),
+    ).toEqual({ status: "live" });
+  });
+
   it("enforces the readiness gate and domain transition", async () => {
     const request = vi.fn().mockResolvedValue(response());
     const repository = new BackendMatchRepository({
