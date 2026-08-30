@@ -126,7 +126,7 @@ export function reduceCameraSession(
     case "connection-lost":
       if (
         !isCurrent(snapshot, event.sessionId) ||
-        snapshot.state !== "connected"
+        (snapshot.state !== "connected" && snapshot.state !== "negotiating")
       ) {
         return snapshot;
       }

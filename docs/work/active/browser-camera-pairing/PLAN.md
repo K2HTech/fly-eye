@@ -349,7 +349,8 @@ readiness rather than simulated camera status.
 - Show connected metadata and a compact video/first-frame confirmation without
   fabricated values.
 - Keep calibration visibly simulated and independently persisted.
-- Derive the monitoring gate from two current ready streams plus calibration.
+- For the approved POC rule, derive the monitoring gate from at least one
+  current decoded stream. Keep calibration visible but non-blocking.
 - Keep the anonymous demo on its existing simulated path; it does not consume
   the real-camera provider or protected pairing API.
 - Prevent a live match with missing ephemeral cameras from bypassing setup.

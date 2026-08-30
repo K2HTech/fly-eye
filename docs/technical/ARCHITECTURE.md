@@ -115,8 +115,9 @@ Readiness is currently a replaceable application service whose connection
 checks and calibration state are explicitly simulated. For normal backend
 matches, a camera registry obtains exactly the two supported device records:
 `SIDELINE_LEFT` and `SIDELINE_RIGHT`, with 1280x720/30-FPS preview metadata.
-Those records establish later pairing identity only; passing the local gate
-does not mean a physical device was discovered or that captured data is valid.
+Those records establish pairing identity only. For normal matches, readiness
+requires each browser-owned peer to be connected and delivering a live preview;
+saved simulated values cannot satisfy that gate.
 
 Live views, rolling-buffer segments, synchronized frames, reconstructed
 evidence, and decision values are likewise simulated UI behavior in the current
@@ -135,13 +136,17 @@ stale, cross-session, malformed, or unsupported signaling/control messages
 before they can change a camera snapshot. A browser-only adapter now creates
 or cancels backend pairing sessions, authenticates the viewer socket, accepts
 the Flutter offer, exchanges trickle ICE, receives a video track and approved
-control channel, samples bounded diagnostics, and closes resources
+control channel, sends the required application heartbeat while authenticated,
+samples bounded diagnostics, and closes resources
 idempotently. Mobile and viewer tokens, SDP, ICE candidates, and TURN
 credentials are deliberately excluded from persistence-safe models and browser
 storage. An application-level provider now owns the two ephemeral role
 snapshots above same-match readiness, live, review, and decision routes, and
 clears them on sign-out, match switch, workflow exit, or provider teardown.
-UI pairing controls remain later integration work.
+The readiness surface creates the per-camera QR session and derives its normal
+readiness gate from those ephemeral streams. The live surface maps streams by
+their backend role, labels the unrelated review buffer as simulated, and offers
+camera setup when a preview is unavailable.
 
 Evidence: [readiness service contract](../../src/services/contracts.ts), [local
 readiness adapter](../../src/infrastructure/local/localAppServices.ts),

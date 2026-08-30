@@ -50,6 +50,7 @@ instructions](../AGENTS.md).
   specification](work/active/browser-camera-pairing/SPEC.md) and
   [implementation plan](work/active/browser-camera-pairing/PLAN.md), with the
   [backend signaling handoff](work/active/browser-camera-pairing/SIGNALING-SERVER-HANDOFF.md)
+  and [mobile recovery handoff](work/active/browser-camera-pairing/MOBILE-RECOVERY-HANDOFF.md)
 - Technical baseline: [architecture](technical/ARCHITECTURE.md), [quality
   requirements](technical/QUALITY-REQUIREMENTS.md), and [architecture decision
   records](technical/decisions/README.md)

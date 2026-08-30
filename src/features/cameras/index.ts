@@ -15,6 +15,7 @@ export type {
   PairingQrPayload,
   PairingSession,
   SignalingCandidate,
+  SignalingDescription,
   SignalingErrorCode,
   ViewerSignalingMessage,
 } from "./protocol";

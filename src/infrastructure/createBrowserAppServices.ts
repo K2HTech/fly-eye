@@ -10,7 +10,10 @@ import {
   createBackendMatchRepository,
   MemoryCredentialStore,
 } from "./backend";
-import { createBackendPairingClient } from "./browser/cameras";
+import {
+  BrowserCameraConnectionFactory,
+  createBackendPairingClient,
+} from "./browser/cameras";
 import { createHybridAuthService, UnavailableNormalAuthService } from "./auth";
 import { HybridMatchRepository, UnavailableMatchRepository } from "./matches";
 import {
@@ -77,6 +80,7 @@ export function createBrowserAppServices(
     now: options.now,
   });
 
+  const pairing = createBackendPairingClient(client, environment.signalingUrl);
   return {
     ...local,
     auth,
@@ -84,6 +88,7 @@ export function createBrowserAppServices(
       auth.getActiveSessionMode(),
     ),
     cameras: createBackendCameraRegistry({ client }),
-    pairing: createBackendPairingClient(client, environment.signalingUrl),
+    pairing,
+    cameraConnections: new BrowserCameraConnectionFactory(pairing),
   };
 }
