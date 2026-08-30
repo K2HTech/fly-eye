@@ -177,7 +177,9 @@ export class BackendMatchRepository implements MatchRepository {
   async updateStatus(id: string, status: MatchStatus) {
     const current = await this.get(id);
     if (!current) throw new Error("The requested match was not found.");
-    assertValidMatchStatusTransition(current.status, status);
+    const directBackendStart = current.status === "draft" && status === "live";
+    if (!directBackendStart)
+      assertValidMatchStatusTransition(current.status, status);
     if (status === "ready") {
       if (!this.readiness || !isHardwareReady(await this.readiness.get(id)))
         throw new Error("Both cameras and calibration must be ready first.");

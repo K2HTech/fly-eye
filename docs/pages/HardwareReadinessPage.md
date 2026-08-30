@@ -10,9 +10,8 @@ Status: Current
 
 ## Purpose
 
-The hardware-readiness page prevents an operator from starting monitoring
-until the selected match has two healthy camera paths and an applicable court
-calibration.
+The hardware-readiness page prepares camera paths before monitoring. For the
+current POC, one healthy live camera path is sufficient to start.
 
 ## Actors and entry conditions
 
@@ -25,8 +24,9 @@ calibration.
 
 ## Business rules
 
-- Monitoring cannot start until Camera A, Camera B, and a calibration profile
-  are all ready.
+- For normal POC matches, monitoring cannot start until at least one paired
+  camera has a current decoded live preview. The other camera may be added or
+  repaired later.
 - Camera and calibration progress is saved independently so successful work is
   not lost when another check fails or the page is reopened.
 - For normal matches, opening readiness obtains exactly one backend
@@ -34,13 +34,20 @@ calibration.
   right cards use those role directions and their backend 1280x720/30-FPS
   preview metadata. Unexpected, duplicate, inactive, or incompatible records
   block setup with an actionable error rather than being guessed at.
-- The current camera checks and calibration profile are simulated. Their
-  simulated status must remain clear and must not be represented as proof of
-  physical hardware readiness.
-- Starting an eligible draft match moves it through ready status and into live
-  monitoring.
-- A match already in live monitoring returns to its monitor; a completed match
-  opens its decision evidence instead of beginning another monitoring session.
+- For normal backend matches, each camera becomes ready only when its paired
+  phone has a connected peer and a current live video preview. Saved or
+  simulated camera-check values cannot satisfy this gate. Pairing, loss, and
+  replacement remain independent for the two roles.
+- The demo path retains its clearly simulated camera checks. Calibration stays
+  visible as a simulated known-good selection but does not gate this POC.
+- For normal POC matches, starting from draft advances the backend directly to
+  live after the page verifies one decoded preview. Demo retains its local
+  ready stage before live monitoring.
+- A live normal match only returns to its monitor after at least one current
+  decoded preview is present in this browser session. After sign-in, refresh,
+  or restart, the operator must pair a phone again before returning. A
+  completed match opens its decision evidence instead of beginning another
+  monitoring session.
 - A demo operator must explicitly confirm the timed trial before monitoring
   starts. Timing and expiry are owned by the
   [demo-trial workflow](../workflows/DemoTrialWorkflow.md).
@@ -52,7 +59,8 @@ calibration.
   cannot be loaded; the operator receives a safe route back to the match
   workspace.
 - **Incomplete:** One or more required checks remain and monitoring is blocked.
-- **Ready:** Both camera paths and calibration satisfy the monitoring gate.
+- **Ready:** At least one normal camera has a decoded live preview, or the
+  demo path satisfies its existing simulated gate.
 - **Live:** The match has already started and can return to monitoring.
 - **Completed:** The match is closed and can open its decision view.
 - **Action failure:** A readiness update or monitoring transition failed; the
@@ -61,14 +69,15 @@ calibration.
 
 ## Actions and consequences
 
-| Action                           | Business consequence                                                                             |
-| -------------------------------- | ------------------------------------------------------------------------------------------------ |
-| Advance or retry a camera check  | Updates only that camera's saved readiness state.                                                |
-| Reset a camera before monitoring | Makes the readiness gate incomplete again.                                                       |
-| Select or clear calibration      | Updates the saved court-profile requirement.                                                     |
-| Start monitoring                 | Enters live monitoring only when all readiness requirements and valid match transitions succeed. |
-| Confirm demo start               | Starts monitoring and begins the single 15-minute demo trial.                                    |
-| Keep configuring                 | Closes the demo confirmation without starting the timer.                                         |
+| Action                           | Business consequence                                                                                           |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Pair phone                       | Creates a short-lived code for one backend camera and waits for its independent live preview.                  |
+| Advance or retry a camera check  | Demo-only simulated action; updates only that camera's saved readiness state.                                  |
+| Reset a camera before monitoring | Demo-only simulated action; makes the readiness gate incomplete again.                                         |
+| Select or clear calibration      | Updates the saved court-profile requirement.                                                                   |
+| Start monitoring                 | For normal POC matches, enters live monitoring with at least one decoded preview and a valid match transition. |
+| Confirm demo start               | Starts monitoring and begins the single 15-minute demo trial.                                                  |
+| Keep configuring                 | Closes the demo confirmation without starting the timer.                                                       |
 
 ## Navigation
 
@@ -79,6 +88,5 @@ calibration.
 
 ## Open questions
 
-Real device discovery, health criteria, calibration-profile applicability,
-permissions, and recovery behavior must be specified with the hardware
-integration. The current simulated sequence does not define those contracts.
+Calibration-profile applicability, measured camera health diagnostics,
+permissions, and recovery after a browser refresh remain to be specified.

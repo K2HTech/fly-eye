@@ -5,13 +5,17 @@ import { serializePairingQrPayload, type PairingSession } from "../cameras";
 
 interface CameraPairingDialogProps {
   pairing: PairingSession;
+  stream: MediaStream | null;
   onCancel(): void;
+  onPreviewReady(): void;
   onRegenerate(): void;
 }
 
 export function CameraPairingDialog({
   pairing,
+  stream,
   onCancel,
+  onPreviewReady,
   onRegenerate,
 }: CameraPairingDialogProps) {
   const [svg, setSvg] = useState<string | null>(null);
@@ -72,6 +76,7 @@ export function CameraPairingDialog({
               : "Preparing secure QR code…"}
           </p>
         )}
+        <PairingPreview stream={stream} onReady={onPreviewReady} />
         <p role="timer" aria-live="polite">
           {expired ? "Expired" : `Code expires in ${label}`}
         </p>
@@ -89,5 +94,33 @@ export function CameraPairingDialog({
         </div>
       </section>
     </div>
+  );
+}
+
+function PairingPreview({
+  stream,
+  onReady,
+}: {
+  stream: MediaStream | null;
+  onReady(): void;
+}) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (videoRef.current) videoRef.current.srcObject = stream;
+  }, [stream]);
+
+  return (
+    <video
+      ref={videoRef}
+      className="readiness__pairing-preview"
+      aria-label="Paired camera preview"
+      autoPlay
+      muted
+      playsInline
+      onLoadedData={() => {
+        if (stream) onReady();
+      }}
+    />
   );
 }

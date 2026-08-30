@@ -6,8 +6,14 @@ import { describe, expect, it, vi } from "vitest";
 import App from "../../App";
 import { createAppMemoryRouter } from "../../app/router";
 import type { CameraStatus, MatchStatus } from "../../domain";
+import type { PairingSession } from "../cameras";
 import { createLocalAppServices } from "../../infrastructure/local";
-import type { AppServices, CreateMatchInput } from "../../services";
+import type {
+  AppServices,
+  CameraConnectionCallbacks,
+  CameraRecord,
+  CreateMatchInput,
+} from "../../services";
 import { MemoryStorage } from "../../test/MemoryStorage";
 
 const matchInput: CreateMatchInput = {
@@ -76,6 +82,91 @@ async function readinessApp(options?: {
   return { ...result, match, router, services };
 }
 
+async function backendReadinessApp(options?: { live?: boolean }) {
+  const base = createLocalAppServices(new MemoryStorage(), {
+    createId: (prefix) => `${prefix}-42`,
+    now: () => new Date().toISOString(),
+  });
+  const identity = await base.auth.register({
+    email: "operator@example.com",
+    password: "test-password",
+    passwordConfirmation: "test-password",
+  });
+  const match = await base.matches.create(matchInput);
+  if (options?.live) {
+    await base.readiness.save(match.id, {
+      cameraA: { status: "ready", simulated: true },
+      cameraB: { status: "ready", simulated: true },
+      calibrationProfile: profile,
+    });
+    await base.matches.updateStatus(match.id, "ready");
+    await base.matches.updateStatus(match.id, "live");
+  }
+  const left: CameraRecord = {
+    id: "00000000-0000-4000-8000-000000000002",
+    matchId: match.id,
+    name: "Sideline left",
+    role: "SIDELINE_LEFT",
+    sourceType: "device",
+    sourceRef: "test-left",
+    resolution: { width: 1280, height: 720 },
+    targetFps: 30,
+    isActive: true,
+    calibration: null,
+    createdAt: new Date().toISOString(),
+  };
+  const right: CameraRecord = {
+    ...left,
+    id: "00000000-0000-4000-8000-000000000003",
+    name: "Sideline right",
+    role: "SIDELINE_RIGHT",
+    sourceRef: "test-right",
+  };
+  const pairing: PairingSession = {
+    protocol: "fly-eye-camera-pairing",
+    version: 1,
+    sessionId: "session_0123456789abcdef",
+    matchId: match.id,
+    cameraId: left.id,
+    cameraRole: left.role,
+    expiresAt: "2030-08-30T12:00:00.000Z",
+    signalingUrl: "wss://signal.example/api/v1/signal",
+    mobileToken: "a".repeat(32),
+    viewerToken: "b".repeat(32),
+  };
+  let callbacks: CameraConnectionCallbacks | null = null;
+  const services: AppServices = {
+    ...base,
+    auth: {
+      ...base.auth,
+      getCurrentSession: async () => ({
+        ...identity,
+        session: { ...identity.session, mode: "backend" },
+      }),
+    },
+    cameras: {
+      list: async () => [left, right],
+      prepare: async () => ({ left, right }),
+    },
+    cameraConnections: {
+      create: (nextCallbacks) => {
+        callbacks = nextCallbacks;
+        return {
+          begin: async () => {
+            nextCallbacks.onPairing(pairing);
+            return pairing;
+          },
+          close: () => undefined,
+        };
+      },
+    },
+  };
+  const router = createAppMemoryRouter([`/matches/${match.id}/readiness`]);
+  render(<App router={router} services={services} />);
+  await screen.findByRole("heading", { name: /hardware readiness/i });
+  return { callbacks: () => callbacks, match, router };
+}
+
 function camera(name: "Camera A" | "Camera B") {
   return screen.getByRole("article", { name });
 }
@@ -105,7 +196,7 @@ describe("hardware readiness", () => {
     expect(screen.getByText(/camera b health check/i)).toBeVisible();
     const start = screen.getByRole("button", { name: /start monitoring/i });
     expect(start).toBeDisabled();
-    expect(start).toHaveAccessibleDescription(/complete both camera/i);
+    expect(start).toHaveAccessibleDescription(/pair a phone/i);
   });
 
   it("persists camera progress independently and supports error recovery", async () => {
@@ -356,6 +447,36 @@ describe("hardware readiness", () => {
     expect(router.state.location.pathname).toBe(
       `/matches/${match.id}/decision`,
     );
+  });
+
+  it("requires a new camera preview before a signed-in live match can resume", async () => {
+    await backendReadinessApp({ live: true });
+
+    expect(
+      screen.getByRole("heading", { name: /reconnect a camera/i }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: /pair a camera to resume/i }),
+    ).toBeDisabled();
+  });
+
+  it("marks a backend camera ready when its first decoded preview arrives", async () => {
+    const user = userEvent.setup();
+    const { callbacks } = await backendReadinessApp();
+
+    await user.click(
+      within(screen.getByRole("article", { name: /left camera/i })).getByRole(
+        "button",
+        { name: /pair phone/i },
+      ),
+    );
+    callbacks()?.onStream({} as MediaStream);
+
+    expect(
+      await within(
+        screen.getByRole("article", { name: /left camera/i }),
+      ).findByText(/^ready$/i),
+    ).toBeVisible();
   });
 
   it("shows a recoverable state for an unknown match", async () => {

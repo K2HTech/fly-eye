@@ -30,12 +30,16 @@ documented by [MatchDashboardPage](../pages/MatchDashboardPage.md),
    readiness. Cancellation before creation returns to the dashboard without
    creating a match.
 5. Readiness obtains exactly one backend left-sideline and one right-sideline
-   device-camera record, then the operator completes the still-simulated
-   camera checks and selects a calibration profile.
-   Each successful readiness update is retained independently.
-6. Monitoring remains blocked until the complete readiness gate succeeds.
-7. Starting monitoring advances the match through valid ready and live states,
-   then opens its live workspace.
+   device-camera record. For this POC, the operator needs at least one decoded
+   live preview; the other camera can be paired later. Calibration remains a
+   visible simulated placeholder.
+6. Monitoring remains blocked until the applicable POC readiness gate succeeds.
+7. Starting a normal POC match with one decoded preview advances its backend
+   status directly to live, then opens its live workspace. Demo retains the
+   local ready stage before live.
+8. A normal live match reopened without any current preview returns to hardware
+   readiness because camera connections are ephemeral and never restored after
+   sign-in or browser restart.
 
 ## Match rules
 
@@ -48,7 +52,8 @@ documented by [MatchDashboardPage](../pages/MatchDashboardPage.md),
 - The backend does not yet store scoring fields. The UI locally supplements a
   backend UUID with match length and point target; an unknown backend match
   defaults to best-of-three/21 until backend scoring synchronization is added.
-- Readiness requires both camera paths and one applicable calibration profile.
+- Normal POC readiness requires at least one decoded live preview; calibration
+  does not gate entry and the other camera may be unavailable.
 - Simulated readiness must not be interpreted as connected physical hardware.
 
 ## Match status and resume behavior
@@ -67,12 +72,12 @@ The transition to completed requires an explicit **End match** action. A
 line-call result does not complete the match. Umpire score control and automatic
 completion based on games won are deferred.
 
-| Status    | Safe resume destination                                   |
-| --------- | --------------------------------------------------------- |
-| Draft     | Hardware readiness to continue setup                      |
-| Ready     | Hardware readiness to confirm or recover monitoring entry |
-| Live      | Live monitor                                              |
-| Completed | Decision view                                             |
+| Status    | Safe resume destination                                                 |
+| --------- | ----------------------------------------------------------------------- |
+| Draft     | Hardware readiness to continue setup                                    |
+| Ready     | Hardware readiness to confirm or recover monitoring entry               |
+| Live      | Hardware readiness until a current preview is paired; then live monitor |
+| Completed | Decision view                                                           |
 
 ## Recovery behavior
 
