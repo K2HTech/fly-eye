@@ -30,6 +30,7 @@ export interface ViewerSignalingTransport {
   connect(
     pairing: PairingSession,
     listener: (message: ViewerSignalingMessage) => void,
+    onClosedByServer?: () => void,
   ): Promise<void>;
   sendAnswer(sessionId: string, description: RTCSessionDescriptionInit): void;
   sendCandidate(sessionId: string, candidate: RTCIceCandidateInit | null): void;
@@ -64,12 +65,14 @@ function safeCandidate(candidate: RTCIceCandidateInit | null) {
 export class BrowserViewerSignalingTransport implements ViewerSignalingTransport {
   private socket: WebSocketLike | null = null;
   private sessionId: string | null = null;
+  private heartbeatTimer: number | null = null;
 
   constructor(private readonly factory: WebSocketFactory) {}
 
   connect(
     pairing: PairingSession,
     listener: (message: ViewerSignalingMessage) => void,
+    onClosedByServer?: () => void,
   ): Promise<void> {
     this.close();
     const socket = this.factory.create(pairing.signalingUrl);
@@ -103,12 +106,12 @@ export class BrowserViewerSignalingTransport implements ViewerSignalingTransport
       socket.onmessage = (event) => {
         if (typeof event.data !== "string") return;
         try {
-          listener(
-            parseViewerSignalingMessage(
-              JSON.parse(event.data) as unknown,
-              pairing.sessionId,
-            ),
+          const message = parseViewerSignalingMessage(
+            JSON.parse(event.data) as unknown,
+            pairing.sessionId,
           );
+          if (message.type === "authenticated") this.startHeartbeat();
+          listener(message);
         } catch (error) {
           if (error instanceof PairingProtocolError) {
             fail("Fly Eye received an invalid camera signaling message.");
@@ -116,13 +119,14 @@ export class BrowserViewerSignalingTransport implements ViewerSignalingTransport
         }
       };
       socket.onerror = () => fail("Unable to connect to camera signaling.");
-      socket.onclose = (event) => {
+      socket.onclose = () => {
         if (!settled) fail("Camera signaling closed before pairing completed.");
-        if (this.socket === socket) this.socket = null;
-        if (this.sessionId === pairing.sessionId) this.sessionId = null;
-        if (event.code !== 1000 && event.code !== 1001) {
-          /* The connection owner classifies recovery after it observes closure. */
+        if (this.socket === socket) {
+          this.socket = null;
+          this.stopHeartbeat();
+          onClosedByServer?.();
         }
+        if (this.sessionId === pairing.sessionId) this.sessionId = null;
       };
     });
   }
@@ -150,7 +154,26 @@ export class BrowserViewerSignalingTransport implements ViewerSignalingTransport
     const socket = this.socket;
     this.socket = null;
     this.sessionId = null;
+    this.stopHeartbeat();
     if (socket) socket.close(1000, "Fly Eye camera session closed");
+  }
+
+  private startHeartbeat(): void {
+    this.stopHeartbeat();
+    this.heartbeatTimer = window.setInterval(() => {
+      if (!this.sessionId || this.socket?.readyState !== 1) return;
+      try {
+        this.send(this.sessionId, "ping", {});
+      } catch {
+        this.stopHeartbeat();
+      }
+    }, 20_000);
+  }
+
+  private stopHeartbeat(): void {
+    if (this.heartbeatTimer === null) return;
+    window.clearInterval(this.heartbeatTimer);
+    this.heartbeatTimer = null;
   }
 
   private send(sessionId: string, type: string, payload: object): void {

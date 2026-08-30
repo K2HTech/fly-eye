@@ -106,6 +106,15 @@ describe("viewer signaling protocol", () => {
     ).toMatchObject({ type: "authenticated", cameraId });
     expect(
       parseViewerSignalingMessage(
+        envelope("camera-joined", {
+          cameraId,
+          cameraRole: "SIDELINE_LEFT",
+        }),
+        sessionId,
+      ),
+    ).toMatchObject({ type: "camera-joined", cameraId });
+    expect(
+      parseViewerSignalingMessage(
         envelope("offer", {
           description: { type: "offer", sdp: "v=0" },
         }),
@@ -124,6 +133,7 @@ describe("viewer signaling protocol", () => {
     ["another session", envelope("pong", {}, "session_other_0123456789")],
     ["unknown type", envelope("surprise", {})],
     ["malformed candidate", envelope("ice-candidate", { candidate: {} })],
+    ["camera join without camera identity", envelope("camera-joined", {})],
     [
       "unknown error code",
       envelope("error", {

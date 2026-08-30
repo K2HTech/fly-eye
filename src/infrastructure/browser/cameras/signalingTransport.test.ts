@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { PairingSession } from "../../../features/cameras";
 import {
@@ -35,6 +35,11 @@ class FakeSocket implements WebSocketLike {
     this.readyState = 3;
   }
 
+  closeFromServer(code = 1006) {
+    this.readyState = 3;
+    this.onclose?.({ code } as CloseEvent);
+  }
+
   open() {
     this.readyState = 1;
     this.onopen?.(new Event("open"));
@@ -48,6 +53,8 @@ class FakeSocket implements WebSocketLike {
 }
 
 describe("BrowserViewerSignalingTransport", () => {
+  afterEach(() => vi.useRealTimers());
+
   it("authenticates first, validates messages, and sends only supported outbound envelopes", async () => {
     const socket = new FakeSocket();
     const transport = new BrowserViewerSignalingTransport({
@@ -70,7 +77,10 @@ describe("BrowserViewerSignalingTransport", () => {
       version: 1,
       type: "camera-joined",
       sessionId: pairing.sessionId,
-      payload: {},
+      payload: {
+        cameraId: pairing.cameraId,
+        cameraRole: pairing.cameraRole,
+      },
     });
     expect(messages).toEqual(["camera-joined"]);
 
@@ -114,5 +124,59 @@ describe("BrowserViewerSignalingTransport", () => {
     await connected;
     transport.close();
     expect(() => transport.leave(pairing.sessionId)).toThrow(/not connected/i);
+  });
+
+  it("keeps an authenticated viewer session alive with heartbeats", async () => {
+    vi.useFakeTimers();
+    const socket = new FakeSocket();
+    const transport = new BrowserViewerSignalingTransport({
+      create: () => socket,
+    });
+    const connected = transport.connect(pairing, () => undefined);
+    socket.open();
+    await connected;
+    socket.message({
+      version: 1,
+      type: "authenticated",
+      sessionId: pairing.sessionId,
+      payload: {
+        role: "viewer",
+        cameraId: pairing.cameraId,
+        cameraRole: pairing.cameraRole,
+        expiresAt: pairing.expiresAt,
+        iceServers: [],
+      },
+    });
+
+    vi.advanceTimersByTime(20_000);
+    expect(JSON.parse(socket.sent.at(-1) ?? "{}")).toEqual({
+      version: 1,
+      type: "ping",
+      sessionId: pairing.sessionId,
+      payload: {},
+    });
+
+    transport.close();
+    vi.advanceTimersByTime(20_000);
+    expect(socket.sent).toHaveLength(2);
+  });
+
+  it("notifies its owner when the server closes the viewer socket", async () => {
+    const socket = new FakeSocket();
+    const transport = new BrowserViewerSignalingTransport({
+      create: () => socket,
+    });
+    const onClosedByServer = vi.fn();
+    const connected = transport.connect(
+      pairing,
+      () => undefined,
+      onClosedByServer,
+    );
+    socket.open();
+    await connected;
+
+    socket.closeFromServer(1000);
+
+    expect(onClosedByServer).toHaveBeenCalledOnce();
   });
 });

@@ -104,7 +104,12 @@ export type ViewerSignalingMessage =
       readonly expiresAt: string;
       readonly iceServers: readonly IceServer[];
     }
-  | { readonly type: "camera-joined"; readonly sessionId: string }
+  | {
+      readonly type: "camera-joined";
+      readonly sessionId: string;
+      readonly cameraId: string;
+      readonly cameraRole: CameraRole;
+    }
   | {
       readonly type: "offer";
       readonly sessionId: string;
@@ -463,8 +468,13 @@ export function parseViewerSignalingMessage(
         iceServers: parseIceServers(payload.iceServers),
       };
     case "camera-joined":
-      exactKeys(payload, [], code);
-      return { type: "camera-joined", sessionId: receivedSessionId };
+      exactKeys(payload, ["cameraId", "cameraRole"], code);
+      return {
+        type: "camera-joined",
+        sessionId: receivedSessionId,
+        cameraId: uuid(payload.cameraId, code),
+        cameraRole: role(payload.cameraRole, code),
+      };
     case "offer": {
       exactKeys(payload, ["description"], code);
       const description = object(payload.description, code);

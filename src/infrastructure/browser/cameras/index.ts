@@ -9,6 +9,7 @@ export {
   createBrowserViewerSignalingTransport,
 } from "./signalingTransport";
 export { BrowserPeerConnection } from "./peerConnection";
+export { BrowserCameraConnectionFactory } from "./connection";
 export type {
   CameraDiagnostics,
   PeerConnectionCallbacks,

@@ -15,6 +15,7 @@ describe("parseEnvironment", () => {
       apiBaseUrl: "https://api.example.test/api/v1",
       signalingUrl: "wss://api.example.test/api/v1/signal",
       cameraSimulatorEnabled: false,
+      insecurePublicSignalingAllowed: false,
     });
   });
 
@@ -70,7 +71,7 @@ describe("parseEnvironment", () => {
     });
   });
 
-  it("rejects insecure public development endpoints", () => {
+  it("requires an explicit development flag for public ws signaling", () => {
     const result = parseEnvironment({
       ...valid,
       VITE_API_BASE_URL: "http://public.example.test",
@@ -84,6 +85,37 @@ describe("parseEnvironment", () => {
         "Signaling URL must use wss (private-network ws is development-only).",
       ]);
     }
+  });
+
+  it("allows explicitly opted-in public ws signaling only in development", () => {
+    const result = parseEnvironment({
+      ...valid,
+      VITE_SIGNALING_URL: "ws://45.77.47.58:9080/api/v1/signal",
+      VITE_ALLOW_INSECURE_PUBLIC_SIGNALING: "true",
+    });
+
+    expect(result).toMatchObject({
+      status: "available",
+      signalingUrl: "ws://45.77.47.58:9080/api/v1/signal",
+      insecurePublicSignalingAllowed: true,
+    });
+  });
+
+  it("rejects the insecure public signaling override in production", () => {
+    const result = parseEnvironment(
+      {
+        ...valid,
+        VITE_ALLOW_INSECURE_PUBLIC_SIGNALING: "true",
+      },
+      "production",
+    );
+
+    expect(result).toEqual({
+      status: "unavailable",
+      issues: [
+        "VITE_ALLOW_INSECURE_PUBLIC_SIGNALING cannot be enabled in production.",
+      ],
+    });
   });
 
   it("rejects a signaling URL outside the implemented endpoint", () => {

@@ -211,16 +211,16 @@ the successful response:
   "protocol": "fly-eye-camera-pairing",
   "version": 1,
   "sessionId": "01K5Y2J6Z7H8K9M0N1P2Q3R4S5",
-  "cameraSlot": "A",
-  "signalingUrl": "wss://signal.fly-eye.example/v1/signal",
+  "cameraId": "00000000-0000-4000-8000-000000000002",
+  "cameraRole": "SIDELINE_LEFT",
+  "signalingUrl": "wss://signal.fly-eye.example/api/v1/signal",
   "pairingToken": "server-generated-mobile-token",
-  "expiresAt": "2026-08-25T10:30:00.000Z",
-  "matchName": "Fly Eye Open — Court 2"
+  "expiresAt": "2026-08-25T10:30:00.000Z"
 }
 ```
 
-`matchName` is optional display data added by React. The backend must not use
-it for authorization or session identity.
+The backend authorizes the session and camera by `sessionId`, `cameraId`, and
+the one-time `pairingToken`; it does not use a client-side camera slot.
 
 ## 7. WebSocket envelope
 
@@ -363,7 +363,7 @@ If the app process loses the peer token, the operator generates a new QR.
 
 After mobile join succeeds:
 
-1. Send `camera-joined` to React.
+1. Send `camera-joined` to React with the bound `cameraId` and `cameraRole`.
 2. Send `viewer-ready` to Flutter.
 3. Flutter creates its peer connection using `iceServers`.
 4. Flutter adds one video track and the `fly-eye-control-v1` data channel.
@@ -468,6 +468,10 @@ signaling after the peer connection opens.
 - An authenticated viewer may reconnect with its unexpired viewer token.
 - A joined camera may reconnect with its in-memory peer token.
 - `leave` closes the role. Viewer leave invalidates the entire pairing session.
+  A camera's explicit `leave` must notify the viewer with `camera-left` and
+  `retryable: false` before closing its socket, so Fly Eye can distinguish it
+  from a recoverable network interruption. Closing the whole session without
+  that message forces the browser to show only a generic connection failure.
 - `DELETE /v1/camera-pairings/:sessionId` provides idempotent HTTP cleanup for
   a viewer that cannot use its WebSocket. Production requires viewer/operator
   authorization.

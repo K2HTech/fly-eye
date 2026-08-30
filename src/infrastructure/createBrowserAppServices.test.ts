@@ -9,6 +9,7 @@ const environment: AvailableEnvironment = {
   apiBaseUrl: "https://api.fly-eye.example/api/v1",
   signalingUrl: "wss://api.fly-eye.example/api/v1/signal",
   cameraSimulatorEnabled: false,
+  insecurePublicSignalingAllowed: false,
 };
 
 const user = {
