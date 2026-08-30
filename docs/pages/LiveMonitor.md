@@ -1,6 +1,6 @@
 # LiveMonitor
 
-Status: Current behavior with approved implementation gap
+Status: Current
 
 - Route: `#/matches/:matchId/live`
 - Primary source: [`LiveMonitor.tsx`](../../src/features/live/LiveMonitor.tsx)
@@ -29,10 +29,14 @@ is owned by the [line-call review workflow](../workflows/LineCallReviewWorkflow.
 
 ## Business rules and current boundaries
 
-- The two camera perspectives and their synchronization represent the intended
-  review context, but the current views are simulated court imagery. They are
-  not evidence that cameras are capturing, calibrated, or processing physical
-  play.
+- For normal paired matches, the left and right panels render the current live
+  WebRTC video previews for `SIDELINE_LEFT` and `SIDELINE_RIGHT`. Without any
+  current preview, Fly Eye redirects directly to camera setup for a fresh
+  pairing. A missing secondary preview is a connection failure, not evidence
+  or a line-call result, and the monitor offers camera setup repair.
+- In the demo path or without a current preview, the court imagery remains a
+  visible simulation and does not represent physical capture, calibration, or
+  processing.
 - The rolling buffer communicates the product concept of retaining recent play
   so the operator can review a rally after it occurs. Its duration, detected
   rally segments, frame rate, latency, score, court, teams, and elapsed time in
@@ -45,20 +49,28 @@ is owned by the [line-call review workflow](../workflows/LineCallReviewWorkflow.
 
 ## Meaningful states
 
-- **Monitoring active:** The operator can see the simulated camera context and
-  select the most recent rally for review.
+- **Monitoring active:** The operator can see two current previews when both
+  phones are connected, or clearly marked simulated context where applicable,
+  and select the most recent rally for review.
 - **Review requested:** The selected rally opens the clip-review workflow.
-- **Feed or processing failure:** No product-level recovery state is currently
-  defined by this page; real device-health and processing failures must be
-  specified with the hardware and backend integrations.
+- **All feeds unavailable:** The normal operator returns to camera setup for a
+  fresh pairing. With one remaining preview, the operator is told the affected
+  secondary preview is unavailable and can repair it from camera setup. The
+  simulated review controls do not turn that failure into evidence.
+
+Camera status uses the shared operator wording: **Live** has a red activity
+indicator, **Reconnecting camera…** is temporary recovery, and **Offline** is
+unavailable. The compact Camera setup action appears in the monitor header
+only when a normal camera requires repair.
 
 ## Actions and consequences
 
-| Action            | Business consequence                                       |
-| ----------------- | ---------------------------------------------------------- |
-| Review last rally | Opens synchronized clip review for operator inspection.    |
-| F1                | Keyboard equivalent of requesting the latest rally review. |
-| End match         | Approved product action, not yet available on this page.   |
+| Action                 | Business consequence                                         |
+| ---------------------- | ------------------------------------------------------------ |
+| Review last rally      | Opens synchronized clip review for operator inspection.      |
+| F1                     | Keyboard equivalent of requesting the latest rally review.   |
+| Return to camera setup | Opens readiness when a required live preview is unavailable. |
+| End match              | Approved product action, not yet available on this page.     |
 
 ## Navigation
 
@@ -76,7 +88,6 @@ is owned by the [line-call review workflow](../workflows/LineCallReviewWorkflow.
 
 ## Open questions
 
-The product owner must define how real camera loss, synchronization drift,
-buffer retention, and processing failure affect the operator's ability to call
-or revisit a rally. The current UI does not establish those device or inference
-policies.
+The product owner must define synchronization drift, buffer retention, and
+processing failure policies for decisions. The current UI does not establish
+those device or inference policies.

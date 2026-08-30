@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import "./live-monitor.css";
 
@@ -17,7 +17,9 @@ export interface CameraFeed {
   resolution: string;
   frameRate: number;
   latencyMs: number;
-  status: "online" | "offline";
+  status: "online" | "offline" | "reconnecting";
+  stream?: MediaStream | null;
+  simulated?: boolean;
 }
 
 export interface MatchState {
@@ -41,6 +43,7 @@ export interface RollingBuffer {
 }
 
 export interface LiveMonitorProps {
+  onReturnToSetup?: () => void;
   onReview: () => void;
   match?: MatchState;
   cameras?: readonly CameraFeed[];
@@ -125,7 +128,12 @@ function CourtView({ camera }: { camera: CameraFeed }) {
 }
 
 function CameraCard({ camera }: { camera: CameraFeed }) {
-  const statusLabel = camera.status === "online" ? "Live" : "Offline";
+  const statusLabel =
+    camera.status === "online"
+      ? "Live"
+      : camera.status === "reconnecting"
+        ? "Reconnecting"
+        : "Offline";
 
   return (
     <article
@@ -140,20 +148,44 @@ function CameraCard({ camera }: { camera: CameraFeed }) {
           />
           {camera.name} — {camera.position}
         </h2>
-        <span className="live-monitor__feed-meta">
-          {camera.resolution} · {camera.latencyMs.toFixed(1)} ms
-        </span>
+        <span className="live-monitor__feed-meta">{camera.resolution}</span>
       </header>
       <div className="live-monitor__well">
-        <CourtView camera={camera} />
+        {camera.stream ? (
+          <CameraVideo camera={camera} />
+        ) : (
+          <CourtView camera={camera} />
+        )}
         <span
           className={`live-monitor__feed-tag live-monitor__feed-tag--${camera.status}`}
           aria-label={`${camera.name} status: ${statusLabel}`}
         >
           {statusLabel}
         </span>
+        {camera.status === "reconnecting" && (
+          <span className="live-monitor__reconnecting" role="status">
+            Reconnecting camera…
+          </span>
+        )}
       </div>
     </article>
+  );
+}
+
+function CameraVideo({ camera }: { camera: CameraFeed }) {
+  const video = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    if (video.current) video.current.srcObject = camera.stream ?? null;
+  }, [camera.stream]);
+  return (
+    <video
+      ref={video}
+      className="live-monitor__video"
+      aria-label={`${camera.name} live camera preview`}
+      autoPlay
+      muted
+      playsInline
+    />
   );
 }
 
@@ -163,12 +195,13 @@ function BufferTrack({ buffer }: { buffer: RollingBuffer }) {
   return (
     <div className="live-monitor__buffer" aria-label="Rolling buffer">
       <p className="live-monitor__eyebrow">
-        Rolling buffer — last {buffer.durationSeconds} s is always recorded
+        Simulated review buffer — last {buffer.durationSeconds} s shown for
+        workflow demonstration
       </p>
       <div
         className="live-monitor__track"
         role="img"
-        aria-label={`Last ${buffer.durationSeconds} seconds recorded with ${buffer.segments.length} detected rallies`}
+        aria-label={`Simulated ${buffer.durationSeconds}-second review buffer with ${buffer.segments.length} displayed rallies`}
       >
         <div className="live-monitor__track-fill" aria-hidden="true" />
         {buffer.segments.map((segment, index) => (
@@ -195,6 +228,7 @@ function BufferTrack({ buffer }: { buffer: RollingBuffer }) {
 }
 
 export function LiveMonitor({
+  onReturnToSetup,
   onReview,
   match = simulatedMatch,
   cameras = simulatedCameras,
@@ -239,17 +273,35 @@ export function LiveMonitor({
               key={camera.id}
               role="status"
             >
-              ● CAM {camera.id} · {camera.frameRate} fps
+              ● CAM {camera.id} ·{" "}
+              {camera.status === "reconnecting"
+                ? "reconnecting"
+                : camera.stream
+                  ? `${camera.frameRate} fps`
+                  : camera.status === "offline"
+                    ? "offline"
+                    : "simulated"}
             </span>
           ))}
           <span
-            className="live-monitor__chip live-monitor__chip--online"
+            className="live-monitor__chip live-monitor__chip--calibrated"
             role="status"
           >
             CALIBRATED
           </span>
           <time className="live-monitor__clock">{match.elapsed}</time>
         </div>
+        {onReturnToSetup &&
+          cameras.some((camera) => camera.status !== "online") && (
+            <button
+              type="button"
+              className="live-monitor__setup"
+              aria-label="Return to camera setup"
+              onClick={onReturnToSetup}
+            >
+              Camera setup
+            </button>
+          )}
       </header>
 
       <div
