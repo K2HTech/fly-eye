@@ -52,8 +52,9 @@ instructions](../AGENTS.md).
   [backend signaling handoff](work/active/browser-camera-pairing/SIGNALING-SERVER-HANDOFF.md)
   and [mobile recovery handoff](work/active/browser-camera-pairing/MOBILE-RECOVERY-HANDOFF.md)
 - Technical baseline: [architecture](technical/ARCHITECTURE.md), [quality
-  requirements](technical/QUALITY-REQUIREMENTS.md), and [architecture decision
-  records](technical/decisions/README.md)
+  requirements](technical/QUALITY-REQUIREMENTS.md), [browser camera pairing
+  validation](technical/BROWSER-CAMERA-PAIRING-VALIDATION.md), and
+  [architecture decision records](technical/decisions/README.md)
 
 ## Ownership rules
 

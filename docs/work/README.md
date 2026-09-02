@@ -30,16 +30,15 @@ active/<feature>/
 `PLAN.md` owns batch order, dependencies, file ownership, validation, and
 proposed commits.
 
-Current active work:
-
-- [Browser camera pairing](active/browser-camera-pairing/SPEC.md) — approved
-  specification, [implementation plan](active/browser-camera-pairing/PLAN.md),
-  and historical [signaling-server
-  handoff](active/browser-camera-pairing/SIGNALING-SERVER-HANDOFF.md).
+There is no active implementation work. New non-trivial work begins with an
+approved specification and batch plan under `active/<feature>/`.
 
 Completed historical specifications:
 
 - [Documentation system](archive/2026/documentation-system/SPEC.md)
+- [Browser camera pairing](archive/2026/browser-camera-pairing/SPEC.md) —
+  delivered browser integration; its required real-environment acceptance is
+  retained in the [camera-pairing validation checklist](../technical/BROWSER-CAMERA-PAIRING-VALIDATION.md).
 
 ## Approval rules
 

@@ -84,6 +84,10 @@ before implementation.
 No performance threshold is approved or enforced. Numbers shown in simulated
 UI copy, fixtures, or mockups are not performance requirements.
 
+| ID     | Requirement                                                                                                                                                                                                                            | Status                 | Verification and evidence                                                                                                                                                                                                                                  |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CAM-01 | Browser camera pairing must be manually accepted with one and two phones, QR expiry, duplicate pairing, explicit disconnect, recoverable interruption, direct/TURN paths, a 15-minute run, latency measurement, and secret inspection. | Required, not enforced | Execute and retain evidence specified by the [browser camera pairing validation checklist](BROWSER-CAMERA-PAIRING-VALIDATION.md). Automated tests cover protocol and browser-adapter behavior but cannot prove external devices or network infrastructure. |
+
 The following targets are **unresolved** and must receive a measurement method,
 test environment, and pass/fail threshold before they become requirements:
 

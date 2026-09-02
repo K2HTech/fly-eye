@@ -1,6 +1,16 @@
 # Browser Camera Pairing Specification
 
-Status: Approved on 2026-08-29
+Status: Implemented on 2026-09-02 with deferred real-environment acceptance
+
+## Delivery note
+
+The approved browser implementation batches were delivered. The final
+real-device and network acceptance matrix was intentionally deferred so
+calibration work can proceed. It remains required before operational use and
+is owned by the durable [browser camera pairing validation
+checklist](../../../technical/BROWSER-CAMERA-PAIRING-VALIDATION.md). This
+archived specification is historical context and does not override current
+product or technical documentation.
 
 ## 1. Summary
 

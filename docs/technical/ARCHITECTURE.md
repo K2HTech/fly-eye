@@ -111,13 +111,12 @@ Evidence: [authentication contracts](../../src/services/contracts.ts),
 
 ## Hardware and processing boundary
 
-Readiness is currently a replaceable application service whose connection
-checks and calibration state are explicitly simulated. For normal backend
-matches, a camera registry obtains exactly the two supported device records:
+For normal backend matches, a camera registry obtains exactly the two supported device records:
 `SIDELINE_LEFT` and `SIDELINE_RIGHT`, with 1280x720/30-FPS preview metadata.
 Those records establish pairing identity only. For normal matches, readiness
-requires each browser-owned peer to be connected and delivering a live preview;
-saved simulated values cannot satisfy that gate.
+requires at least one browser-owned peer to be connected and delivering a live
+preview; saved simulated values cannot satisfy that gate. Calibration remains
+simulated until the separately planned calibration integration replaces it.
 
 Live views, rolling-buffer segments, synchronized frames, reconstructed
 evidence, and decision values are likewise simulated UI behavior in the current
@@ -147,6 +146,11 @@ The readiness surface creates the per-camera QR session and derives its normal
 readiness gate from those ephemeral streams. The live surface maps streams by
 their backend role, labels the unrelated review buffer as simulated, and offers
 camera setup when a preview is unavailable.
+
+The browser pairing transport is covered by automated tests, while real-device
+and network acceptance remains a required manual gate. Its exact scenarios and
+evidence requirements are owned by the [browser camera pairing validation
+checklist](BROWSER-CAMERA-PAIRING-VALIDATION.md).
 
 Evidence: [readiness service contract](../../src/services/contracts.ts), [local
 readiness adapter](../../src/infrastructure/local/localAppServices.ts),
