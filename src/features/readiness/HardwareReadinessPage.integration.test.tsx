@@ -10,6 +10,7 @@ import type { PairingSession } from "../cameras";
 import { createLocalAppServices } from "../../infrastructure/local";
 import type {
   AppServices,
+  CameraCalibration,
   CameraConnectionCallbacks,
   CameraRecord,
   CreateMatchInput,
@@ -82,7 +83,25 @@ async function readinessApp(options?: {
   return { ...result, match, router, services };
 }
 
-async function backendReadinessApp(options?: { live?: boolean }) {
+function backendCalibration(
+  cameraId: string,
+  quality: CameraCalibration["quality"],
+): CameraCalibration {
+  return {
+    id: `calibration-${cameraId}`,
+    cameraId,
+    quality,
+    isCurrent: true,
+  } as CameraCalibration;
+}
+
+async function backendReadinessApp(options?: {
+  live?: boolean;
+  calibration?: {
+    readonly left: CameraCalibration | null;
+    readonly right: CameraCalibration | null;
+  };
+}) {
   const base = createLocalAppServices(new MemoryStorage(), {
     createId: (prefix) => `${prefix}-42`,
     now: () => new Date().toISOString(),
@@ -134,6 +153,7 @@ async function backendReadinessApp(options?: { live?: boolean }) {
     mobileToken: "a".repeat(32),
     viewerToken: "b".repeat(32),
   };
+  const calibration = options?.calibration ?? { left: null, right: null };
   let callbacks: CameraConnectionCallbacks | null = null;
   const services: AppServices = {
     ...base,
@@ -147,6 +167,24 @@ async function backendReadinessApp(options?: { live?: boolean }) {
     cameras: {
       list: async () => [left, right],
       prepare: async () => ({ left, right }),
+    },
+    matches: {
+      list: () => base.matches.list(),
+      get: (matchId) => base.matches.get(matchId),
+      create: (input) => base.matches.create(input),
+      update: (matchId, input) => base.matches.update(matchId, input),
+      updateStatus: async (matchId, status) => {
+        const current = await base.matches.get(matchId);
+        if (current?.status === "draft" && status === "live") {
+          await base.matches.updateStatus(matchId, "ready");
+        }
+        return base.matches.updateStatus(matchId, status);
+      },
+    },
+    calibration: {
+      getCurrent: async (cameraId) =>
+        cameraId === left.id ? calibration.left : calibration.right,
+      submit: async (input) => backendCalibration(input.cameraId, "good"),
     },
     cameraConnections: {
       create: (nextCallbacks) => {
@@ -477,6 +515,65 @@ describe("hardware readiness", () => {
         screen.getByRole("article", { name: /left camera/i }),
       ).findByText(/^ready$/i),
     ).toBeVisible();
+  });
+
+  it("offers a test preview with one live camera while official monitoring remains gated", async () => {
+    const user = userEvent.setup();
+    const { callbacks, match, router } = await backendReadinessApp();
+
+    await user.click(
+      within(screen.getByRole("article", { name: /left camera/i })).getByRole(
+        "button",
+        { name: /pair phone/i },
+      ),
+    );
+    callbacks()?.onStream({} as MediaStream);
+
+    expect(
+      await screen.findByRole("button", { name: /test camera preview/i }),
+    ).toBeEnabled();
+    expect(
+      screen.getByRole("button", { name: /start monitoring/i }),
+    ).toBeDisabled();
+
+    await user.click(
+      screen.getByRole("button", { name: /test camera preview/i }),
+    );
+
+    await screen.findByText(/^test camera preview$/i);
+    expect(router.state.location.pathname).toBe(`/matches/${match.id}/live`);
+    expect(router.state.location.search).toBe("?mode=test");
+    expect(
+      screen.getByRole("button", { name: /review last rally/i }),
+    ).toBeDisabled();
+  });
+
+  it("requires usable current calibrations for both cameras before official monitoring", async () => {
+    const user = userEvent.setup();
+    const base = await backendReadinessApp({
+      calibration: {
+        left: backendCalibration(
+          "00000000-0000-4000-8000-000000000002",
+          "good",
+        ),
+        right: backendCalibration(
+          "00000000-0000-4000-8000-000000000003",
+          "acceptable",
+        ),
+      },
+    });
+
+    await user.click(
+      within(screen.getByRole("article", { name: /left camera/i })).getByRole(
+        "button",
+        { name: /pair phone/i },
+      ),
+    );
+    base.callbacks()?.onStream({} as MediaStream);
+
+    expect(
+      await screen.findByRole("button", { name: /start monitoring/i }),
+    ).toBeEnabled();
   });
 
   it("shows a recoverable state for an unknown match", async () => {

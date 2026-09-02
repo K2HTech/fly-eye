@@ -34,6 +34,14 @@ is owned by the [line-call review workflow](../workflows/LineCallReviewWorkflow.
   current preview, Fly Eye redirects directly to camera setup for a fresh
   pairing. A missing secondary preview is a connection failure, not evidence
   or a line-call result, and the monitor offers camera setup repair.
+- A normal operator may enter a visibly labelled **Test camera preview** with
+  one current preview. It is for framing verification only: **Review last
+  rally** and its F1 shortcut stay disabled until the operator starts an
+  official session.
+- Official normal monitoring enables the review affordance only while both
+  required camera roles have a current `good` or `acceptable` calibration.
+  Calibration policy and readiness ownership belong to the
+  [match-preparation workflow](../workflows/MatchPreparationWorkflow.md).
 - In the demo path or without a current preview, the court imagery remains a
   visible simulation and does not represent physical capture, calibration, or
   processing.
@@ -49,9 +57,12 @@ is owned by the [line-call review workflow](../workflows/LineCallReviewWorkflow.
 
 ## Meaningful states
 
+- **Test camera preview:** The operator can inspect the available live framing,
+  but rally review is unavailable and explained.
 - **Monitoring active:** The operator can see two current previews when both
   phones are connected, or clearly marked simulated context where applicable,
-  and select the most recent rally for review.
+  and select the most recent rally for review only when official calibration
+  requirements remain satisfied.
 - **Review requested:** The selected rally opens the clip-review workflow.
 - **All feeds unavailable:** The normal operator returns to camera setup for a
   fresh pairing. With one remaining preview, the operator is told the affected
@@ -65,12 +76,12 @@ only when a normal camera requires repair.
 
 ## Actions and consequences
 
-| Action                 | Business consequence                                         |
-| ---------------------- | ------------------------------------------------------------ |
-| Review last rally      | Opens synchronized clip review for operator inspection.      |
-| F1                     | Keyboard equivalent of requesting the latest rally review.   |
-| Return to camera setup | Opens readiness when a required live preview is unavailable. |
-| End match              | Approved product action, not yet available on this page.     |
+| Action                 | Business consequence                                                 |
+| ---------------------- | -------------------------------------------------------------------- |
+| Review last rally      | Opens synchronized clip review only in an eligible official session. |
+| F1                     | Keyboard equivalent of requesting the latest eligible rally review.  |
+| Return to camera setup | Opens readiness when a required live preview is unavailable.         |
+| End match              | Approved product action, not yet available on this page.             |
 
 ## Navigation
 

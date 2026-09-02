@@ -36,8 +36,9 @@ batches are delivered.
 
 The following are outside the current product boundary:
 
-- Camera capture, calibration, tracking, shuttle/ball inference, and any other
-  physical-device or processing implementation.
+- Physical-device capture implementation, tracking, shuttle/ball inference,
+  and any other processing implementation. The UI does consume existing
+  camera previews and calibration results through approved external contracts.
 - The backend services themselves. Fly Eye consumes authentication, matches,
   and camera records through application adapters; later batches add pairing
   without moving server ownership into this repository.
@@ -96,11 +97,11 @@ current UI.
 
 The initial product handles standalone matches. Its normal progression is
 `draft` to `ready` to `live` to `completed`; returning from readiness setup may
-move a ready match back to draft. For the current normal-camera POC, the UI
-verifies one decoded live camera preview then advances the backend directly from
-`draft` to `live`; backend status has no persisted `ready` state. Calibration
-remains a visible simulated placeholder and the second camera may be unavailable.
-Other invalid status transitions are not permitted.
+move a ready match back to draft. For the normal-camera POC, the UI requires a
+current decoded live preview plus a current `good` or `acceptable` calibration
+for both required camera roles before it advances the backend directly from
+`draft` to `live`; backend status has no persisted `ready` state. Other invalid
+status transitions are not permitted.
 
 Singles has one participant per side; doubles has two. The selected scoring
 format remains explicit for the match. Match length is either one game or best
@@ -146,11 +147,11 @@ the Tauri desktop webview.
 
 ## Current limitations and deferred integrations
 
-The current UI does not capture camera input, calibrate physical devices,
-track objects, infer line calls, record evidence, or provide a production
-adjudication system. Monitoring, review evidence, and recorded results still
-represent the operator journey and simulated data until those integrations are
-implemented.
+The current UI does not implement physical camera capture, track objects,
+infer line calls, record evidence, or provide a production adjudication system.
+It can capture stills from an already-paired browser preview and submit the
+approved backend calibration flow, but monitoring review evidence and recorded
+results remain simulated until those integrations are implemented.
 
 The live workspace does not yet provide **End match**. This is an
 implementation gap, not a change to the approved product rules above.

@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { useMatches } from "../../app/matchContext";
@@ -14,8 +14,19 @@ import {
   type HardwareReadiness,
   type MatchRecord,
 } from "../../domain";
-import type { CameraRecord, PreparedCameraPair } from "../../services";
+import type {
+  CameraCalibration,
+  CameraRecord,
+  CameraRole,
+  PreparedCameraPair,
+} from "../../services";
 import type { CameraConnectionState, PairingSession } from "../cameras";
+import {
+  CalibrationCapturePanel,
+  isUsableCalibration,
+  type CapturedCalibrationFrame,
+  type PreparedCalibrationCapture,
+} from "../calibration";
 import { CameraPairingDialog } from "./CameraPairingDialog";
 import "./hardware-readiness.css";
 
@@ -27,6 +38,11 @@ const knownGoodCalibrationProfile: CalibrationProfile = {
 
 type CameraKey = "cameraA" | "cameraB";
 type LoadingState = "loading" | "ready" | "not-found" | "error";
+type CalibrationMap = Record<CameraRole, CameraCalibration | null>;
+type CalibrationReferenceMap = Record<
+  CameraRole,
+  CapturedCalibrationFrame | null
+>;
 
 const statusLabels: Record<CameraStatus, string> = {
   disconnected: "Disconnected",
@@ -92,6 +108,14 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
   const [match, setMatch] = useState<MatchRecord | null>(null);
   const [readiness, setReadiness] = useState<HardwareReadiness | null>(null);
   const [cameraPair, setCameraPair] = useState<PreparedCameraPair | null>(null);
+  const [calibrations, setCalibrations] = useState<CalibrationMap | null>(null);
+  const [calibrationReferences, setCalibrationReferences] =
+    useState<CalibrationReferenceMap>({
+      SIDELINE_LEFT: null,
+      SIDELINE_RIGHT: null,
+    });
+  const [calibratingCamera, setCalibratingCamera] =
+    useState<CameraRecord | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [pendingControl, setPendingControl] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -101,8 +125,12 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
   const hasNormalLivePreview =
     cameraSessions.streams.SIDELINE_LEFT !== null ||
     cameraSessions.streams.SIDELINE_RIGHT !== null;
+  const normalCalibrationReady =
+    calibrations !== null &&
+    isUsableCalibration(calibrations.SIDELINE_LEFT) &&
+    isUsableCalibration(calibrations.SIDELINE_RIGHT);
   const monitoringReady = isBackendSession
-    ? hasNormalLivePreview
+    ? hasNormalLivePreview && normalCalibrationReady
     : readiness !== null && isHardwareReady(readiness);
 
   useEffect(() => {
@@ -124,15 +152,28 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
       services.readiness.get(matchId),
       preparedCameras,
     ])
-      .then(([record, savedReadiness, pair]) => {
+      .then(async ([record, savedReadiness, pair]) => {
         if (!active) return;
         if (!record) {
           setLoadingState("not-found");
           return;
         }
+        const results =
+          isBackendSession && pair && services.calibration
+            ? await Promise.all([
+                services.calibration.getCurrent(pair.left.id),
+                services.calibration.getCurrent(pair.right.id),
+              ])
+            : null;
+        if (!active) return;
         setMatch(record);
         setReadiness(savedReadiness);
         setCameraPair(pair);
+        setCalibrations(
+          results
+            ? { SIDELINE_LEFT: results[0], SIDELINE_RIGHT: results[1] }
+            : null,
+        );
         setLoadError(null);
         setLoadingState("ready");
       })
@@ -152,6 +193,7 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
   }, [
     matchId,
     services.cameras,
+    services.calibration,
     services.matches,
     services.readiness,
     session.identity?.session.mode,
@@ -228,7 +270,7 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
   const startMonitoring = async () => {
     if (!match || !readiness || pendingControl) return;
     if (match.status === "live") {
-      if (!isBackendSession || hasNormalLivePreview) {
+      if (!isBackendSession || monitoringReady) {
         navigate(matchRoutes.live(match.id));
       }
       return;
@@ -264,6 +306,57 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
     } catch {
       setActionError(
         "Monitoring could not start. Recheck the available camera preview and try again.",
+      );
+    } finally {
+      setPendingControl(null);
+    }
+  };
+
+  const openTestPreview = () => {
+    if (!match || !hasNormalLivePreview) return;
+    navigate(matchRoutes.live(match.id, "test"));
+  };
+
+  const submitCalibration = async (capture: PreparedCalibrationCapture) => {
+    const camera = calibratingCamera;
+    if (!camera || !services.calibration || pendingControl) return;
+    const reference = capture.frames[capture.referenceFrameIndex];
+    if (
+      capture.frames.some(
+        (frame) =>
+          frame.width !== camera.resolution.width ||
+          frame.height !== camera.resolution.height,
+      )
+    ) {
+      setActionError(
+        "Captured images do not match this camera's registered resolution. Capture them again from the current preview.",
+      );
+      return;
+    }
+    setPendingControl(`calibration-${camera.role}`);
+    setActionError(null);
+    try {
+      const calibration = await services.calibration.submit({
+        cameraId: camera.id,
+        frames: capture.frames,
+        seedPoints: capture.seedPoints,
+        frameSize: camera.resolution,
+      });
+      setCalibrations((current) => ({
+        SIDELINE_LEFT: current?.SIDELINE_LEFT ?? null,
+        SIDELINE_RIGHT: current?.SIDELINE_RIGHT ?? null,
+        [camera.role]: calibration,
+      }));
+      setCalibrationReferences((current) => ({
+        ...current,
+        [camera.role]: reference,
+      }));
+      setCalibratingCamera(null);
+    } catch (error) {
+      setActionError(
+        error instanceof Error
+          ? error.message
+          : "Calibration could not be completed. Please try again.",
       );
     } finally {
       setPendingControl(null);
@@ -315,6 +408,9 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
 
   const leftCameraPreview = cameraSessions.streams.SIDELINE_LEFT !== null;
   const rightCameraPreview = cameraSessions.streams.SIDELINE_RIGHT !== null;
+  const calibrationStream = calibratingCamera
+    ? cameraSessions.streams[calibratingCamera.role]
+    : null;
   const currentReadiness: HardwareReadiness = isBackendSession
     ? {
         ...readiness,
@@ -342,17 +438,27 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
         },
       }
     : readiness;
-  const ready = monitoringReady;
+  const ready = isBackendSession
+    ? hasNormalLivePreview && normalCalibrationReady
+    : monitoringReady;
   const missing = isBackendSession
-    ? hasNormalLivePreview
-      ? []
-      : ["One decoded live camera preview"]
+    ? [
+        ...(hasNormalLivePreview ? [] : ["One decoded live camera preview"]),
+        ...(isUsableCalibration(calibrations?.SIDELINE_LEFT)
+          ? []
+          : ["Left camera calibration"]),
+        ...(isUsableCalibration(calibrations?.SIDELINE_RIGHT)
+          ? []
+          : ["Right camera calibration"]),
+      ]
     : missingRequirements(currentReadiness);
   const isBusy = pendingControl !== null;
   const isLive = match.status === "live";
   const isCompleted = match.status === "completed";
   const workflowResolved =
-    isCompleted || (isLive && (!isBackendSession || hasNormalLivePreview));
+    isCompleted ||
+    (isLive &&
+      (!isBackendSession || (hasNormalLivePreview && normalCalibrationReady)));
   const resumingLiveWithoutPreview = isLive && !workflowResolved;
   const gatePositive = ready || workflowResolved;
   const gateEyebrow = isCompleted
@@ -400,8 +506,8 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
             <p className="readiness__eyebrow">System setup</p>
             <h1 id="readiness-title">Hardware readiness</h1>
             <p>
-              Verify both camera paths and apply the known-good calibration
-              before opening the live monitor.
+              Verify each camera path, then calibrate both court views before
+              starting official monitoring.
             </p>
           </div>
         </div>
@@ -445,12 +551,26 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
             showSimulatorControls={!isBackendSession}
             onChange={(status) => void saveCamera("cameraB", status)}
           />
-          <CalibrationCard
-            profile={readiness.calibrationProfile}
-            pending={pendingControl === "calibration"}
-            disabled={isBusy}
-            onChange={(profile) => void saveCalibration(profile)}
-          />
+          {isBackendSession && cameraPair && calibrations ? (
+            <NormalCalibrationCard
+              calibrations={calibrations}
+              cameraPair={cameraPair}
+              references={calibrationReferences}
+              disabled={isBusy}
+              livePreviews={{
+                SIDELINE_LEFT: leftCameraPreview,
+                SIDELINE_RIGHT: rightCameraPreview,
+              }}
+              onCalibrate={setCalibratingCamera}
+            />
+          ) : (
+            <CalibrationCard
+              profile={readiness.calibrationProfile}
+              pending={pendingControl === "calibration"}
+              disabled={isBusy}
+              onChange={(profile) => void saveCalibration(profile)}
+            />
+          )}
         </div>
 
         <section
@@ -492,6 +612,16 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
             {pendingControl === "start" ? "Starting monitor…" : primaryLabel}
             {pendingControl !== "start" && <span aria-hidden="true">→</span>}
           </button>
+          {isBackendSession && !isLive && !isCompleted && (
+            <button
+              type="button"
+              className="readiness__test-preview"
+              disabled={!hasNormalLivePreview || isBusy}
+              onClick={openTestPreview}
+            >
+              Test camera preview
+            </button>
+          )}
           {!ready && !workflowResolved && (
             <span id="readiness-start-help" className="readiness__sr-only">
               Pair a phone and wait for a decoded live preview before returning
@@ -555,6 +685,23 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
             void cancelPairing().then(() => camera && openPairing(camera));
           }}
         />
+      )}
+      {calibratingCamera && calibrationStream && (
+        <div className="readiness__dialog-backdrop">
+          <section
+            className="readiness__calibration-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Calibrate ${calibratingCamera.name}`}
+          >
+            <CalibrationCapturePanel
+              cameraName={calibratingCamera.name}
+              stream={calibrationStream}
+              onCancel={() => setCalibratingCamera(null)}
+              onPrepared={(capture) => void submitCalibration(capture)}
+            />
+          </section>
+        </div>
       )}
     </section>
   );
@@ -670,6 +817,130 @@ interface CalibrationCardProps {
   pending: boolean;
   profile: CalibrationProfile | null;
   onChange: (profile: CalibrationProfile | null) => void;
+}
+
+interface NormalCalibrationCardProps {
+  readonly calibrations: CalibrationMap;
+  readonly cameraPair: PreparedCameraPair;
+  readonly disabled: boolean;
+  readonly livePreviews: Readonly<Record<CameraRole, boolean>>;
+  readonly references: CalibrationReferenceMap;
+  readonly onCalibrate: (camera: CameraRecord) => void;
+}
+
+function CalibrationReference({
+  calibration,
+  frame,
+}: {
+  calibration: CameraCalibration;
+  frame: CapturedCalibrationFrame;
+}) {
+  const url = useMemo(() => URL.createObjectURL(frame.blob), [frame.blob]);
+  useEffect(() => () => URL.revokeObjectURL(url), [url]);
+  const pointList = (points: readonly { x: number; y: number }[]) =>
+    points.map((point) => `${point.x},${point.y}`).join(" ");
+
+  return (
+    <div className="readiness__calibration-overlay">
+      <img alt="Calibration reference image" src={url} />
+      <svg
+        aria-label="Returned court calibration overlay"
+        role="img"
+        viewBox={`0 0 ${frame.width} ${frame.height}`}
+      >
+        <polygon points={pointList(calibration.courtOutlineImage)} />
+        {Object.entries(calibration.wireframeImage).map(([name, points]) => (
+          <polyline key={name} points={pointList(points)} />
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+function NormalCalibrationCard({
+  calibrations,
+  cameraPair,
+  disabled,
+  livePreviews,
+  references,
+  onCalibrate,
+}: NormalCalibrationCardProps) {
+  const cards: readonly [CameraRole, CameraRecord][] = [
+    ["SIDELINE_LEFT", cameraPair.left],
+    ["SIDELINE_RIGHT", cameraPair.right],
+  ];
+
+  return (
+    <article
+      className="readiness__calibration readiness__calibration--normal"
+      aria-labelledby="calibration-title"
+    >
+      <header>
+        <div>
+          <span>Court geometry</span>
+          <h2 id="calibration-title">Camera calibration</h2>
+        </div>
+        <span
+          className={
+            isUsableCalibration(calibrations.SIDELINE_LEFT) &&
+            isUsableCalibration(calibrations.SIDELINE_RIGHT)
+              ? "is-selected"
+              : ""
+          }
+        >
+          <i aria-hidden="true" />
+          {isUsableCalibration(calibrations.SIDELINE_LEFT) &&
+          isUsableCalibration(calibrations.SIDELINE_RIGHT)
+            ? "Ready"
+            : "Action required"}
+        </span>
+      </header>
+      <p>
+        Calibrate both fixed camera views with good or acceptable quality before
+        official monitoring can start.
+      </p>
+      <div className="readiness__calibration-cameras">
+        {cards.map(([role, camera]) => {
+          const calibration = calibrations[role];
+          const usable = isUsableCalibration(calibration);
+          const quality = calibration
+            ? calibration.quality[0].toUpperCase() +
+              calibration.quality.slice(1)
+            : "Not calibrated";
+          return (
+            <section key={role} aria-labelledby={`calibration-${role}`}>
+              <div>
+                <h3 id={`calibration-${role}`}>{camera.name}</h3>
+                <span className={usable ? "is-selected" : ""}>{quality}</span>
+              </div>
+              <p>
+                {!livePreviews[role]
+                  ? "Pair this phone and wait for its live preview before capturing calibration images."
+                  : calibration?.quality === "poor"
+                    ? "This result is saved, but reposition or re-mark the court before recalibrating."
+                    : usable
+                      ? "Current calibration is usable for official monitoring."
+                      : "Capture fixed-camera images and mark the outer court corners."}
+              </p>
+              {calibration && references[role] && (
+                <CalibrationReference
+                  calibration={calibration}
+                  frame={references[role]}
+                />
+              )}
+              <button
+                type="button"
+                disabled={disabled || !livePreviews[role]}
+                onClick={() => onCalibrate(camera)}
+              >
+                {calibration ? "Recalibrate camera" : "Calibrate camera"}
+              </button>
+            </section>
+          );
+        })}
+      </div>
+    </article>
+  );
 }
 
 function CalibrationCard({

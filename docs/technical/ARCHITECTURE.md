@@ -115,13 +115,16 @@ For normal backend matches, a camera registry obtains exactly the two supported 
 `SIDELINE_LEFT` and `SIDELINE_RIGHT`, with 1280x720/30-FPS preview metadata.
 Those records establish pairing identity only. For normal matches, readiness
 requires at least one browser-owned peer to be connected and delivering a live
-preview; saved simulated values cannot satisfy that gate. Calibration remains
-simulated until the separately planned calibration integration replaces it.
+preview; saved simulated values cannot satisfy that gate. The calibration
+adapter now loads and submits immutable per-camera backend snapshots. Official
+monitoring additionally requires a current `good` or `acceptable` result for
+both supported camera roles; the test-preview route deliberately does not.
 
 Live views, rolling-buffer segments, synchronized frames, reconstructed
-evidence, and decision values are likewise simulated UI behavior in the current
-product. Camera capture, calibration, tracking, inference, real-time buffering,
-and evidence provenance remain outside this repository's current boundary.
+evidence, and decision values are otherwise simulated UI behavior in the
+current product. Physical camera capture, tracking, inference, real-time
+buffering, and evidence provenance remain outside this repository's current
+boundary.
 
 Future hardware and processing integrations must enter through explicit
 service or host boundaries and preserve the distinction between unavailable,

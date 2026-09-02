@@ -17,7 +17,8 @@ function matchPath(matchId: string, destination: string): string {
 
 export const matchRoutes = {
   readiness: (matchId: string) => matchPath(matchId, "readiness"),
-  live: (matchId: string) => matchPath(matchId, "live"),
+  live: (matchId: string, mode: "official" | "test" = "official") =>
+    `${matchPath(matchId, "live")}${mode === "test" ? "?mode=test" : ""}`,
   review: (matchId: string) => matchPath(matchId, "review"),
   decision: (matchId: string) => matchPath(matchId, "decision"),
 } as const;

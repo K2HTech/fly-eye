@@ -30,16 +30,19 @@ documented by [MatchDashboardPage](../pages/MatchDashboardPage.md),
    readiness. Cancellation before creation returns to the dashboard without
    creating a match.
 5. Readiness obtains exactly one backend left-sideline and one right-sideline
-   device-camera record. For this POC, the operator needs at least one decoded
-   live preview; the other camera can be paired later. Calibration remains a
-   visible simulated placeholder.
-6. Monitoring remains blocked until the applicable POC readiness gate succeeds.
-7. Starting a normal POC match with one decoded preview advances its backend
-   status directly to live, then opens its live workspace. Demo retains the
-   local ready stage before live.
-8. A normal live match reopened without any current preview returns to hardware
-   readiness because camera connections are ephemeral and never restored after
-   sign-in or browser restart.
+   device-camera record. The operator pairs the fixed phones, captures stills,
+   and calibrates each view against the four outer court corners.
+6. A test camera preview is available with at least one decoded live preview.
+   It allows framing verification only and does not enable rally review.
+7. Official monitoring remains blocked until at least one decoded live preview
+   exists and both required camera roles hold a current `good` or `acceptable`
+   backend calibration.
+8. Starting an eligible normal match advances its backend status directly to
+   live, then opens its official live workspace. Demo retains the local ready
+   stage before live.
+9. A normal live match reopened without a current preview or both usable
+   calibrations returns to hardware readiness because browser camera
+   connections are ephemeral and backend calibration validity is authoritative.
 
 ## Match rules
 
@@ -52,8 +55,10 @@ documented by [MatchDashboardPage](../pages/MatchDashboardPage.md),
 - The backend does not yet store scoring fields. The UI locally supplements a
   backend UUID with match length and point target; an unknown backend match
   defaults to best-of-three/21 until backend scoring synchronization is added.
-- Normal POC readiness requires at least one decoded live preview; calibration
-  does not gate entry and the other camera may be unavailable.
+- Normal official readiness requires at least one decoded live preview and
+  current `good` or `acceptable` calibration for both backend camera roles.
+  The test-preview route only requires the current preview and cannot request
+  a rally review.
 - Simulated readiness must not be interpreted as connected physical hardware.
 
 ## Match status and resume behavior

@@ -46,6 +46,27 @@ describe("LiveMonitor", () => {
     expect(onReview).not.toHaveBeenCalled();
   });
 
+  it("disables rally review and its F1 shortcut when camera testing is active", () => {
+    const onReview = vi.fn();
+    render(
+      <LiveMonitor
+        mode="test"
+        onReview={onReview}
+        reviewEnabled={false}
+        reviewUnavailableMessage="Rally review is unavailable in test camera preview."
+      />,
+    );
+
+    const review = screen.getByRole("button", { name: /review last rally/i });
+    expect(review).toBeDisabled();
+    expect(review).toHaveAccessibleDescription(
+      /rally review is unavailable in test camera preview/i,
+    );
+    fireEvent.keyDown(window, { key: "F1" });
+
+    expect(onReview).not.toHaveBeenCalled();
+  });
+
   it("exposes camera feeds and system chips as named regions/statuses", () => {
     render(<LiveMonitor onReview={vi.fn()} />);
 

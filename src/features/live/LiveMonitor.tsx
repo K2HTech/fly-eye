@@ -45,6 +45,9 @@ export interface RollingBuffer {
 export interface LiveMonitorProps {
   onReturnToSetup?: () => void;
   onReview: () => void;
+  reviewEnabled?: boolean;
+  reviewUnavailableMessage?: string;
+  mode?: "official" | "test";
   match?: MatchState;
   cameras?: readonly CameraFeed[];
   buffer?: RollingBuffer;
@@ -230,13 +233,16 @@ function BufferTrack({ buffer }: { buffer: RollingBuffer }) {
 export function LiveMonitor({
   onReturnToSetup,
   onReview,
+  reviewEnabled = true,
+  reviewUnavailableMessage,
+  mode = "official",
   match = simulatedMatch,
   cameras = simulatedCameras,
   buffer = simulatedBuffer,
 }: LiveMonitorProps) {
   useEffect(() => {
     const handleShortcut = (event: KeyboardEvent) => {
-      if (event.key === "F1" && !event.repeat) {
+      if (reviewEnabled && event.key === "F1" && !event.repeat) {
         event.preventDefault();
         onReview();
       }
@@ -244,7 +250,7 @@ export function LiveMonitor({
 
     window.addEventListener("keydown", handleShortcut);
     return () => window.removeEventListener("keydown", handleShortcut);
-  }, [onReview]);
+  }, [onReview, reviewEnabled]);
 
   return (
     <section className="live-monitor" aria-labelledby="live-monitor-title">
@@ -252,7 +258,9 @@ export function LiveMonitor({
         <h1 id="live-monitor-title" className="live-monitor__sr-only">
           Live monitor
         </h1>
-        <span className="live-monitor__mode">Live monitor</span>
+        <span className="live-monitor__mode">
+          {mode === "test" ? "Test camera preview" : "Live monitor"}
+        </span>
         <div className="live-monitor__scoreboard">
           <span className="live-monitor__court-label">{match.court}</span>
           <span className="live-monitor__team">{match.leftTeam}</span>
@@ -284,10 +292,14 @@ export function LiveMonitor({
             </span>
           ))}
           <span
-            className="live-monitor__chip live-monitor__chip--calibrated"
+            className={`live-monitor__chip ${
+              reviewEnabled
+                ? "live-monitor__chip--calibrated"
+                : "live-monitor__chip--offline"
+            }`}
             role="status"
           >
-            CALIBRATED
+            {reviewEnabled ? "CALIBRATED" : "CALIBRATION REQUIRED"}
           </span>
           <time className="live-monitor__clock">{match.elapsed}</time>
         </div>
@@ -319,10 +331,24 @@ export function LiveMonitor({
         <button
           className="live-monitor__review"
           type="button"
+          disabled={!reviewEnabled}
+          aria-describedby={
+            !reviewEnabled && reviewUnavailableMessage
+              ? "live-monitor-review-help"
+              : undefined
+          }
           onClick={onReview}
         >
           Review last rally <kbd aria-hidden="true">F1</kbd>
         </button>
+        {!reviewEnabled && reviewUnavailableMessage && (
+          <p
+            id="live-monitor-review-help"
+            className="live-monitor__review-help"
+          >
+            {reviewUnavailableMessage}
+          </p>
+        )}
       </footer>
     </section>
   );
