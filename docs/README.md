@@ -50,7 +50,8 @@ instructions](../AGENTS.md).
   and [implementation plan](work/active/calibration-ui/PLAN.md)
 - Technical baseline: [architecture](technical/ARCHITECTURE.md), [quality
   requirements](technical/QUALITY-REQUIREMENTS.md), [browser camera pairing
-  validation](technical/BROWSER-CAMERA-PAIRING-VALIDATION.md), and
+  validation](technical/BROWSER-CAMERA-PAIRING-VALIDATION.md), [camera
+  calibration validation](technical/CAMERA-CALIBRATION-VALIDATION.md), and
   [architecture decision records](technical/decisions/README.md)
 
 ## Ownership rules
