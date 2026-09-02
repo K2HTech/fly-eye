@@ -30,8 +30,10 @@ active/<feature>/
 `PLAN.md` owns batch order, dependencies, file ownership, validation, and
 proposed commits.
 
-There is no active implementation work. New non-trivial work begins with an
-approved specification and batch plan under `active/<feature>/`.
+Current active work:
+
+- [Camera calibration UI](active/calibration-ui/SPEC.md) — approved
+  specification and [implementation plan](active/calibration-ui/PLAN.md).
 
 Completed historical specifications:
 
