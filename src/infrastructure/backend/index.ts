@@ -7,6 +7,11 @@ export {
   createBackendCameraRegistry,
 } from "./cameras/registry";
 export {
+  BackendCalibrationService,
+  CalibrationServiceError,
+  createBackendCalibrationService,
+} from "./calibration/service";
+export {
   BackendMatchRepository,
   createBackendMatchRepository,
 } from "./matches/backendMatchRepository";

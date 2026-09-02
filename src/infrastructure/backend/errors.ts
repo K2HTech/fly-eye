@@ -23,6 +23,11 @@ const publicErrorCodes = new Set([
   "INVALID_CREDENTIALS",
   "INVALID_REFRESH_TOKEN",
   "UNAUTHORIZED",
+  "CALIBRATION_DEGENERATE",
+  "CALIBRATION_FRAME_INCOMPLETE",
+  "CALIBRATION_FRAME_INVALID",
+  "CALIBRATION_MISSING",
+  "ENGINE_ERROR",
 ]);
 
 export function publicBackendMessage(status: number, code?: unknown): string {
@@ -30,6 +35,14 @@ export function publicBackendMessage(status: number, code?: unknown): string {
     return "The email or password is incorrect.";
   if (code === "INVALID_REFRESH_TOKEN")
     return "Your session has expired. Please sign in again.";
+  if (code === "CALIBRATION_FRAME_INCOMPLETE")
+    return "One or more calibration images did not finish uploading.";
+  if (code === "CALIBRATION_FRAME_INVALID")
+    return "The captured calibration images are not valid for this camera.";
+  if (code === "CALIBRATION_DEGENERATE")
+    return "The marked court geometry could not be calibrated.";
+  if (code === "ENGINE_ERROR")
+    return "Calibration could not be completed. Please try again.";
   if (status === 401) return "Your session has expired. Please sign in again.";
   if (status === 403) return "You are not allowed to perform this action.";
   if (status === 404) return "The requested Fly Eye resource was not found.";

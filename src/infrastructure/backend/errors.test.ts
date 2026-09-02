@@ -40,4 +40,25 @@ describe("backend error boundary", () => {
     expect(error.message).toBe("The Fly Eye request could not be completed.");
     expect(JSON.stringify(error)).not.toContain("PRIVATE_DATABASE_CONSTRAINT");
   });
+
+  it("exposes approved calibration recovery categories without backend detail", async () => {
+    const response = new Response(
+      JSON.stringify({
+        detail: {
+          error: {
+            code: "CALIBRATION_DEGENERATE",
+            message: "solver diagnostic: private geometry detail",
+          },
+        },
+      }),
+      { status: 400 },
+    );
+
+    const error = await toBackendError(response, "request-3");
+    expect(error.code).toBe("CALIBRATION_DEGENERATE");
+    expect(error.message).toBe(
+      "The marked court geometry could not be calibrated.",
+    );
+    expect(error.message).not.toContain("private geometry detail");
+  });
 });

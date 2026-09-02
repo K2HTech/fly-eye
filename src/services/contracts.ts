@@ -110,6 +110,66 @@ export interface CameraRegistry {
   prepare(matchId: string): Promise<PreparedCameraPair>;
 }
 
+export type CalibrationQuality = "good" | "acceptable" | "poor";
+
+export interface CalibrationPoint {
+  readonly x: number;
+  readonly y: number;
+}
+
+export interface CalibrationSeedPoint {
+  readonly image: CalibrationPoint;
+  readonly court: CalibrationPoint;
+}
+
+/** A transient captured image. It must not enter persistence-safe state. */
+export interface CalibrationFrame {
+  readonly blob: Blob;
+}
+
+export interface CameraCalibration {
+  readonly id: string;
+  readonly cameraId: string;
+  readonly engineVersion: string;
+  readonly seedPoints: readonly CalibrationSeedPoint[];
+  readonly homography: readonly (readonly number[])[];
+  readonly distortion: {
+    readonly k1: number;
+    readonly cx: number;
+    readonly cy: number;
+    readonly scale: number;
+  } | null;
+  readonly lineErrorsCm: Readonly<Record<string, number>>;
+  readonly resolutionCmPerPx: Readonly<Record<string, number>>;
+  readonly reprojectionErrorCm: number;
+  readonly straightnessBeforePx: number | null;
+  readonly straightnessAfterPx: number | null;
+  readonly framesUsed: number;
+  readonly framesRejected: number;
+  readonly sampleCount: number;
+  readonly converged: boolean;
+  readonly cameraStable: boolean;
+  readonly quality: CalibrationQuality;
+  readonly courtOutlineImage: readonly CalibrationPoint[];
+  readonly wireframeImage: Readonly<
+    Record<string, readonly CalibrationPoint[]>
+  >;
+  readonly isCurrent: boolean;
+  readonly createdAt: string;
+}
+
+export interface SubmitCalibrationInput {
+  readonly cameraId: string;
+  readonly frames: readonly CalibrationFrame[];
+  readonly seedPoints: readonly CalibrationSeedPoint[];
+  readonly frameSize: { readonly width: number; readonly height: number };
+}
+
+export interface CalibrationService {
+  getCurrent(cameraId: string): Promise<CameraCalibration | null>;
+  submit(input: SubmitCalibrationInput): Promise<CameraCalibration>;
+}
+
 export interface PairingService {
   create(matchId: string, cameraId: string): Promise<PairingSession>;
   cancel(sessionId: string): Promise<void>;
@@ -137,6 +197,7 @@ export interface AppServices {
   readiness: ReadinessService;
   /** Present when the normal backend camera boundary is configured. */
   cameras?: CameraRegistry;
+  calibration?: CalibrationService;
   pairing?: PairingService;
   cameraConnections?: CameraConnectionFactory;
 }

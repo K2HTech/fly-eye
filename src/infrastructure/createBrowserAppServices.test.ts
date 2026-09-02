@@ -94,6 +94,21 @@ describe("browser app service composition", () => {
     expect(fetchImpl).not.toHaveBeenCalled();
   });
 
+  it("composes the normal calibration service without adding it to the local demo boundary", () => {
+    const available = createBrowserAppServices(new MemoryStorage(), {
+      environment,
+    });
+    const unavailable = createBrowserAppServices(new MemoryStorage(), {
+      environment: {
+        status: "unavailable",
+        issues: ["VITE_API_BASE_URL is missing."],
+      },
+    });
+
+    expect(available.calibration).toBeDefined();
+    expect(unavailable.calibration).toBeUndefined();
+  });
+
   it("keeps the local demo available when backend configuration is missing", async () => {
     const storage = new MemoryStorage();
     const services = createBrowserAppServices(storage, {
