@@ -43,6 +43,19 @@ function isPrivateDevelopmentHost(hostname: string): boolean {
 }
 
 function normalizeApiBase(value: string, mode: string): string {
+  if (value.startsWith("/")) {
+    if (value.startsWith("//")) {
+      throw new Error("API path must be a same-origin path.");
+    }
+    const path = value.replace(/\/+$/, "");
+    if (path.includes("?") || path.includes("#")) {
+      throw new Error("API path must not contain query data.");
+    }
+    if (path === "/api" || path === "/api/") return "/api/v1";
+    return path === "/api/v1" || path.endsWith("/api/v1")
+      ? path
+      : `${path || ""}/api/v1`;
+  }
   const url = new URL(value);
   const secure = url.protocol === "https:";
   const developmentPrivate =

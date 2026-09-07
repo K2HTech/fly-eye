@@ -29,6 +29,24 @@ describe("parseEnvironment", () => {
     );
   });
 
+  it("accepts a same-origin API path for a development proxy", () => {
+    const result = parseEnvironment({
+      ...valid,
+      VITE_API_BASE_URL: "/api",
+    });
+
+    expect(result.status === "available" && result.apiBaseUrl).toBe("/api/v1");
+  });
+
+  it("rejects a protocol-relative API path", () => {
+    expect(
+      parseEnvironment({ ...valid, VITE_API_BASE_URL: "//api.example.test" }),
+    ).toEqual({
+      status: "unavailable",
+      issues: ["API path must be a same-origin path."],
+    });
+  });
+
   it("returns actionable unavailable issues for missing values", () => {
     expect(parseEnvironment({}, "production")).toEqual({
       status: "unavailable",

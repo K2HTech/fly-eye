@@ -9,6 +9,12 @@ export default defineConfig({
   server: {
     host: host || false,
     port: 1420,
+    proxy: {
+      "/api": {
+        target: "http://127.0.0.1:9080",
+        changeOrigin: true,
+      },
+    },
     strictPort: true,
     watch: {
       ignored: ["**/src-tauri/**"],

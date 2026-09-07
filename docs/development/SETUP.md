@@ -45,6 +45,21 @@ because Vite exposes those values to browser code. Without valid endpoint
 configuration, normal authentication reports that the backend is unavailable
 while the isolated demo remains usable.
 
+### Local backend through the Vite proxy
+
+When the backend is reachable from the development machine on port `9080`, use
+the same-origin path below instead of a browser-visible backend address:
+
+```dotenv
+VITE_API_BASE_URL=/api
+```
+
+The development server forwards `/api/*` to `http://127.0.0.1:9080`. This
+avoids browser CORS for a frontend opened through the Vite server. Restart
+`task dev` after changing `.env` or the proxy target. This proxy exists only
+for browser development; deployed applications need their own HTTPS reverse
+proxy or public API configuration.
+
 ## Common tasks
 
 | Command            | Purpose                                       |
