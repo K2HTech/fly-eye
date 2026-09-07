@@ -53,7 +53,8 @@ instructions](../AGENTS.md).
   and [mobile recovery handoff](work/active/browser-camera-pairing/MOBILE-RECOVERY-HANDOFF.md)
 - Technical baseline: [architecture](technical/ARCHITECTURE.md), [quality
   requirements](technical/QUALITY-REQUIREMENTS.md), [browser camera pairing
-  validation](technical/BROWSER-CAMERA-PAIRING-VALIDATION.md), and
+  validation](technical/BROWSER-CAMERA-PAIRING-VALIDATION.md), [calibration
+  engine open questions](technical/CALIBRATION-ENGINE-OPEN-QUESTIONS.md), and
   [architecture decision records](technical/decisions/README.md)
 
 ## Ownership rules
