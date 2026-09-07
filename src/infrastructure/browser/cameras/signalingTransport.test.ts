@@ -65,7 +65,6 @@ describe("BrowserViewerSignalingTransport", () => {
       messages.push(message.type),
     );
     socket.open();
-    await connected;
 
     expect(JSON.parse(socket.sent[0])).toEqual({
       version: 1,
@@ -73,6 +72,26 @@ describe("BrowserViewerSignalingTransport", () => {
       sessionId: pairing.sessionId,
       payload: { role: "viewer", token: pairing.viewerToken },
     });
+    let acknowledged = false;
+    void connected.then(() => {
+      acknowledged = true;
+    });
+    await Promise.resolve();
+    expect(acknowledged).toBe(false);
+    socket.message({
+      version: 1,
+      type: "authenticated",
+      sessionId: pairing.sessionId,
+      payload: {
+        role: "viewer",
+        cameraId: pairing.cameraId,
+        cameraRole: pairing.cameraRole,
+        expiresAt: pairing.expiresAt,
+        iceServers: [],
+      },
+    });
+    await connected;
+
     socket.message({
       version: 1,
       type: "camera-joined",
@@ -82,7 +101,7 @@ describe("BrowserViewerSignalingTransport", () => {
         cameraRole: pairing.cameraRole,
       },
     });
-    expect(messages).toEqual(["camera-joined"]);
+    expect(messages).toEqual(["authenticated", "camera-joined"]);
 
     transport.sendAnswer(pairing.sessionId, { type: "answer", sdp: "v=0" });
     transport.sendCandidate(pairing.sessionId, null);
@@ -102,6 +121,18 @@ describe("BrowserViewerSignalingTransport", () => {
     });
     const connected = transport.connect(pairing, () => undefined);
     socket.open();
+    socket.message({
+      version: 1,
+      type: "authenticated",
+      sessionId: pairing.sessionId,
+      payload: {
+        role: "viewer",
+        cameraId: pairing.cameraId,
+        cameraRole: pairing.cameraRole,
+        expiresAt: pairing.expiresAt,
+        iceServers: [],
+      },
+    });
     await connected;
     socket.message({
       version: 1,
@@ -121,6 +152,18 @@ describe("BrowserViewerSignalingTransport", () => {
     });
     const connected = transport.connect(pairing, () => undefined);
     socket.open();
+    socket.message({
+      version: 1,
+      type: "authenticated",
+      sessionId: pairing.sessionId,
+      payload: {
+        role: "viewer",
+        cameraId: pairing.cameraId,
+        cameraRole: pairing.cameraRole,
+        expiresAt: pairing.expiresAt,
+        iceServers: [],
+      },
+    });
     await connected;
     transport.close();
     expect(() => transport.leave(pairing.sessionId)).toThrow(/not connected/i);
@@ -134,7 +177,6 @@ describe("BrowserViewerSignalingTransport", () => {
     });
     const connected = transport.connect(pairing, () => undefined);
     socket.open();
-    await connected;
     socket.message({
       version: 1,
       type: "authenticated",
@@ -147,6 +189,7 @@ describe("BrowserViewerSignalingTransport", () => {
         iceServers: [],
       },
     });
+    await connected;
 
     vi.advanceTimersByTime(20_000);
     expect(JSON.parse(socket.sent.at(-1) ?? "{}")).toEqual({
@@ -173,6 +216,18 @@ describe("BrowserViewerSignalingTransport", () => {
       onClosedByServer,
     );
     socket.open();
+    socket.message({
+      version: 1,
+      type: "authenticated",
+      sessionId: pairing.sessionId,
+      payload: {
+        role: "viewer",
+        cameraId: pairing.cameraId,
+        cameraRole: pairing.cameraRole,
+        expiresAt: pairing.expiresAt,
+        iceServers: [],
+      },
+    });
     await connected;
 
     socket.closeFromServer(1000);

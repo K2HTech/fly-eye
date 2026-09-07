@@ -23,6 +23,9 @@ const publicErrorCodes = new Set([
   "INVALID_CREDENTIALS",
   "INVALID_REFRESH_TOKEN",
   "UNAUTHORIZED",
+  "CAMERA_PAIRING_ACTIVE",
+  "SIGNALING_CAPACITY_REACHED",
+  "RATE_LIMITED",
 ]);
 
 export function publicBackendMessage(status: number, code?: unknown): string {
@@ -35,6 +38,12 @@ export function publicBackendMessage(status: number, code?: unknown): string {
   if (status === 404) return "The requested Fly Eye resource was not found.";
   if (status === 409 && code === "EMAIL_ALREADY_REGISTERED")
     return "An account already exists with that email.";
+  if (code === "CAMERA_PAIRING_ACTIVE")
+    return "A pairing code is already active for this camera. Wait for it to expire, then try again.";
+  if (code === "SIGNALING_CAPACITY_REACHED")
+    return "Camera signaling is temporarily at capacity. Please try again shortly.";
+  if (code === "RATE_LIMITED")
+    return "Too many pairing attempts were made. Wait before trying again.";
   if (status === 422) return "The submitted data is invalid.";
   if (status >= 500) return "The Fly Eye service is temporarily unavailable.";
   return "The Fly Eye request could not be completed.";
