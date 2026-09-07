@@ -43,6 +43,9 @@ const camera: CameraRecord = {
 class FakeTransport implements ViewerSignalingTransport {
   listener: ((message: ViewerSignalingMessage) => void) | null = null;
   onClosedByServer: (() => void) | undefined;
+  waitForAuthentication = false;
+  connectError: Error | null = null;
+  private resolveAuthentication: (() => void) | null = null;
   readonly close = vi.fn();
   readonly sendAnswer = vi.fn();
   readonly sendCandidate = vi.fn();
@@ -55,6 +58,16 @@ class FakeTransport implements ViewerSignalingTransport {
   ) {
     this.listener = listener;
     this.onClosedByServer = onClosedByServer;
+    if (this.connectError) throw this.connectError;
+    if (this.waitForAuthentication)
+      await new Promise<void>((resolve) => {
+        this.resolveAuthentication = resolve;
+      });
+  }
+
+  authenticate() {
+    this.resolveAuthentication?.();
+    this.resolveAuthentication = null;
   }
 
   emit(message: ViewerSignalingMessage) {
@@ -86,6 +99,80 @@ function authenticated(iceServers: readonly IceServer[] = []) {
 }
 
 describe("BrowserCameraConnection", () => {
+  it("cancels a created pairing when viewer authentication fails", async () => {
+    const transport = new FakeTransport();
+    transport.connectError = new Error("viewer authentication failed");
+    const cancel = vi.fn(async () => undefined);
+    const callbacks: CameraConnectionCallbacks = {
+      onPairing: vi.fn(),
+      onStream: vi.fn(),
+      onState: vi.fn(),
+      onError: vi.fn(),
+    };
+    const connection = new BrowserCameraConnection(
+      {
+        create: vi.fn(async () => pairing),
+        cancel,
+      } as unknown as BackendPairingClient,
+      callbacks,
+      {
+        createTransport: () => transport,
+        createPeer: () => ({
+          start: () => undefined,
+          acceptOffer: async () => undefined,
+          addCandidate: async () => undefined,
+          close: () => undefined,
+        }),
+        setTimeout: () => 1,
+        clearTimeout: vi.fn(),
+      },
+    );
+
+    await expect(connection.begin(pairing.matchId, camera)).rejects.toThrow(
+      "viewer authentication failed",
+    );
+    expect(transport.close).toHaveBeenCalledOnce();
+    expect(cancel).toHaveBeenCalledWith(pairing.sessionId);
+    expect(callbacks.onError).toHaveBeenCalledOnce();
+  });
+
+  it("shows the pairing code only after the signaling server authenticates the viewer", async () => {
+    const transport = new FakeTransport();
+    transport.waitForAuthentication = true;
+    const callbacks: CameraConnectionCallbacks = {
+      onPairing: vi.fn(),
+      onStream: vi.fn(),
+      onState: vi.fn(),
+      onError: vi.fn(),
+    };
+    const connection = new BrowserCameraConnection(
+      {
+        create: vi.fn(async () => pairing),
+        cancel: vi.fn(async () => undefined),
+      } as unknown as BackendPairingClient,
+      callbacks,
+      {
+        createTransport: () => transport,
+        createPeer: () => ({
+          start: () => undefined,
+          acceptOffer: async () => undefined,
+          addCandidate: async () => undefined,
+          close: () => undefined,
+        }),
+        setTimeout: () => 1,
+        clearTimeout: vi.fn(),
+      },
+    );
+
+    const started = connection.begin(pairing.matchId, camera);
+    await Promise.resolve();
+    expect(callbacks.onPairing).not.toHaveBeenCalled();
+
+    transport.authenticate();
+    await expect(started).resolves.toEqual(pairing);
+    expect(callbacks.onPairing).toHaveBeenCalledWith(pairing);
+  });
+
   it("replaces a lost peer only after the phone rejoins and offers again", async () => {
     const transport = new FakeTransport();
     const callbacks: CameraConnectionCallbacks = {

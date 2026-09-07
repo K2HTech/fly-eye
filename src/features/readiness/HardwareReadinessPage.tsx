@@ -6,6 +6,11 @@ import { useCameraSessions } from "../../app/cameraContext";
 import { matchRoutes, routePaths } from "../../app/paths";
 import { useSession } from "../../app/sessionContext";
 import { useAppServices } from "../../app/servicesContext";
+import { BackendRequestError } from "../../infrastructure/backend";
+import {
+  PairingClientError,
+  SignalingTransportError,
+} from "../../infrastructure/browser/cameras";
 import {
   isHardwareReady,
   type CalibrationProfile,
@@ -41,6 +46,16 @@ const statusDescriptions: Record<CameraStatus, string> = {
   ready: "Connection, frame timing, and health checks passed.",
   error: "The camera reported a recoverable connection error.",
 };
+
+function pairingFailureMessage(error: unknown): string {
+  if (
+    error instanceof BackendRequestError ||
+    error instanceof PairingClientError ||
+    error instanceof SignalingTransportError
+  )
+    return error.message;
+  return "Unable to create a camera pairing code. Please try again.";
+}
 
 function nextCameraStatus(status: CameraStatus): CameraStatus {
   switch (status) {
@@ -203,10 +218,8 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
     setActionError(null);
     try {
       setPairing(await cameraSessions.begin(camera.role, matchId, camera));
-    } catch {
-      setActionError(
-        "Unable to create a camera pairing code. Please try again.",
-      );
+    } catch (error) {
+      setActionError(pairingFailureMessage(error));
     } finally {
       setPendingControl(null);
     }

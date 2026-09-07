@@ -67,20 +67,25 @@ export class BrowserCameraConnection implements CameraConnection {
     if (pairing.cameraRole !== camera.role)
       throw new Error("The pairing camera role is invalid.");
     this.pairing = pairing;
-    this.callbacks.onPairing(pairing);
     const transport = this.dependencies.createTransport();
     this.transport = transport;
-    void transport
-      .connect(
+    try {
+      await transport.connect(
         pairing,
         (message) => void this.handle(message),
         () => {
           if (!this.closed) this.callbacks.onState("error");
         },
-      )
-      .catch(() => {
-        if (!this.closed) this.callbacks.onError();
-      });
+      );
+      if (this.closed || this.pairing?.sessionId !== pairing.sessionId)
+        throw new Error("Camera pairing was cancelled.");
+      this.callbacks.onPairing(pairing);
+    } catch (error) {
+      const wasClosed = this.closed;
+      this.close();
+      if (!wasClosed) this.callbacks.onError();
+      throw error;
+    }
     return pairing;
   }
 

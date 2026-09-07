@@ -95,10 +95,6 @@ export class BrowserViewerSignalingTransport implements ViewerSignalingTransport
               payload: { role: "viewer", token: pairing.viewerToken },
             }),
           );
-          if (!settled) {
-            settled = true;
-            resolve();
-          }
         } catch {
           fail("Unable to authenticate the camera signaling session.");
         }
@@ -110,7 +106,13 @@ export class BrowserViewerSignalingTransport implements ViewerSignalingTransport
             JSON.parse(event.data) as unknown,
             pairing.sessionId,
           );
-          if (message.type === "authenticated") this.startHeartbeat();
+          if (message.type === "authenticated") {
+            this.startHeartbeat();
+            if (!settled) {
+              settled = true;
+              resolve();
+            }
+          }
           listener(message);
         } catch (error) {
           if (error instanceof PairingProtocolError) {
