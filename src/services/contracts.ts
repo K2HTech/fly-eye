@@ -183,8 +183,8 @@ export interface CalibrationResult {
   readonly lineErrorsCm: Readonly<Record<string, number>>;
   readonly resolutionCmPerPx: Readonly<Record<string, number>>;
   readonly reprojectionErrorCm: number;
-  readonly straightnessBeforePx: number;
-  readonly straightnessAfterPx: number;
+  readonly straightnessBeforePx: number | null;
+  readonly straightnessAfterPx: number | null;
   readonly framesUsed: number;
   readonly framesRejected: number;
   readonly sampleCount: number;
