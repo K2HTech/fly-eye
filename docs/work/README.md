@@ -30,8 +30,10 @@ active/<feature>/
 `PLAN.md` owns batch order, dependencies, file ownership, validation, and
 proposed commits.
 
-There is no active implementation work. New non-trivial work begins with an
-approved specification and batch plan under `active/<feature>/`.
+The current [court-calibration work](active/court-calibration/SPEC.md) has a
+draft specification and plan, plus an external dependency record. It is not
+approved for implementation yet. New non-trivial implementation begins only
+after an approved `SPEC.md` and `PLAN.md` exist under `active/<feature>/`.
 
 Completed historical specifications:
 
