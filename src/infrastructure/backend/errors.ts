@@ -26,6 +26,9 @@ const publicErrorCodes = new Set([
   "CAMERA_PAIRING_ACTIVE",
   "SIGNALING_CAPACITY_REACHED",
   "RATE_LIMITED",
+  "CALIBRATION_DEGENERATE",
+  "CALIBRATION_FRAME_INCOMPLETE",
+  "CALIBRATION_FRAME_INVALID",
 ]);
 
 export function publicBackendMessage(status: number, code?: unknown): string {
