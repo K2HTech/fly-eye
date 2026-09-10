@@ -37,14 +37,21 @@ export function CalibrationReview({
                 .map((point) => `${point.x},${point.y}`)
                 .join(" ")}
             />
-            {Object.entries(result.wireframeImage).map(
-              ([name, [start, end]]) => (
+            {Object.entries(result.wireframeImage).map(([name, points]) =>
+              points.length === 2 ? (
                 <line
                   key={name}
-                  x1={start.x}
-                  y1={start.y}
-                  x2={end.x}
-                  y2={end.y}
+                  x1={points[0].x}
+                  y1={points[0].y}
+                  x2={points[1].x}
+                  y2={points[1].y}
+                />
+              ) : (
+                <polyline
+                  key={name}
+                  points={points
+                    .map((point) => `${point.x},${point.y}`)
+                    .join(" ")}
                 />
               ),
             )}

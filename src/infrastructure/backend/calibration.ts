@@ -54,12 +54,6 @@ function nullableFinite(value: unknown): number | null {
   return finite(value);
 }
 
-function positiveInteger(value: unknown): number {
-  if (typeof value !== "number" || !Number.isInteger(value) || value <= 0)
-    throw invalid();
-  return value;
-}
-
 function nonNegativeInteger(value: unknown): number {
   if (typeof value !== "number" || !Number.isInteger(value) || value < 0)
     throw invalid();
@@ -97,15 +91,15 @@ function numberMap(value: unknown): Readonly<Record<string, number>> {
 
 function wireframe(
   value: unknown,
-): Readonly<Record<string, readonly [CalibrationPoint, CalibrationPoint]>> {
+): Readonly<Record<string, readonly CalibrationPoint[]>> {
   const body = object(value);
   return Object.fromEntries(
     Object.entries(body).map(([key, entry]) => {
-      const endpoints = array(entry);
-      if (endpoints.length !== 2) throw invalid();
-      return [key, [point(endpoints[0]), point(endpoints[1])]];
+      const points = array(entry).map(point);
+      if (points.length < 2) throw invalid();
+      return [key, points];
     }),
-  ) as Readonly<Record<string, readonly [CalibrationPoint, CalibrationPoint]>>;
+  ) as Readonly<Record<string, readonly CalibrationPoint[]>>;
 }
 
 function matrix(value: unknown): CalibrationResult["homography"] {
@@ -141,7 +135,6 @@ export function parseCalibration(value: unknown): CalibrationResult {
   )
     throw invalid();
   const outline = array(body.courtOutlineImage).map(point);
-  if (outline.length !== 4) throw invalid();
   return {
     id: id(body, "id"),
     cameraId: id(body, "cameraId"),
@@ -154,7 +147,7 @@ export function parseCalibration(value: unknown): CalibrationResult {
     reprojectionErrorCm: finite(body.reprojectionErrorCm),
     straightnessBeforePx: nullableFinite(body.straightnessBeforePx),
     straightnessAfterPx: nullableFinite(body.straightnessAfterPx),
-    framesUsed: positiveInteger(body.framesUsed),
+    framesUsed: nonNegativeInteger(body.framesUsed),
     framesRejected: nonNegativeInteger(body.framesRejected),
     sampleCount: nonNegativeInteger(body.sampleCount),
     converged: body.converged,

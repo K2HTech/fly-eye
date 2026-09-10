@@ -193,7 +193,7 @@ export interface CalibrationResult {
   readonly quality: "good" | "acceptable" | "poor";
   readonly courtOutlineImage: readonly CalibrationPoint[];
   readonly wireframeImage: Readonly<
-    Record<string, readonly [CalibrationPoint, CalibrationPoint]>
+    Record<string, readonly CalibrationPoint[]>
   >;
   readonly isCurrent: boolean;
   readonly createdAt: string;
