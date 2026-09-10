@@ -431,6 +431,15 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
             label={cameraPair ? "Left camera" : "Camera A"}
             location={cameraPair ? "Sideline left" : "Sideline"}
             cameraRecord={cameraPair?.left}
+            calibrateDisabled={!leftCameraPreview || !services.calibration}
+            onCalibrate={
+              cameraPair?.left
+                ? () =>
+                    navigate(
+                      matchRoutes.calibration(matchId, cameraPair.left.id),
+                    )
+                : undefined
+            }
             onPair={
               cameraPair?.left
                 ? () => void openPairing(cameraPair.left)
@@ -447,6 +456,15 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
             label={cameraPair ? "Right camera" : "Camera B"}
             location={cameraPair ? "Sideline right" : "Baseline"}
             cameraRecord={cameraPair?.right}
+            calibrateDisabled={!rightCameraPreview || !services.calibration}
+            onCalibrate={
+              cameraPair?.right
+                ? () =>
+                    navigate(
+                      matchRoutes.calibration(matchId, cameraPair.right.id),
+                    )
+                : undefined
+            }
             onPair={
               cameraPair?.right
                 ? () => void openPairing(cameraPair.right)
@@ -576,6 +594,7 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
 interface CameraCardProps {
   camera: CameraKey;
   cameraRecord?: CameraRecord;
+  calibrateDisabled: boolean;
   disabled: boolean;
   label: string;
   location: string;
@@ -583,12 +602,14 @@ interface CameraCardProps {
   readiness: CameraReadiness;
   showSimulatorControls: boolean;
   onChange: (status: CameraStatus) => void;
+  onCalibrate?: () => void;
   onPair?: () => void;
 }
 
 function CameraCard({
   camera,
   cameraRecord,
+  calibrateDisabled,
   disabled,
   label,
   location,
@@ -596,6 +617,7 @@ function CameraCard({
   readiness,
   showSimulatorControls,
   onChange,
+  onCalibrate,
   onPair,
 }: CameraCardProps) {
   return (
@@ -636,6 +658,15 @@ function CameraCard({
         {onPair && (
           <button type="button" disabled={disabled} onClick={onPair}>
             Pair phone
+          </button>
+        )}
+        {onCalibrate && (
+          <button
+            type="button"
+            disabled={disabled || calibrateDisabled}
+            onClick={onCalibrate}
+          >
+            Calibrate court
           </button>
         )}
         {showSimulatorControls && (
