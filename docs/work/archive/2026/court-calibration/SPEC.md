@@ -1,6 +1,6 @@
 # Court Calibration Specification
 
-Status: Draft — awaiting product-owner approval
+Status: Implemented — 2026-09-10
 
 ## Outcome
 
@@ -68,3 +68,16 @@ Demo remains visibly simulated and does not call calibration endpoints.
 
 See [backend and engine dependencies](BACKEND-DEPENDENCIES.md). The End A
 match field is required before this becomes an operational production flow.
+
+## Delivered differences and remaining external work
+
+- The frontend implements capture, upload, seeding, solve/review, and a local
+  normal-session readiness/live-route guard. It cannot enforce calibration
+  safety for another backend client; backend enforcement remains external.
+- The match-level End A label, signed-upload target renewal endpoint,
+  configurable resolution thresholds, and rig-level line-resolution gate were
+  not available in the backend contract. They are recorded in the accompanying
+  dependency record and manual validation checklist.
+- The UI supports the required four corners, raw off-frame coordinates,
+  keyboard adjustment, and line-intersection recovery. A follow-up can add the
+  complete substitute-landmark catalogue once the engine/API naming is settled.

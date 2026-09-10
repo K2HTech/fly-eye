@@ -30,17 +30,16 @@ active/<feature>/
 `PLAN.md` owns batch order, dependencies, file ownership, validation, and
 proposed commits.
 
-The current [court-calibration work](active/court-calibration/SPEC.md) has a
-draft specification and plan, plus an external dependency record. It is not
-approved for implementation yet. New non-trivial implementation begins only
-after an approved `SPEC.md` and `PLAN.md` exist under `active/<feature>/`.
-
 Completed historical specifications:
 
 - [Documentation system](archive/2026/documentation-system/SPEC.md)
 - [Browser camera pairing](archive/2026/browser-camera-pairing/SPEC.md) —
   delivered browser integration; its required real-environment acceptance is
   retained in the [camera-pairing validation checklist](../technical/BROWSER-CAMERA-PAIRING-VALIDATION.md).
+- [Court calibration](archive/2026/court-calibration/SPEC.md) — delivered UI
+  integration; its external dependencies and required physical-camera
+  validation are retained in the [dependency record](archive/2026/court-calibration/BACKEND-DEPENDENCIES.md)
+  and [calibration validation checklist](../technical/CALIBRATION-VALIDATION.md).
 
 ## Approval rules
 
