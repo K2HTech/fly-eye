@@ -96,10 +96,11 @@ current UI.
 
 The initial product handles standalone matches. Its normal progression is
 `draft` to `ready` to `live` to `completed`; returning from readiness setup may
-move a ready match back to draft. For the current normal-camera POC, the UI
-verifies one decoded live camera preview then advances the backend directly from
-`draft` to `live`; backend status has no persisted `ready` state. Calibration
-remains a visible simulated placeholder and the second camera may be unavailable.
+move a ready match back to draft. For normal-camera operation, the UI verifies
+one decoded live camera preview and current eligible calibration from both
+backend cameras before advancing directly from `draft` to `live`; backend
+status has no persisted `ready` state. The demo retains its visible simulated
+calibration selection.
 Other invalid status transitions are not permitted.
 
 Singles has one participant per side; doubles has two. The selected scoring

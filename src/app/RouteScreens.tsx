@@ -6,6 +6,7 @@ import {
   useParams,
   type Location,
 } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 import { DecisionScreen, type DecisionResult } from "../features/decision";
 import { LiveMonitor, type CameraFeed } from "../features/live";
@@ -15,7 +16,9 @@ import { ClipReview, type ClipDecision } from "../features/review";
 import { matchRoutes, routePaths } from "./paths";
 import { useRouteAccess } from "./routeAccess";
 import { useSession } from "./sessionContext";
+import { useAppServices } from "./servicesContext";
 import { AuthenticatedShell } from "./AuthenticatedShell";
+import { calibrationSafety } from "../features/calibration/safety";
 
 interface RouteMessageState {
   message?: string;
@@ -158,8 +161,40 @@ export function LiveRoute() {
   const matchId = useMatchId();
   const navigate = useNavigate();
   const session = useSession();
+  const services = useAppServices();
   const { sessions, streams } = useCameraSessions();
   const isBackendSession = session.identity?.session.mode === "backend";
+  const [calibrationGate, setCalibrationGate] = useState<
+    "checking" | "eligible" | "blocked"
+  >(() => (isBackendSession ? "checking" : "eligible"));
+  useEffect(() => {
+    let active = true;
+    if (!isBackendSession || !services.cameras || !services.calibration)
+      return undefined;
+    void services.cameras
+      .list(matchId)
+      .then((cameras) =>
+        Promise.all(
+          cameras.map((camera) => services.calibration!.getCurrent(camera.id)),
+        ),
+      )
+      .then((results) => {
+        if (!active) return;
+        setCalibrationGate(
+          results.length === 2 &&
+            results.every(
+              (result) =>
+                result?.isCurrent && !calibrationSafety(result).blocksCamera,
+            )
+            ? "eligible"
+            : "blocked",
+        );
+      })
+      .catch(() => active && setCalibrationGate("blocked"));
+    return () => {
+      active = false;
+    };
+  }, [isBackendSession, matchId, services.calibration, services.cameras]);
   const cameras = isBackendSession
     ? simulatedCameras.map((camera, index) => {
         const stream =
@@ -187,6 +222,19 @@ export function LiveRoute() {
       <Navigate
         replace
         state={{ message: "Pair a camera before opening the live monitor." }}
+        to={matchRoutes.readiness(matchId)}
+      />
+    );
+  }
+  if (isBackendSession && calibrationGate === "checking")
+    return <RestorationScreen />;
+  if (isBackendSession && calibrationGate === "blocked") {
+    return (
+      <Navigate
+        replace
+        state={{
+          message: "Calibrate both cameras before opening the live monitor.",
+        }}
         to={matchRoutes.readiness(matchId)}
       />
     );
