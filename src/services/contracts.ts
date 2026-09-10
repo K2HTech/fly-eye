@@ -115,6 +115,83 @@ export interface PairingService {
   cancel(sessionId: string): Promise<void>;
 }
 
+export interface CalibrationPoint {
+  readonly x: number;
+  readonly y: number;
+}
+
+export interface CalibrationSeedPoint {
+  readonly image: CalibrationPoint;
+  readonly court: CalibrationPoint;
+}
+
+export interface CalibrationFrameDeclaration {
+  readonly contentType: "image/jpeg";
+  readonly sizeBytes: number;
+  readonly checksumSha256: string;
+}
+
+export interface CalibrationFrameUpload {
+  readonly assetId: string;
+  readonly url: string;
+  readonly method: "PUT";
+  readonly headers: Readonly<Record<string, string>>;
+  readonly expiresAt: string;
+}
+
+export interface CalibrationResult {
+  readonly id: string;
+  readonly cameraId: string;
+  readonly engineVersion: string;
+  readonly seedPoints: readonly CalibrationSeedPoint[];
+  readonly homography: readonly [
+    readonly [number, number, number],
+    readonly [number, number, number],
+    readonly [number, number, number],
+  ];
+  readonly distortion: {
+    readonly k1: number;
+    readonly cx: number;
+    readonly cy: number;
+    readonly scale: number;
+  } | null;
+  readonly lineErrorsCm: Readonly<Record<string, number>>;
+  readonly resolutionCmPerPx: Readonly<Record<string, number>>;
+  readonly reprojectionErrorCm: number;
+  readonly straightnessBeforePx: number;
+  readonly straightnessAfterPx: number;
+  readonly framesUsed: number;
+  readonly framesRejected: number;
+  readonly sampleCount: number;
+  readonly converged: boolean;
+  readonly cameraStable: boolean;
+  readonly quality: "good" | "acceptable" | "poor";
+  readonly courtOutlineImage: readonly CalibrationPoint[];
+  readonly wireframeImage: Readonly<
+    Record<string, readonly [CalibrationPoint, CalibrationPoint]>
+  >;
+  readonly isCurrent: boolean;
+  readonly createdAt: string;
+}
+
+export interface CalibrationSolveInput {
+  readonly frameAssetIds: readonly string[];
+  readonly seedPoints: readonly CalibrationSeedPoint[];
+  readonly frameSize: { readonly w: number; readonly h: number };
+}
+
+export interface CalibrationService {
+  createFrameUploads(
+    cameraId: string,
+    frames: readonly CalibrationFrameDeclaration[],
+  ): Promise<readonly CalibrationFrameUpload[]>;
+  getCurrent(cameraId: string): Promise<CalibrationResult | null>;
+  solve(
+    cameraId: string,
+    input: CalibrationSolveInput,
+  ): Promise<CalibrationResult>;
+}
+
 export interface CameraConnectionCallbacks {
   onPairing(pairing: PairingSession): void;
   onStream(stream: MediaStream): void;
@@ -139,4 +216,5 @@ export interface AppServices {
   cameras?: CameraRegistry;
   pairing?: PairingService;
   cameraConnections?: CameraConnectionFactory;
+  calibration?: CalibrationService;
 }

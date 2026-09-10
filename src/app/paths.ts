@@ -6,6 +6,7 @@ export const routePaths = {
   matches: "/matches",
   newMatch: "/matches/new",
   readinessPattern: "/matches/:matchId/readiness",
+  calibrationPattern: "/matches/:matchId/cameras/:cameraId/calibration",
   livePattern: "/matches/:matchId/live",
   reviewPattern: "/matches/:matchId/review",
   decisionPattern: "/matches/:matchId/decision",
@@ -17,6 +18,8 @@ function matchPath(matchId: string, destination: string): string {
 
 export const matchRoutes = {
   readiness: (matchId: string) => matchPath(matchId, "readiness"),
+  calibration: (matchId: string, cameraId: string) =>
+    `/matches/${encodeURIComponent(matchId)}/cameras/${encodeURIComponent(cameraId)}/calibration`,
   live: (matchId: string) => matchPath(matchId, "live"),
   review: (matchId: string) => matchPath(matchId, "review"),
   decision: (matchId: string) => matchPath(matchId, "decision"),

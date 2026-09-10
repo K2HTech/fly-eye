@@ -16,6 +16,12 @@ export {
   mapBackendUser,
 } from "./dtos";
 export { BackendRequestError, publicBackendMessage } from "./errors";
+export {
+  BackendCalibrationService,
+  CalibrationServiceError,
+  createBackendCalibrationService,
+  parseCalibration,
+} from "./calibration";
 export type { CredentialPair, CredentialStore } from "./credentials";
 export type {
   BackendHttpClient,

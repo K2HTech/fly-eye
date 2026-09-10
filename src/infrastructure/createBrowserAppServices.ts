@@ -6,6 +6,7 @@ import type { AppServices } from "../services";
 import {
   createBackendAuthService,
   createBackendCameraRegistry,
+  createBackendCalibrationService,
   createBackendHttpClient,
   createBackendMatchRepository,
   MemoryCredentialStore,
@@ -88,6 +89,7 @@ export function createBrowserAppServices(
       auth.getActiveSessionMode(),
     ),
     cameras: createBackendCameraRegistry({ client }),
+    calibration: createBackendCalibrationService(client),
     pairing,
     cameraConnections: new BrowserCameraConnectionFactory(pairing),
   };
