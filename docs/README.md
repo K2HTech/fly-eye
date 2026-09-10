@@ -46,12 +46,12 @@ instructions](../AGENTS.md).
 - Line-call pages: [live monitor](pages/LiveMonitor.md), [clip
   review](pages/ClipReview.md), and [decision](pages/DecisionScreen.md)
 - [Line-call review workflow](workflows/LineCallReviewWorkflow.md)
-- Calibration work: [specification](work/active/court-calibration/SPEC.md),
-  [batch plan](work/active/court-calibration/PLAN.md), and external
-  [backend/engine dependencies](work/active/court-calibration/BACKEND-DEPENDENCIES.md).
+- Completed calibration work: [specification](work/archive/2026/court-calibration/SPEC.md)
+  and external [backend/engine dependencies](work/archive/2026/court-calibration/BACKEND-DEPENDENCIES.md).
 - Technical baseline: [architecture](technical/ARCHITECTURE.md), [quality
   requirements](technical/QUALITY-REQUIREMENTS.md), [browser camera pairing
-  validation](technical/BROWSER-CAMERA-PAIRING-VALIDATION.md), and
+  validation](technical/BROWSER-CAMERA-PAIRING-VALIDATION.md), [court
+  calibration validation](technical/CALIBRATION-VALIDATION.md), and
   [architecture decision records](technical/decisions/README.md)
 
 ## Ownership rules
