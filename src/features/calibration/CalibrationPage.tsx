@@ -5,14 +5,17 @@ import { useCameraSessions } from "../../app/cameraContext";
 import { matchRoutes } from "../../app/paths";
 import { useSession } from "../../app/sessionContext";
 import { useAppServices } from "../../app/servicesContext";
+import { BackendRequestError } from "../../infrastructure/backend";
 import type {
   CalibrationFrameUpload,
+  CalibrationResult,
   CalibrationSeedPoint,
   CameraRole,
   CapturedCalibrationFrame,
 } from "../../services";
 import "./calibration.css";
 import { LandmarkEditor } from "./LandmarkEditor";
+import { CalibrationReview } from "./CalibrationReview";
 import { initialSeeds } from "./landmarks";
 
 type FrameStatus = "captured" | "uploading" | "uploaded" | "error";
@@ -20,6 +23,18 @@ interface FrameState {
   readonly captured: CapturedCalibrationFrame;
   readonly target?: CalibrationFrameUpload;
   readonly status: FrameStatus;
+}
+
+function solveFailureMessage(error: unknown): string {
+  if (!(error instanceof BackendRequestError))
+    return "The court could not be solved from these markers. Adjust the points or recapture clear, stable frames.";
+  if (error.code === "CALIBRATION_FRAME_INCOMPLETE")
+    return "One or more frame uploads are incomplete. Retry the missing frame upload before solving.";
+  if (error.code === "CALIBRATION_FRAME_INVALID")
+    return "The camera resolution changed after capture. Recapture calibration frames at the current resolution.";
+  if (error.code === "CALIBRATION_DEGENERATE")
+    return "These points do not define a usable court, or court lines are too unclear. Adjust markers first; recapture only if the lines are unclear.";
+  return "Fly Eye could not solve this court calibration. Try again shortly.";
 }
 
 export function CalibrationPage() {
@@ -36,6 +51,7 @@ export function CalibrationPage() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [seeds, setSeeds] = useState<readonly CalibrationSeedPoint[]>([]);
+  const [result, setResult] = useState<CalibrationResult | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -130,6 +146,38 @@ export function CalibrationPage() {
       setMessage(
         "Fly Eye could not prepare uploads. Captured frames remain available; try again.",
       );
+    } finally {
+      setBusy(false);
+    }
+  };
+  const solve = async () => {
+    if (
+      !services.calibration ||
+      frames.length < 3 ||
+      uploaded !== frames.length
+    )
+      return;
+    const selectedFrame = frames[0].captured;
+    const currentSeeds =
+      seeds.length >= 4
+        ? seeds
+        : initialSeeds(selectedFrame.width, selectedFrame.height);
+    const assets = frames
+      .map((frame) => frame.target?.assetId)
+      .filter((assetId): assetId is string => Boolean(assetId));
+    if (assets.length !== frames.length) return;
+    setBusy(true);
+    setMessage(null);
+    try {
+      setResult(
+        await services.calibration.solve(cameraId, {
+          frameAssetIds: assets,
+          seedPoints: currentSeeds,
+          frameSize: { w: selectedFrame.width, h: selectedFrame.height },
+        }),
+      );
+    } catch (error) {
+      setMessage(solveFailureMessage(error));
     } finally {
       setBusy(false);
     }
@@ -253,20 +301,41 @@ export function CalibrationPage() {
               </article>
             ))}
           </div>
-          {frames.length >= 3 && uploaded === frames.length && (
-            <LandmarkEditor
-              frame={frames[0].captured}
-              seeds={
-                seeds.length === 4
-                  ? seeds
-                  : initialSeeds(
-                      frames[0].captured.width,
-                      frames[0].captured.height,
-                    )
-              }
-              onChange={setSeeds}
-            />
-          )}
+          {frames.length >= 3 &&
+            uploaded === frames.length &&
+            (result ? (
+              <CalibrationReview
+                frame={frames[0].captured}
+                result={result}
+                onRedo={() => setResult(null)}
+              />
+            ) : (
+              <>
+                <LandmarkEditor
+                  frame={frames[0].captured}
+                  seeds={
+                    seeds.length >= 4
+                      ? seeds
+                      : initialSeeds(
+                          frames[0].captured.width,
+                          frames[0].captured.height,
+                        )
+                  }
+                  onChange={setSeeds}
+                />
+                <div className="calibration__solve">
+                  <button type="button" onClick={solve} disabled={busy}>
+                    {busy
+                      ? "Solving court geometry…"
+                      : `Solve calibration with ${frames.length} frames`}
+                  </button>
+                  <p>
+                    Solving saves the immutable calibration immediately. You can
+                    adjust these markers and solve again without re-uploading.
+                  </p>
+                </div>
+              </>
+            ))}
         </section>
       )}
     </main>
