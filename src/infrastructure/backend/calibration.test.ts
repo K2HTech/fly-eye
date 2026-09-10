@@ -154,8 +154,10 @@ describe("BackendCalibrationService", () => {
       lineErrorsCm: {},
       resolutionCmPerPx: {},
       wireframeImage: {},
+      courtOutlineImage: [],
       straightnessBeforePx: null,
       straightnessAfterPx: null,
+      framesUsed: 0,
       sampleCount: 0,
     });
     const service = new BackendCalibrationService(client);
@@ -164,10 +166,46 @@ describe("BackendCalibrationService", () => {
       id: calibrationId,
       straightnessBeforePx: null,
       straightnessAfterPx: null,
+      framesUsed: 0,
       sampleCount: 0,
       lineErrorsCm: {},
       resolutionCmPerPx: {},
+      courtOutlineImage: [],
       wireframeImage: {},
+    });
+  });
+
+  it("accepts wireframe entries that carry more than two points", async () => {
+    const { client } = clientReturning({
+      ...calibration(),
+      wireframeImage: {
+        COURT_OUTLINE: [
+          { x: 0, y: 0 },
+          { x: 100, y: 0 },
+          { x: 100, y: 200 },
+          { x: 0, y: 200 },
+        ],
+        BASELINE_NEAR: [
+          { x: 0, y: 100 },
+          { x: 100, y: 100 },
+        ],
+      },
+    });
+    const service = new BackendCalibrationService(client);
+
+    await expect(service.getCurrent(cameraId)).resolves.toMatchObject({
+      wireframeImage: {
+        COURT_OUTLINE: [
+          { x: 0, y: 0 },
+          { x: 100, y: 0 },
+          { x: 100, y: 200 },
+          { x: 0, y: 200 },
+        ],
+        BASELINE_NEAR: [
+          { x: 0, y: 100 },
+          { x: 100, y: 100 },
+        ],
+      },
     });
   });
 });
