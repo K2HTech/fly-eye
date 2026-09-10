@@ -105,9 +105,19 @@ export interface PreparedCameraPair {
   readonly right: CameraRecord;
 }
 
+export interface CameraUpdateInput {
+  readonly resolution?: { readonly w: number; readonly h: number };
+  readonly targetFps?: number;
+}
+
 export interface CameraRegistry {
   list(matchId: string): Promise<CameraRecord[]>;
   prepare(matchId: string): Promise<PreparedCameraPair>;
+  update(
+    matchId: string,
+    cameraId: string,
+    input: CameraUpdateInput,
+  ): Promise<CameraRecord>;
 }
 
 export interface PairingService {

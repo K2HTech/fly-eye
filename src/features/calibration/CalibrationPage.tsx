@@ -10,6 +10,7 @@ import type {
   CalibrationFrameUpload,
   CalibrationResult,
   CalibrationSeedPoint,
+  CameraRecord,
   CameraRole,
   CapturedCalibrationFrame,
 } from "../../services";
@@ -44,6 +45,7 @@ export function CalibrationPage() {
   const services = useAppServices();
   const cameraSessions = useCameraSessions();
   const [role, setRole] = useState<CameraRole | null>(null);
+  const [camera, setCamera] = useState<CameraRecord | null>(null);
   const [frames, setFrames] = useState<readonly FrameState[]>([]);
   const [loading, setLoading] = useState(() =>
     Boolean(services.cameras && cameraId),
@@ -61,11 +63,13 @@ export function CalibrationPage() {
     services.cameras
       .list(matchId)
       .then(
-        (cameras) =>
-          active &&
-          setRole(
-            cameras.find((camera) => camera.id === cameraId)?.role ?? null,
-          ),
+        (cameras) => {
+          if (!active) return;
+          const selected =
+            cameras.find((entry) => entry.id === cameraId) ?? null;
+          setRole(selected?.role ?? null);
+          setCamera(selected);
+        },
         () =>
           active &&
           setMessage(
@@ -153,6 +157,7 @@ export function CalibrationPage() {
   const solve = async () => {
     if (
       !services.calibration ||
+      !services.cameras ||
       frames.length < 3 ||
       uploaded !== frames.length
     )
@@ -169,6 +174,15 @@ export function CalibrationPage() {
     setBusy(true);
     setMessage(null);
     try {
+      if (
+        camera &&
+        (camera.resolution.width !== selectedFrame.width ||
+          camera.resolution.height !== selectedFrame.height)
+      ) {
+        await services.cameras.update(matchId, cameraId, {
+          resolution: { w: selectedFrame.width, h: selectedFrame.height },
+        });
+      }
       setResult(
         await services.calibration.solve(cameraId, {
           frameAssetIds: assets,

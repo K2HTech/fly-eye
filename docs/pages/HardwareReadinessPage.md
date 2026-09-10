@@ -32,9 +32,11 @@ before monitoring.
   not lost when another check fails or the page is reopened.
 - For normal matches, opening readiness obtains exactly one backend
   `SIDELINE_LEFT` and one `SIDELINE_RIGHT` device-camera record. The left and
-  right cards use those role directions and their backend 1280x720/30-FPS
-  preview metadata. Unexpected, duplicate, inactive, or incompatible records
-  block setup with an actionable error rather than being guessed at.
+  right cards use those role directions and their stored preview metadata. A
+  freshly created record starts with a placeholder resolution/FPS that is
+  reconciled with the phone's actual decoded stream before calibration.
+  Unexpected, duplicate, inactive, or non-device records block setup with an
+  actionable error rather than being guessed at.
 - For normal backend matches, each camera becomes ready only when its paired
   phone has a connected peer and a current live video preview. Saved or
   simulated camera-check values cannot satisfy this gate. Pairing, loss, and

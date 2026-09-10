@@ -125,6 +125,75 @@ describe("BackendCameraRegistry", () => {
     expect(request).toHaveBeenCalledOnce();
   });
 
+  it("reuses a device camera whose reported resolution differs from the placeholder", async () => {
+    const { client, request } = clientFor([
+      camera("SIDELINE_LEFT", leftId, { resolution: { w: 1920, h: 1080 } }),
+    ]);
+    const registry = new BackendCameraRegistry({ client, crypto });
+
+    await expect(registry.prepare(matchId)).resolves.toMatchObject({
+      left: { id: leftId, resolution: { width: 1920, height: 1080 } },
+    });
+    expect(request).toHaveBeenCalledTimes(2);
+    expect(JSON.parse(String(request.mock.calls[1][1]?.body))).toMatchObject({
+      role: "SIDELINE_RIGHT",
+    });
+  });
+
+  it("updates a camera resolution through PATCH", async () => {
+    const request = vi.fn<BackendHttpClient["request"]>();
+    request.mockImplementation(async () =>
+      camera("SIDELINE_LEFT", leftId, { resolution: { w: 1920, h: 1080 } }),
+    );
+    const registry = new BackendCameraRegistry({
+      client: { request } as BackendHttpClient,
+    });
+
+    const updated = await registry.update(matchId, leftId, {
+      resolution: { w: 1920, h: 1080 },
+    });
+
+    expect(updated).toMatchObject({
+      id: leftId,
+      role: "SIDELINE_LEFT",
+      resolution: { width: 1920, height: 1080 },
+    });
+    expect(request).toHaveBeenCalledWith(
+      `cameras/${leftId}`,
+      expect.objectContaining({
+        method: "PATCH",
+        body: JSON.stringify({ resolution: { w: 1920, h: 1080 } }),
+      }),
+    );
+  });
+
+  it.each([
+    ["missing change", {}],
+    ["zero width", { resolution: { w: 0, h: 720 } }],
+    ["non-integer height", { resolution: { w: 1280, h: 720.5 } }],
+    ["non-positive target FPS", { targetFps: 0 }],
+  ])("rejects an invalid camera update: %s", async (_label, input) => {
+    const { client } = clientFor([]);
+    const registry = new BackendCameraRegistry({ client });
+
+    await expect(registry.update(matchId, leftId, input)).rejects.toMatchObject(
+      {
+        code: "INVALID_CAMERA_UPDATE",
+      },
+    );
+  });
+
+  it("rejects a camera update for a malformed camera id", async () => {
+    const { client } = clientFor([]);
+    const registry = new BackendCameraRegistry({ client });
+
+    await expect(
+      registry.update(matchId, "not-a-uuid", {
+        resolution: { w: 1280, h: 720 },
+      }),
+    ).rejects.toMatchObject({ code: "INVALID_CAMERA_UPDATE" });
+  });
+
   it("retains each role's client request ID when a create retry is made", async () => {
     let listCall = 0;
     const request = vi.fn<BackendHttpClient["request"]>();
@@ -174,10 +243,6 @@ describe("BackendCameraRegistry", () => {
     ],
     ["unexpected role", [camera("BASELINE_NEAR")]],
     ["inactive camera", [camera("SIDELINE_LEFT", leftId, { isActive: false })]],
-    [
-      "incompatible resolution",
-      [camera("SIDELINE_LEFT", leftId, { resolution: { w: 1920, h: 1080 } })],
-    ],
     [
       "incompatible source type",
       [camera("SIDELINE_LEFT", leftId, { sourceType: "mjpeg" })],
