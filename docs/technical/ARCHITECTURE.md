@@ -112,8 +112,9 @@ Evidence: [authentication contracts](../../src/services/contracts.ts),
 ## Hardware and processing boundary
 
 For normal backend matches, a camera registry obtains exactly the two supported device records:
-`SIDELINE_LEFT` and `SIDELINE_RIGHT`, with 1280x720/30-FPS preview metadata.
-Those records establish pairing identity only. For normal matches, readiness
+`SIDELINE_LEFT` and `SIDELINE_RIGHT`. A missing record is created with a
+placeholder capture spec that is later reconciled with the phone's actual
+decoded resolution before calibration. Those records establish pairing identity only. For normal matches, readiness
 requires at least one browser-owned peer to be connected and delivering a live
 preview; saved simulated values cannot satisfy that gate. Calibration remains
 simulated until the separately planned calibration integration replaces it.

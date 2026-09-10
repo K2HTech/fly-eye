@@ -17,6 +17,7 @@ export type {
   CalibrationSolveInput,
   CameraRegistry,
   CameraRole,
+  CameraUpdateInput,
   CreateMatchInput,
   MatchRepository,
   PairingService,

@@ -147,6 +147,7 @@ async function backendReadinessApp(options?: { live?: boolean }) {
     cameras: {
       list: async () => [left, right],
       prepare: async () => ({ left, right }),
+      update: async () => left,
     },
     cameraConnections: {
       create: (nextCallbacks) => {
