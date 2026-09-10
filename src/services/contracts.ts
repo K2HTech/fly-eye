@@ -139,6 +139,21 @@ export interface CalibrationFrameUpload {
   readonly expiresAt: string;
 }
 
+/** An in-memory JPEG captured from a live camera preview. */
+export interface CapturedCalibrationFrame {
+  readonly bytes: Blob;
+  readonly previewDataUrl: string;
+  readonly width: number;
+  readonly height: number;
+  readonly declaration: CalibrationFrameDeclaration;
+}
+
+/** Browser/media boundary used by the calibration route; nothing is persisted. */
+export interface CalibrationFrameCaptureService {
+  capture(stream: MediaStream): Promise<CapturedCalibrationFrame>;
+  upload(target: CalibrationFrameUpload, bytes: Blob): Promise<void>;
+}
+
 export interface CalibrationResult {
   readonly id: string;
   readonly cameraId: string;
@@ -217,4 +232,5 @@ export interface AppServices {
   pairing?: PairingService;
   cameraConnections?: CameraConnectionFactory;
   calibration?: CalibrationService;
+  calibrationFrames?: CalibrationFrameCaptureService;
 }
