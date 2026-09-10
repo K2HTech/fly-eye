@@ -29,6 +29,7 @@ describe("backend error boundary", () => {
           error: {
             code: "PRIVATE_DATABASE_CONSTRAINT",
             message: "private database detail",
+            field: "private_column",
           },
         },
       }),
@@ -37,7 +38,29 @@ describe("backend error boundary", () => {
 
     const error = await toBackendError(response, "request-2");
     expect(error.code).toBeNull();
+    expect(error.field).toBeNull();
     expect(error.message).toBe("The Fly Eye request could not be completed.");
     expect(JSON.stringify(error)).not.toContain("PRIVATE_DATABASE_CONSTRAINT");
+    expect(JSON.stringify(error)).not.toContain("private_column");
+  });
+
+  it("keeps the offending field for a public calibration error", async () => {
+    const response = new Response(
+      JSON.stringify({
+        detail: {
+          error: {
+            code: "CALIBRATION_FRAME_INVALID",
+            message: "Frame size must match the camera resolution.",
+            field: "frameSize",
+          },
+        },
+      }),
+      { status: 400 },
+    );
+
+    const error = await toBackendError(response, "request-3");
+    expect(error.code).toBe("CALIBRATION_FRAME_INVALID");
+    expect(error.field).toBe("frameSize");
+    expect(error.message).not.toContain("must match the camera resolution");
   });
 });

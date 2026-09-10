@@ -31,8 +31,11 @@ function solveFailureMessage(error: unknown): string {
     return "The court could not be solved from these markers. Adjust the points or recapture clear, stable frames.";
   if (error.code === "CALIBRATION_FRAME_INCOMPLETE")
     return "One or more frame uploads are incomplete. Retry the missing frame upload before solving.";
-  if (error.code === "CALIBRATION_FRAME_INVALID")
-    return "The camera resolution changed after capture. Recapture calibration frames at the current resolution.";
+  if (error.code === "CALIBRATION_FRAME_INVALID") {
+    if (error.field === "frameSize")
+      return "The camera's saved resolution no longer matches the captured frames. Recapture every frame at the current resolution.";
+    return "An uploaded frame does not match the camera's current resolution or checksum. Recapture every frame at the current resolution.";
+  }
   if (error.code === "CALIBRATION_DEGENERATE")
     return "These points do not define a usable court, or court lines are too unclear. Adjust markers first; recapture only if the lines are unclear.";
   return "Fly Eye could not solve this court calibration. Try again shortly.";
@@ -87,6 +90,14 @@ export function CalibrationPage() {
     () => frames.filter((frame) => frame.status === "uploaded").length,
     [frames],
   );
+  const baseline = frames[0]?.captured ?? null;
+  const frameSizeChanged =
+    baseline !== null &&
+    frames.some(
+      (frame) =>
+        frame.captured.width !== baseline.width ||
+        frame.captured.height !== baseline.height,
+    );
   const available = Boolean(
     cameraId &&
     services.calibration &&
@@ -99,6 +110,15 @@ export function CalibrationPage() {
     setMessage(null);
     try {
       const captured = await services.calibrationFrames.capture(stream);
+      if (
+        baseline &&
+        (captured.width !== baseline.width ||
+          captured.height !== baseline.height)
+      ) {
+        setMessage(
+          `This frame is ${captured.width}×${captured.height}, but Frame 1 is ${baseline.width}×${baseline.height}. The camera resolution changed; recapture every frame without changing the stream.`,
+        );
+      }
       setFrames((current) => [...current, { captured, status: "captured" }]);
     } catch {
       setMessage(
@@ -162,6 +182,12 @@ export function CalibrationPage() {
       uploaded !== frames.length
     )
       return;
+    if (frameSizeChanged) {
+      setMessage(
+        `The captured frames do not all measure ${baseline?.width}×${baseline?.height}. Recapture every frame at the current camera resolution before solving.`,
+      );
+      return;
+    }
     const selectedFrame = frames[0].captured;
     const currentSeeds =
       seeds.length >= 4
@@ -295,7 +321,8 @@ export function CalibrationPage() {
                         ? "Uploading"
                         : frame.status === "error"
                           ? "Upload failed"
-                          : "Ready to upload"}
+                          : "Ready to upload"}{" "}
+                    · {frame.captured.width}×{frame.captured.height}
                   </span>
                   {frame.status === "error" && (
                     <>
