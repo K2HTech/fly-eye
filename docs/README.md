@@ -46,15 +46,12 @@ instructions](../AGENTS.md).
 - Line-call pages: [live monitor](pages/LiveMonitor.md), [clip
   review](pages/ClipReview.md), and [decision](pages/DecisionScreen.md)
 - [Line-call review workflow](workflows/LineCallReviewWorkflow.md)
-- Active work: [browser camera pairing
-  specification](work/active/browser-camera-pairing/SPEC.md) and
-  [implementation plan](work/active/browser-camera-pairing/PLAN.md), with the
-  [backend signaling handoff](work/active/browser-camera-pairing/SIGNALING-SERVER-HANDOFF.md)
-  and [mobile recovery handoff](work/active/browser-camera-pairing/MOBILE-RECOVERY-HANDOFF.md)
+- Calibration work: [specification](work/active/court-calibration/SPEC.md),
+  [batch plan](work/active/court-calibration/PLAN.md), and external
+  [backend/engine dependencies](work/active/court-calibration/BACKEND-DEPENDENCIES.md).
 - Technical baseline: [architecture](technical/ARCHITECTURE.md), [quality
   requirements](technical/QUALITY-REQUIREMENTS.md), [browser camera pairing
-  validation](technical/BROWSER-CAMERA-PAIRING-VALIDATION.md), [calibration
-  engine open questions](technical/CALIBRATION-ENGINE-OPEN-QUESTIONS.md), and
+  validation](technical/BROWSER-CAMERA-PAIRING-VALIDATION.md), and
   [architecture decision records](technical/decisions/README.md)
 
 ## Ownership rules
