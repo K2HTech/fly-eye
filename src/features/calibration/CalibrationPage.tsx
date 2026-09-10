@@ -7,10 +7,13 @@ import { useSession } from "../../app/sessionContext";
 import { useAppServices } from "../../app/servicesContext";
 import type {
   CalibrationFrameUpload,
+  CalibrationSeedPoint,
   CameraRole,
   CapturedCalibrationFrame,
 } from "../../services";
 import "./calibration.css";
+import { LandmarkEditor } from "./LandmarkEditor";
+import { initialSeeds } from "./landmarks";
 
 type FrameStatus = "captured" | "uploading" | "uploaded" | "error";
 interface FrameState {
@@ -32,6 +35,7 @@ export function CalibrationPage() {
   );
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [seeds, setSeeds] = useState<readonly CalibrationSeedPoint[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -249,6 +253,20 @@ export function CalibrationPage() {
               </article>
             ))}
           </div>
+          {frames.length >= 3 && uploaded === frames.length && (
+            <LandmarkEditor
+              frame={frames[0].captured}
+              seeds={
+                seeds.length === 4
+                  ? seeds
+                  : initialSeeds(
+                      frames[0].captured.width,
+                      frames[0].captured.height,
+                    )
+              }
+              onChange={setSeeds}
+            />
+          )}
         </section>
       )}
     </main>
