@@ -220,7 +220,7 @@ export class BackendCalibrationService implements CalibrationService {
       throw new CalibrationServiceError(
         "A calibration frame declaration is invalid.",
       );
-    return parseUploads(
+    const uploads = parseUploads(
       await this.client.request<unknown>(
         `cameras/${cameraId}/calibration-frames`,
         {
@@ -230,6 +230,7 @@ export class BackendCalibrationService implements CalibrationService {
         },
       ),
     );
+    return uploads;
   }
 
   async getCurrent(cameraId: string): Promise<CalibrationResult | null> {

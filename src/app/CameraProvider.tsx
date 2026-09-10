@@ -32,9 +32,10 @@ function snapshots(): Record<CameraRole, CameraSessionSnapshot> {
 }
 
 function activeMatchId(pathname: string): string | null {
-  const match = /^\/matches\/([^/]+)\/(readiness|live|review|decision)$/.exec(
-    pathname,
-  );
+  const match =
+    /^\/matches\/([^/]+)\/(?:readiness|live|review|decision|cameras\/[^/]+\/calibration)$/.exec(
+      pathname,
+    );
   return match ? decodeURIComponent(match[1]) : null;
 }
 

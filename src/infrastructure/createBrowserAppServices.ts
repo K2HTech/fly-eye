@@ -15,6 +15,7 @@ import {
   BrowserCameraConnectionFactory,
   createBackendPairingClient,
 } from "./browser/cameras";
+import { BrowserCalibrationFrameCaptureService } from "./browser/calibration";
 import { createHybridAuthService, UnavailableNormalAuthService } from "./auth";
 import { HybridMatchRepository, UnavailableMatchRepository } from "./matches";
 import {
@@ -90,6 +91,9 @@ export function createBrowserAppServices(
     ),
     cameras: createBackendCameraRegistry({ client }),
     calibration: createBackendCalibrationService(client),
+    calibrationFrames: new BrowserCalibrationFrameCaptureService({
+      fetchImpl: options.fetchImpl,
+    }),
     pairing,
     cameraConnections: new BrowserCameraConnectionFactory(pairing),
   };
