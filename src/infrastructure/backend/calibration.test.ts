@@ -147,4 +147,27 @@ describe("BackendCalibrationService", () => {
       new BackendCalibrationService(malformed.client).getCurrent(cameraId),
     ).rejects.toBeInstanceOf(CalibrationServiceError);
   });
+
+  it("accepts a calibration with empty diagnostics, zero samples, and null straightness", async () => {
+    const { client } = clientReturning({
+      ...calibration(),
+      lineErrorsCm: {},
+      resolutionCmPerPx: {},
+      wireframeImage: {},
+      straightnessBeforePx: null,
+      straightnessAfterPx: null,
+      sampleCount: 0,
+    });
+    const service = new BackendCalibrationService(client);
+
+    await expect(service.getCurrent(cameraId)).resolves.toMatchObject({
+      id: calibrationId,
+      straightnessBeforePx: null,
+      straightnessAfterPx: null,
+      sampleCount: 0,
+      lineErrorsCm: {},
+      resolutionCmPerPx: {},
+      wireframeImage: {},
+    });
+  });
 });

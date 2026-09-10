@@ -49,6 +49,11 @@ function finite(value: unknown): number {
   return value;
 }
 
+function nullableFinite(value: unknown): number | null {
+  if (value === null) return null;
+  return finite(value);
+}
+
 function positiveInteger(value: unknown): number {
   if (typeof value !== "number" || !Number.isInteger(value) || value <= 0)
     throw invalid();
@@ -86,11 +91,7 @@ function seedPoint(value: unknown): CalibrationSeedPoint {
 function numberMap(value: unknown): Readonly<Record<string, number>> {
   const body = object(value);
   const entries = Object.entries(body);
-  if (
-    entries.length === 0 ||
-    entries.some(([, entry]) => !Number.isFinite(entry))
-  )
-    throw invalid();
+  if (entries.some(([, entry]) => !Number.isFinite(entry))) throw invalid();
   return Object.fromEntries(entries) as Readonly<Record<string, number>>;
 }
 
@@ -98,10 +99,8 @@ function wireframe(
   value: unknown,
 ): Readonly<Record<string, readonly [CalibrationPoint, CalibrationPoint]>> {
   const body = object(value);
-  const entries = Object.entries(body);
-  if (entries.length === 0) throw invalid();
   return Object.fromEntries(
-    entries.map(([key, entry]) => {
+    Object.entries(body).map(([key, entry]) => {
       const endpoints = array(entry);
       if (endpoints.length !== 2) throw invalid();
       return [key, [point(endpoints[0]), point(endpoints[1])]];
@@ -153,11 +152,11 @@ export function parseCalibration(value: unknown): CalibrationResult {
     lineErrorsCm: numberMap(body.lineErrorsCm),
     resolutionCmPerPx: numberMap(body.resolutionCmPerPx),
     reprojectionErrorCm: finite(body.reprojectionErrorCm),
-    straightnessBeforePx: finite(body.straightnessBeforePx),
-    straightnessAfterPx: finite(body.straightnessAfterPx),
+    straightnessBeforePx: nullableFinite(body.straightnessBeforePx),
+    straightnessAfterPx: nullableFinite(body.straightnessAfterPx),
     framesUsed: positiveInteger(body.framesUsed),
     framesRejected: nonNegativeInteger(body.framesRejected),
-    sampleCount: positiveInteger(body.sampleCount),
+    sampleCount: nonNegativeInteger(body.sampleCount),
     converged: body.converged,
     cameraStable: body.cameraStable,
     quality,
