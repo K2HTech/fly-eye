@@ -28,7 +28,7 @@ interface FrameState {
 
 function solveFailureMessage(error: unknown): string {
   if (!(error instanceof BackendRequestError))
-    return "The court could not be solved from these markers. Adjust the points or recapture clear, stable frames.";
+    return "Fly Eye hit an unexpected problem while solving this calibration. Please try again.";
   if (error.code === "CALIBRATION_FRAME_INCOMPLETE")
     return "One or more frame uploads are incomplete. Retry the missing frame upload before solving.";
   if (error.code === "CALIBRATION_FRAME_INVALID") {
@@ -205,9 +205,16 @@ export function CalibrationPage() {
         (camera.resolution.width !== selectedFrame.width ||
           camera.resolution.height !== selectedFrame.height)
       ) {
-        await services.cameras.update(matchId, cameraId, {
-          resolution: { w: selectedFrame.width, h: selectedFrame.height },
-        });
+        try {
+          await services.cameras.update(matchId, cameraId, {
+            resolution: { w: selectedFrame.width, h: selectedFrame.height },
+          });
+        } catch {
+          setMessage(
+            "Fly Eye could not save this camera's current resolution. Reload the page, reconnect the camera, and try again.",
+          );
+          return;
+        }
       }
       setResult(
         await services.calibration.solve(cameraId, {
