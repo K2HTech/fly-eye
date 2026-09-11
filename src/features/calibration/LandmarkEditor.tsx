@@ -1,15 +1,19 @@
-import { useState, type KeyboardEvent } from "react";
+import { useState, type KeyboardEvent, type MouseEvent } from "react";
+
 import type {
   CalibrationPoint,
-  CalibrationSeedPoint,
   CapturedCalibrationFrame,
 } from "../../services";
-import { doublesCorners, lineIntersection, nudgeSeed } from "./landmarks";
+import {
+  lineIntersection,
+  nudgeLandmark,
+  type LandmarkPlacement,
+} from "./landmarks";
 
 interface LandmarkEditorProps {
   readonly frame: CapturedCalibrationFrame;
-  readonly seeds: readonly CalibrationSeedPoint[];
-  onChange(seeds: readonly CalibrationSeedPoint[]): void;
+  readonly landmarks: readonly LandmarkPlacement[];
+  onChange(landmarks: readonly LandmarkPlacement[]): void;
 }
 
 function number(value: string): number | null {
@@ -23,7 +27,7 @@ function emptyPoint(): CalibrationPoint {
 
 export function LandmarkEditor({
   frame,
-  seeds,
+  landmarks,
   onChange,
 }: LandmarkEditorProps) {
   const [selected, setSelected] = useState(0);
@@ -32,20 +36,33 @@ export function LandmarkEditor({
     emptyPoint(),
     emptyPoint(),
     emptyPoint(),
-    emptyPoint(),
   ]);
-  const update = (index: number, image: CalibrationPoint) =>
-    onChange(
-      seeds.map((seed, seedIndex) =>
-        seedIndex === index ? { ...seed, image } : seed,
-      ),
+  const update = (
+    index: number,
+    image: CalibrationPoint,
+    selectNext = false,
+  ) => {
+    const next = landmarks.map((landmark, landmarkIndex) =>
+      landmarkIndex === index ? { ...landmark, image } : landmark,
     );
-  const moveFromClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    onChange(next);
+    if (selectNext) {
+      const nextUnplaced = next.findIndex(
+        (landmark, landmarkIndex) => landmarkIndex > index && !landmark.image,
+      );
+      if (nextUnplaced >= 0) setSelected(nextUnplaced);
+    }
+  };
+  const moveFromClick = (event: MouseEvent<HTMLDivElement>) => {
     const bounds = event.currentTarget.getBoundingClientRect();
-    update(selected, {
-      x: ((event.clientX - bounds.left) / bounds.width) * frame.width,
-      y: ((event.clientY - bounds.top) / bounds.height) * frame.height,
-    });
+    update(
+      selected,
+      {
+        x: ((event.clientX - bounds.left) / bounds.width) * frame.width,
+        y: ((event.clientY - bounds.top) / bounds.height) * frame.height,
+      },
+      true,
+    );
   };
   const keyMove = (event: KeyboardEvent<HTMLButtonElement>) => {
     const delta = event.shiftKey ? 10 : 1;
@@ -58,8 +75,8 @@ export function LandmarkEditor({
     if (!axis) return;
     event.preventDefault();
     onChange(
-      nudgeSeed(
-        seeds,
+      nudgeLandmark(
+        landmarks,
         selected,
         axis,
         event.key === "ArrowLeft" || event.key === "ArrowUp" ? -delta : delta,
@@ -67,17 +84,18 @@ export function LandmarkEditor({
     );
   };
   const intersect = () => {
-    const value = lineIntersection(lines[0], lines[1], lines[2], lines[3]);
-    if (value) update(selected, value);
+    const point = lineIntersection(lines[0], lines[1], lines[2], lines[3]);
+    if (point) update(selected, point, true);
   };
+
   return (
     <section className="calibration__seeding" aria-labelledby="seed-title">
       <div>
         <p className="calibration__eyebrow">STEP 2 OF 3</p>
         <h2 id="seed-title">Place doubles-court markers</h2>
         <p>
-          Use the same fixed A–D court frame for every camera. Coordinates are
-          raw pixels; values outside the image are valid.
+          Select A–D in order, then click its exact painted-line intersection.
+          Coordinates are raw pixels; off-frame coordinates are valid.
         </p>
       </div>
       <div className="calibration__seed-grid">
@@ -92,74 +110,83 @@ export function LandmarkEditor({
               src={frame.previewDataUrl}
               alt="Selected captured calibration frame"
             />
-            {seeds.map((seed, index) => (
-              <button
-                key={doublesCorners[index].id}
-                type="button"
-                className={`calibration__marker ${selected === index ? "is-selected" : ""}`}
-                style={{
-                  left: `${(seed.image.x / frame.width) * 100}%`,
-                  top: `${(seed.image.y / frame.height) * 100}%`,
-                }}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  setSelected(index);
-                }}
-                onKeyDown={keyMove}
-                aria-label={`Marker ${doublesCorners[index].id}, image x ${seed.image.x}, y ${seed.image.y}`}
-              >
-                {doublesCorners[index].id}
-              </button>
-            ))}
+            {landmarks.map(
+              (landmark, index) =>
+                landmark.image && (
+                  <button
+                    key={landmark.id}
+                    type="button"
+                    className={`calibration__marker ${selected === index ? "is-selected" : ""}`}
+                    style={{
+                      left: `${(landmark.image.x / frame.width) * 100}%`,
+                      top: `${(landmark.image.y / frame.height) * 100}%`,
+                    }}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setSelected(index);
+                    }}
+                    onKeyDown={keyMove}
+                    aria-label={`Marker ${landmark.id}, image x ${landmark.image.x}, y ${landmark.image.y}`}
+                  >
+                    <span aria-hidden="true" />
+                  </button>
+                ),
+            )}
           </div>
           <p className="calibration__hint">
-            Click the frame to move the selected marker. Arrow keys move it 1
-            px; Shift + Arrow moves 10 px.
+            The thin reticle center is the submitted point. Select a placed
+            reticle and use Arrow keys for 1 px, or Shift + Arrow for 10 px.
           </p>
         </div>
         <aside
           className="calibration__landmark-list"
           aria-label="Court landmarks"
         >
-          <CourtDiagram selected={selected} />
           <ol>
-            {seeds.map((seed, index) => (
-              <li key={doublesCorners[index].id}>
+            {landmarks.map((landmark, index) => (
+              <li key={landmark.id}>
                 <button
                   type="button"
                   onClick={() => setSelected(index)}
                   className={selected === index ? "is-selected" : ""}
                 >
-                  Marker {doublesCorners[index].id}{" "}
+                  Marker {landmark.id}{" "}
                   <span>
-                    ({doublesCorners[index].court.x},{" "}
-                    {doublesCorners[index].court.y})
+                    ({landmark.court.x}, {landmark.court.y})
                   </span>
                 </button>
-                <label>
-                  Image X
-                  <input
-                    type="number"
-                    value={seed.image.x}
-                    onChange={(event) => {
-                      const value = number(event.target.value);
-                      if (value !== null)
-                        update(index, { ...seed.image, x: value });
-                    }}
-                  />
-                </label>
-                <label>
-                  Image Y
-                  <input
-                    type="number"
-                    value={seed.image.y}
-                    onChange={(event) => {
-                      const value = number(event.target.value);
-                      if (value !== null)
-                        update(index, { ...seed.image, y: value });
-                    }}
-                  />
-                </label>
+                {landmark.image ? (
+                  <>
+                    <label>
+                      Image X
+                      <input
+                        type="number"
+                        value={landmark.image.x}
+                        onChange={(event) => {
+                          const value = number(event.target.value);
+                          if (value !== null)
+                            update(index, { ...landmark.image!, x: value });
+                        }}
+                      />
+                    </label>
+                    <label>
+                      Image Y
+                      <input
+                        type="number"
+                        value={landmark.image.y}
+                        onChange={(event) => {
+                          const value = number(event.target.value);
+                          if (value !== null)
+                            update(index, { ...landmark.image!, y: value });
+                        }}
+                      />
+                    </label>
+                  </>
+                ) : (
+                  <p className="calibration__unplaced" role="status">
+                    Not placed
+                  </p>
+                )}
               </li>
             ))}
           </ol>
@@ -169,8 +196,8 @@ export function LandmarkEditor({
           {helper && (
             <div className="calibration__intersection">
               <p>
-                Enter two visible points on each line. Their intersection
-                becomes the selected marker.
+                Enter two visible points on each line. Their intersection places
+                the selected marker.
               </p>
               {lines.map((point, index) => (
                 <fieldset key={index}>
@@ -223,29 +250,5 @@ export function LandmarkEditor({
         </aside>
       </div>
     </section>
-  );
-}
-
-function CourtDiagram({ selected }: { selected: number }) {
-  return (
-    <svg
-      className="calibration__court"
-      viewBox="0 0 305 670"
-      role="img"
-      aria-label="Fixed A to D doubles court reference diagram"
-    >
-      <rect x="2" y="2" width="301" height="666" />
-      <path d="M2 335h301M2 236h301M2 434h301M75 2v666M230 2v666" />
-      {doublesCorners.map((landmark, index) => (
-        <text
-          key={landmark.id}
-          className={selected === index ? "is-selected" : ""}
-          x={landmark.id === "A" || landmark.id === "D" ? 15 : 275}
-          y={landmark.id === "A" || landmark.id === "B" ? 30 : 655}
-        >
-          {landmark.id}
-        </text>
-      ))}
-    </svg>
   );
 }

@@ -9,7 +9,6 @@ import { BackendRequestError } from "../../infrastructure/backend";
 import type {
   CalibrationFrameUpload,
   CalibrationResult,
-  CalibrationSeedPoint,
   CameraRecord,
   CameraRole,
   CapturedCalibrationFrame,
@@ -17,7 +16,7 @@ import type {
 import "./calibration.css";
 import { LandmarkEditor } from "./LandmarkEditor";
 import { CalibrationReview } from "./CalibrationReview";
-import { initialSeeds } from "./landmarks";
+import { completeSeeds, initialLandmarks } from "./landmarks";
 
 type FrameStatus = "captured" | "uploading" | "uploaded" | "error";
 interface FrameState {
@@ -55,7 +54,7 @@ export function CalibrationPage() {
   );
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const [seeds, setSeeds] = useState<readonly CalibrationSeedPoint[]>([]);
+  const [landmarks, setLandmarks] = useState(initialLandmarks);
   const [result, setResult] = useState<CalibrationResult | null>(null);
 
   useEffect(() => {
@@ -189,10 +188,11 @@ export function CalibrationPage() {
       return;
     }
     const selectedFrame = frames[0].captured;
-    const currentSeeds =
-      seeds.length >= 4
-        ? seeds
-        : initialSeeds(selectedFrame.width, selectedFrame.height);
+    const currentSeeds = completeSeeds(landmarks);
+    if (!currentSeeds) {
+      setMessage("Place all four A–D court markers before solving.");
+      return;
+    }
     const assets = frames
       .map((frame) => frame.target?.assetId)
       .filter((assetId): assetId is string => Boolean(assetId));
@@ -361,18 +361,15 @@ export function CalibrationPage() {
               <>
                 <LandmarkEditor
                   frame={frames[0].captured}
-                  seeds={
-                    seeds.length >= 4
-                      ? seeds
-                      : initialSeeds(
-                          frames[0].captured.width,
-                          frames[0].captured.height,
-                        )
-                  }
-                  onChange={setSeeds}
+                  landmarks={landmarks}
+                  onChange={(nextLandmarks) => setLandmarks([...nextLandmarks])}
                 />
                 <div className="calibration__solve">
-                  <button type="button" onClick={solve} disabled={busy}>
+                  <button
+                    type="button"
+                    onClick={solve}
+                    disabled={busy || completeSeeds(landmarks) === null}
+                  >
                     {busy
                       ? "Solving court geometry…"
                       : `Solve calibration with ${frames.length} frames`}
