@@ -148,6 +148,17 @@ readiness gate from those ephemeral streams. The live surface maps streams by
 their backend role, labels the unrelated review buffer as simulated, and offers
 camera setup when a preview is unavailable.
 
+### Pairing reload-recovery gap
+
+Pairing session identifiers are deliberately memory-only. A browser reload can
+therefore lose the identifier before its best-effort cancellation reaches the
+backend, leaving a short-lived active pairing that blocks another code for the
+same camera until it expires. The backend must define an authenticated,
+operator-scoped create-or-replace pairing operation (or equivalent active
+pairing cancellation) so a new browser session can revoke its stale
+predecessor without knowing the lost identifier. The UI must not attempt to
+infer, reuse, or persist the previous QR credentials.
+
 The browser pairing transport is covered by automated tests, while real-device
 and network acceptance remains a required manual gate. Its exact scenarios and
 evidence requirements are owned by the [browser camera pairing validation
