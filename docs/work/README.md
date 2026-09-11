@@ -30,6 +30,10 @@ active/<feature>/
 `PLAN.md` owns batch order, dependencies, file ownership, validation, and
 proposed commits.
 
+Active work:
+
+- [Calibration marker precision](active/calibration-marker-precision/SPEC.md)
+
 Completed historical specifications:
 
 - [Documentation system](archive/2026/documentation-system/SPEC.md)
