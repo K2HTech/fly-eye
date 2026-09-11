@@ -1,6 +1,6 @@
 # Calibration Marker Precision Specification
 
-Status: Draft — awaiting product-owner approval
+Status: Implemented — 2026-09-11
 
 Related historical work: [court calibration specification](../../archive/2026/court-calibration/SPEC.md).
 
@@ -45,3 +45,11 @@ data.
 - The visible reticle does not conceal the line intersection it represents.
 - Numeric adjustment, arrow-key nudging, off-frame coordinates, and
   line-intersection placement remain keyboard-accessible.
+
+## Delivered behavior
+
+The landmark editor now stores an image coordinate only after an explicit frame
+click, numeric adjustment of an already placed point, or line-intersection
+result. The visual crosshair is deliberately smaller than its keyboard/focus
+target so the operator can see the painted intersection while retaining an
+accessible control.
