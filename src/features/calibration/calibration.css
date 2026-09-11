@@ -189,35 +189,22 @@
   background: transparent !important;
   color: #f3aa3c !important;
 }
-.calibration__marker::before,
-.calibration__marker::after {
+.calibration__marker::before {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 12px;
-  height: 2px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
   background: currentcolor;
   content: "";
   transform: translate(-50%, -50%);
 }
-.calibration__marker::after {
-  transform: translate(-50%, -50%) rotate(90deg);
-}
-.calibration__marker span {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: currentcolor;
-  transform: translate(-50%, -50%);
-}
 .calibration__marker.is-selected,
 .calibration__marker:focus-visible {
-  color: #68a2ff !important;
-  outline: 2px solid #68a2ff;
-  outline-offset: 2px;
+  color: #4add96 !important;
+  outline: 0;
+  box-shadow: 0 0 0 2px rgb(74 221 150 / 70%);
 }
 .calibration__hint {
   color: #94a1b3;
@@ -267,6 +254,18 @@
   border-radius: 4px;
   background: #141d2a;
   color: #e2e8f0;
+}
+.calibration__landmark-list small {
+  grid-column: 1 / -1;
+  color: #91a0b3;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.62rem;
+}
+.calibration__landmark-status {
+  color: #f3aa3c !important;
+}
+.calibration__landmark-status.is-placed {
+  color: #35d07f !important;
 }
 .calibration__court {
   display: block;

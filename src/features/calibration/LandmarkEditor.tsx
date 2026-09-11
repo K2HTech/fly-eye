@@ -1,10 +1,16 @@
-import { useState, type KeyboardEvent, type MouseEvent } from "react";
+import {
+  useState,
+  type KeyboardEvent,
+  type MouseEvent,
+  type PointerEvent,
+} from "react";
 
 import type {
   CalibrationPoint,
   CapturedCalibrationFrame,
 } from "../../services";
 import {
+  doublesCorners,
   lineIntersection,
   nudgeLandmark,
   type LandmarkPlacement,
@@ -20,7 +26,6 @@ function number(value: string): number | null {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
 }
-
 function emptyPoint(): CalibrationPoint {
   return { x: 0, y: 0 };
 }
@@ -31,40 +36,50 @@ export function LandmarkEditor({
   onChange,
 }: LandmarkEditorProps) {
   const [selected, setSelected] = useState(0);
+  const [dragging, setDragging] = useState<number | null>(null);
   const [helper, setHelper] = useState(false);
   const [lines, setLines] = useState([
     emptyPoint(),
     emptyPoint(),
     emptyPoint(),
   ]);
-  const update = (
-    index: number,
-    image: CalibrationPoint,
-    selectNext = false,
-  ) => {
-    const next = landmarks.map((landmark, landmarkIndex) =>
-      landmarkIndex === index ? { ...landmark, image } : landmark,
+  const update = (index: number, image: CalibrationPoint) =>
+    onChange(
+      landmarks.map((landmark, landmarkIndex) =>
+        landmarkIndex === index ? { ...landmark, image } : landmark,
+      ),
     );
-    onChange(next);
-    if (selectNext) {
-      const nextUnplaced = next.findIndex(
-        (landmark, landmarkIndex) => landmarkIndex > index && !landmark.image,
-      );
-      if (nextUnplaced >= 0) setSelected(nextUnplaced);
-    }
-  };
+  const imagePoint = (
+    bounds: DOMRect,
+    clientX: number,
+    clientY: number,
+  ): CalibrationPoint => ({
+    x: ((clientX - bounds.left) / bounds.width) * frame.width,
+    y: ((clientY - bounds.top) / bounds.height) * frame.height,
+  });
   const moveFromClick = (event: MouseEvent<HTMLDivElement>) => {
-    const bounds = event.currentTarget.getBoundingClientRect();
+    if (dragging !== null) return;
     update(
       selected,
-      {
-        x: ((event.clientX - bounds.left) / bounds.width) * frame.width,
-        y: ((event.clientY - bounds.top) / bounds.height) * frame.height,
-      },
-      true,
+      imagePoint(
+        event.currentTarget.getBoundingClientRect(),
+        event.clientX,
+        event.clientY,
+      ),
     );
   };
-  const keyMove = (event: KeyboardEvent<HTMLButtonElement>) => {
+  const drag = (event: PointerEvent<HTMLDivElement>) => {
+    if (dragging === null) return;
+    update(
+      dragging,
+      imagePoint(
+        event.currentTarget.getBoundingClientRect(),
+        event.clientX,
+        event.clientY,
+      ),
+    );
+  };
+  const keyMove = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
     const delta = event.shiftKey ? 10 : 1;
     const axis =
       event.key === "ArrowLeft" || event.key === "ArrowRight"
@@ -77,7 +92,7 @@ export function LandmarkEditor({
     onChange(
       nudgeLandmark(
         landmarks,
-        selected,
+        index,
         axis,
         event.key === "ArrowLeft" || event.key === "ArrowUp" ? -delta : delta,
       ),
@@ -85,7 +100,7 @@ export function LandmarkEditor({
   };
   const intersect = () => {
     const point = lineIntersection(lines[0], lines[1], lines[2], lines[3]);
-    if (point) update(selected, point, true);
+    if (point) update(selected, point);
   };
 
   return (
@@ -94,8 +109,8 @@ export function LandmarkEditor({
         <p className="calibration__eyebrow">STEP 2 OF 3</p>
         <h2 id="seed-title">Place doubles-court markers</h2>
         <p>
-          Select A–D in order, then click its exact painted-line intersection.
-          Coordinates are raw pixels; off-frame coordinates are valid.
+          Select A–D from the list, then click its exact painted-line
+          intersection. The selection remains active until you choose another.
         </p>
       </div>
       <div className="calibration__seed-grid">
@@ -103,6 +118,9 @@ export function LandmarkEditor({
           <div
             className="calibration__image"
             onClick={moveFromClick}
+            onPointerMove={drag}
+            onPointerUp={() => setDragging(null)}
+            onPointerCancel={() => setDragging(null)}
             role="application"
             aria-label="Captured frame marker canvas"
           >
@@ -121,11 +139,13 @@ export function LandmarkEditor({
                       left: `${(landmark.image.x / frame.width) * 100}%`,
                       top: `${(landmark.image.y / frame.height) * 100}%`,
                     }}
-                    onClick={(event) => {
+                    onClick={(event) => event.stopPropagation()}
+                    onPointerDown={(event) => {
                       event.stopPropagation();
-                      setSelected(index);
+                      event.currentTarget.setPointerCapture(event.pointerId);
+                      setDragging(index);
                     }}
-                    onKeyDown={keyMove}
+                    onKeyDown={(event) => keyMove(event, index)}
                     aria-label={`Marker ${landmark.id}, image x ${landmark.image.x}, y ${landmark.image.y}`}
                   >
                     <span aria-hidden="true" />
@@ -134,14 +154,16 @@ export function LandmarkEditor({
             )}
           </div>
           <p className="calibration__hint">
-            The thin reticle center is the submitted point. Select a placed
-            reticle and use Arrow keys for 1 px, or Shift + Arrow for 10 px.
+            The thin reticle center is the submitted point. Drag a placed
+            reticle to refine it; Arrow keys move its focused reticle by 1 px,
+            or Shift + Arrow by 10 px.
           </p>
         </div>
         <aside
           className="calibration__landmark-list"
           aria-label="Court landmarks"
         >
+          <CourtDiagram selected={selected} />
           <ol>
             {landmarks.map((landmark, index) => (
               <li key={landmark.id}>
@@ -151,10 +173,19 @@ export function LandmarkEditor({
                   className={selected === index ? "is-selected" : ""}
                 >
                   Marker {landmark.id}{" "}
-                  <span>
-                    ({landmark.court.x}, {landmark.court.y})
+                  <span
+                    className={
+                      landmark.image
+                        ? "calibration__landmark-status is-placed"
+                        : "calibration__landmark-status"
+                    }
+                  >
+                    {landmark.image ? "Placed" : "Required"}
                   </span>
                 </button>
+                <small>
+                  Court ({landmark.court.x}, {landmark.court.y})
+                </small>
                 {landmark.image ? (
                   <>
                     <label>
@@ -250,5 +281,29 @@ export function LandmarkEditor({
         </aside>
       </div>
     </section>
+  );
+}
+
+function CourtDiagram({ selected }: { selected: number }) {
+  return (
+    <svg
+      className="calibration__court"
+      viewBox="0 0 305 670"
+      role="img"
+      aria-label="Fixed A to D doubles court reference diagram"
+    >
+      <rect x="2" y="2" width="301" height="666" />
+      <path d="M2 335h301M2 236h301M2 434h301M75 2v666M230 2v666" />
+      {doublesCorners.map((landmark, index) => (
+        <text
+          key={landmark.id}
+          className={selected === index ? "is-selected" : ""}
+          x={landmark.id === "A" || landmark.id === "D" ? 15 : 275}
+          y={landmark.id === "A" || landmark.id === "B" ? 30 : 655}
+        >
+          {landmark.id}
+        </text>
+      ))}
+    </svg>
   );
 }

@@ -61,4 +61,36 @@ describe("LandmarkEditor", () => {
       ]),
     );
   });
+
+  it("keeps the selected marker active until the operator chooses another", () => {
+    const onChange = vi.fn();
+    const landmarks = initialLandmarks().map((landmark, index) =>
+      index === 0 ? { ...landmark, image: { x: 20, y: 20 } } : landmark,
+    );
+    render(
+      <LandmarkEditor
+        frame={frame}
+        landmarks={landmarks}
+        onChange={onChange}
+      />,
+    );
+    const canvas = screen.getByRole("application");
+    vi.spyOn(canvas, "getBoundingClientRect").mockReturnValue({
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100,
+      top: 0,
+      right: 100,
+      bottom: 100,
+      left: 0,
+      toJSON: () => ({}),
+    });
+
+    fireEvent.click(canvas, { clientX: 25, clientY: 75 });
+
+    const next = onChange.mock.calls[0][0];
+    expect(next[0].image).toEqual({ x: 50, y: 150 });
+    expect(next[1].image).toBeUndefined();
+  });
 });
