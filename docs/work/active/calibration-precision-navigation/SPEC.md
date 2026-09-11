@@ -1,6 +1,6 @@
 # Calibration Precision Navigation Specification
 
-Status: Draft — awaiting product-owner approval
+Status: Approved — Batch 2 complete; Batch 3 pending
 
 Related historical work: [court calibration](../../archive/2026/court-calibration/SPEC.md) and [marker precision](../../archive/2026/calibration-marker-precision/SPEC.md).
 
@@ -14,15 +14,19 @@ the captured frame while zoomed.
 ## Operator behavior
 
 1. The fixed A–D court reference diagram and marker list identify the selected
-   landmark. Image clicks never change that selection automatically.
+   landmark. Image clicks never change that selection automatically. Only the
+   selected landmark can be changed by image click, marker drag, numeric entry,
+   keyboard movement, or the line-intersection helper.
 2. A small dot marks a placed raw-pixel coordinate. The dot has no radius or
    uncertainty meaning in the calibration payload.
 3. The list shows placed landmarks with a green status and unplaced landmarks
    as requiring placement.
-4. The operator chooses 100%, 200%, 400%, or 800% image zoom. Zoom changes
-   only the rendered view; marker and submitted coordinates remain raw pixels.
-5. While zoomed, the operator can pan the image deliberately. Panning must not
-   place or move a marker accidentally.
+4. The operator points at the captured frame and uses the mouse wheel to zoom
+   continuously between 100% and 800%. Zoom changes only the rendered view;
+   marker and submitted coordinates remain raw pixels.
+5. While zoomed, the operator pans deliberately by dragging empty image space.
+   Dragging a placed marker refines that marker instead. Panning must not place
+   or move a marker accidentally.
 6. Clicking the image places/repositions the selected marker; dragging a
    placed marker refines that marker's raw coordinate.
 7. Numeric entry, keyboard movement, and line-intersection recovery remain
@@ -36,6 +40,13 @@ the captured frame while zoomed.
 - The shared A–D court orientation and current solve gate remain unchanged.
 - The implementation remains browser and Tauri compatible and keyboard
   accessible.
+
+## Open question
+
+The current solve request sends multiple `frameAssetIds` and one `seedPoints`
+set, but does not identify which asset owns those image coordinates. Until the
+backend defines an explicit seed-frame field or documents an ordering contract,
+the UI continues to place markers on the first captured frame only.
 
 ## Acceptance criteria
 

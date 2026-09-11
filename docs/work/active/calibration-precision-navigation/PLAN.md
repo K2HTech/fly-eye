@@ -1,6 +1,6 @@
 # Calibration Precision Navigation Plan
 
-Status: Draft — awaiting product-owner approval
+Status: Approved — Batch 2 complete; Batch 3 pending
 
 ## Batch 1 — Deliberate marker controls
 
@@ -9,9 +9,12 @@ Status: Draft — awaiting product-owner approval
 - Validate selected-marker behavior and direct marker refinement.
 - Commit: `fix(calibration): improve landmark marker controls`.
 
-## Batch 2 — Zoom and pan
+## Batch 2 — Zoom and pan ✓
 
-- Add fixed-level zoom and deliberate pan behavior to the captured-frame pane.
+- Add mouse-wheel continuous zoom and deliberate mouse-drag pan behavior to
+  the captured-frame pane, containing wheel input within that pane.
+- Redesign the editor around a full-width captured-frame pane, with landmark
+  controls above and the fixed court reference below.
 - Maintain exact raw-coordinate mapping for clicks and dragged markers.
 - Validate coordinate mapping at zoom and pan offsets.
 - Commit: `feat(calibration): add precision frame navigation`.
