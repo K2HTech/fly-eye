@@ -30,10 +30,6 @@ active/<feature>/
 `PLAN.md` owns batch order, dependencies, file ownership, validation, and
 proposed commits.
 
-Active work:
-
-- [Calibration marker precision](active/calibration-marker-precision/SPEC.md)
-
 Completed historical specifications:
 
 - [Documentation system](archive/2026/documentation-system/SPEC.md)
@@ -44,6 +40,8 @@ Completed historical specifications:
   integration; its external dependencies and required physical-camera
   validation are retained in the [dependency record](archive/2026/court-calibration/BACKEND-DEPENDENCIES.md)
   and [calibration validation checklist](../technical/CALIBRATION-VALIDATION.md).
+- [Calibration marker precision](archive/2026/calibration-marker-precision/SPEC.md)
+  — delivered explicit landmark placement and precision reticles.
 
 ## Approval rules
 

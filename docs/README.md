@@ -48,6 +48,7 @@ instructions](../AGENTS.md).
 - [Line-call review workflow](workflows/LineCallReviewWorkflow.md)
 - Completed calibration work: [specification](work/archive/2026/court-calibration/SPEC.md)
   and external [backend/engine dependencies](work/archive/2026/court-calibration/BACKEND-DEPENDENCIES.md).
+- Calibration marker precision: [specification](work/archive/2026/calibration-marker-precision/SPEC.md).
 - Technical baseline: [architecture](technical/ARCHITECTURE.md), [quality
   requirements](technical/QUALITY-REQUIREMENTS.md), [browser camera pairing
   validation](technical/BROWSER-CAMERA-PAIRING-VALIDATION.md), [court
