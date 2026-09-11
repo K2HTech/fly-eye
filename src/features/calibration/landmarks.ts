@@ -5,6 +5,11 @@ export interface CourtLandmark {
   readonly court: CalibrationPoint;
 }
 
+export interface LandmarkPlacement extends CourtLandmark {
+  /** Undefined until the operator explicitly places this landmark. */
+  readonly image?: CalibrationPoint;
+}
+
 /** Fixed match-level court frame. These labels are never camera-relative. */
 export const doublesCorners: readonly CourtLandmark[] = [
   { id: "A", court: { x: -3.05, y: 6.7 } },
@@ -13,26 +18,37 @@ export const doublesCorners: readonly CourtLandmark[] = [
   { id: "D", court: { x: -3.05, y: -6.7 } },
 ];
 
-export function initialSeeds(
-  width: number,
-  height: number,
-): CalibrationSeedPoint[] {
-  return doublesCorners.map(({ court }) => ({
-    court,
-    image: { x: width / 2, y: height / 2 },
-  }));
+export function initialLandmarks(): LandmarkPlacement[] {
+  return doublesCorners.map(({ id, court }) => ({ id, court }));
 }
 
-export function nudgeSeed(
-  seeds: readonly CalibrationSeedPoint[],
+export function completeSeeds(
+  landmarks: readonly LandmarkPlacement[],
+): CalibrationSeedPoint[] | null {
+  if (
+    landmarks.length !== doublesCorners.length ||
+    landmarks.some((landmark) => !landmark.image)
+  )
+    return null;
+  return landmarks.map(({ court, image }) => ({ court, image: image! }));
+}
+
+export function nudgeLandmark(
+  landmarks: readonly LandmarkPlacement[],
   index: number,
   axis: "x" | "y",
   delta: number,
-): CalibrationSeedPoint[] {
-  return seeds.map((seed, seedIndex) =>
-    seedIndex === index
-      ? { ...seed, image: { ...seed.image, [axis]: seed.image[axis] + delta } }
-      : seed,
+): LandmarkPlacement[] {
+  return landmarks.map((landmark, landmarkIndex) =>
+    landmarkIndex === index && landmark.image
+      ? {
+          ...landmark,
+          image: {
+            ...landmark.image,
+            [axis]: landmark.image[axis] + delta,
+          },
+        }
+      : landmark,
   );
 }
 
