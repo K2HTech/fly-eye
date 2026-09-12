@@ -30,10 +30,6 @@ active/<feature>/
 `PLAN.md` owns batch order, dependencies, file ownership, validation, and
 proposed commits.
 
-Active work:
-
-- [Lazy camera provisioning and environment policy](active/lazy-camera-policy/SPEC.md)
-
 Completed historical specifications:
 
 - [Documentation system](archive/2026/documentation-system/SPEC.md)
@@ -50,6 +46,8 @@ Completed historical specifications:
   — delivered full-width precision navigation and selected-marker controls.
 - [Calibration result overlay](archive/2026/calibration-result-overlay/SPEC.md)
   — delivered image-aligned, yellow detected-line highlights.
+- [Lazy camera provisioning and environment policy](archive/2026/lazy-camera-policy/SPEC.md)
+  — delivered role-on-demand provisioning and build-mode monitor entry.
 
 ## Approval rules
 

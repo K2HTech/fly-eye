@@ -29,12 +29,15 @@ documented by [MatchDashboardPage](../pages/MatchDashboardPage.md),
 4. Successful creation creates a backend draft match and continues to hardware
    readiness. Cancellation before creation returns to the dashboard without
    creating a match.
-5. Readiness obtains exactly one backend left-sideline and one right-sideline
-   device-camera record. The operator needs at least one decoded live preview
-   and a current eligible calibration for both cameras.
+5. Readiness reads existing camera records without creating them. Selecting a
+   role's **Pair phone** action creates or reuses only that role's device
+   record before its QR session begins.
 6. Monitoring remains blocked until the applicable POC readiness gate succeeds.
-7. Starting a normal match after its preview and both calibration gates pass
-   advances its backend status directly to live, then opens its live workspace.
+7. In development, starting a normal match after one preview is decoded
+   advances its backend status directly to live. In production, both supported
+   roles must have decoded previews and eligible calibrations before the same
+   transition. The frontend gate is presentation-only; backend enforcement is
+   still required for official monitoring.
    Demo retains the local ready stage before live.
 8. A normal live match reopened without any current preview returns to hardware
    readiness because camera connections are ephemeral and never restored after
@@ -51,8 +54,9 @@ documented by [MatchDashboardPage](../pages/MatchDashboardPage.md),
 - The backend does not yet store scoring fields. The UI locally supplements a
   backend UUID with match length and point target; an unknown backend match
   defaults to best-of-three/21 until backend scoring synchronization is added.
-- Normal readiness requires at least one decoded live preview and current,
-  eligible calibration from both backend cameras.
+- Development normal readiness requires one decoded live preview. Production
+  normal readiness requires both supported camera roles, both decoded previews,
+  and current eligible calibration from both cameras.
 - Simulated readiness must not be interpreted as connected physical hardware.
 
 ## Match status and resume behavior

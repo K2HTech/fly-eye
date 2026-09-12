@@ -1,6 +1,6 @@
 # Lazy Camera Provisioning and Environment Policy Specification
 
-Status: Approved — Batch 1 ready
+Status: Implemented
 
 ## Outcome
 

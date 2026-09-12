@@ -29,11 +29,12 @@ is owned by the [line-call review workflow](../workflows/LineCallReviewWorkflow.
 
 ## Business rules and current boundaries
 
-- For normal paired matches, the left and right panels render the current live
-  WebRTC video previews for `SIDELINE_LEFT` and `SIDELINE_RIGHT`. Without any
-  current preview, Fly Eye redirects directly to camera setup for a fresh
-  pairing. A missing secondary preview is a connection failure, not evidence
-  or a line-call result, and the monitor offers camera setup repair.
+- For normal paired matches, the left and right panels render current WebRTC
+  previews for `SIDELINE_LEFT` and `SIDELINE_RIGHT`. Development entry permits
+  one preview for camera validation; production entry requires both previews
+  and safe current calibrations. Without the applicable preview requirement,
+  Fly Eye redirects directly to camera setup. A missing preview is a connection
+  failure, not evidence or a line-call result.
 - In the demo path or without a current preview, the court imagery remains a
   visible simulation and does not represent physical capture, calibration, or
   processing.

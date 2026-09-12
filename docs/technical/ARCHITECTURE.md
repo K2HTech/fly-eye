@@ -111,13 +111,16 @@ Evidence: [authentication contracts](../../src/services/contracts.ts),
 
 ## Hardware and processing boundary
 
-For normal backend matches, a camera registry obtains exactly the two supported device records:
-`SIDELINE_LEFT` and `SIDELINE_RIGHT`. A missing record is created with a
-placeholder capture spec that is later reconciled with the phone's actual
-decoded resolution before calibration. Those records establish pairing identity only. For normal matches, readiness
-requires at least one browser-owned peer to be connected and delivering a live
-preview; saved simulated values cannot satisfy that gate. Calibration remains
-simulated until the separately planned calibration integration replaces it.
+For normal backend matches, the camera registry lists existing supported device
+records without mutation. A role-specific record is created or reused only when
+the operator begins pairing that role, because the pairing boundary requires a
+camera identifier. A new record begins with a placeholder capture specification
+that is reconciled with the phone's actual decoded resolution before
+calibration. Records establish pairing identity only; they do not prove a phone
+connection. Development readiness requires one browser-owned decoded preview.
+Production readiness requires both supported roles, both decoded previews, and
+safe current calibrations. This browser-derived policy is a presentation gate;
+the backend must enforce the production rule before official monitoring.
 
 Live views, rolling-buffer segments, synchronized frames, reconstructed
 evidence, and decision values are likewise simulated UI behavior in the current

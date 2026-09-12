@@ -24,17 +24,20 @@ before monitoring.
 
 ## Business rules
 
-- For normal matches, monitoring cannot start until at least one paired camera
-  has a current decoded live preview and both backend cameras have a current,
-  safe calibration. A poor, moved, non-converged, or single-frame calibration
-  is ineligible.
+- Development monitoring cannot start until at least one paired camera has a
+  current decoded live preview. Calibration is available for validation but is
+  not a development entry requirement.
+- Production monitoring requires the two supported camera roles, a current
+  decoded preview from both, and a current safe calibration for both. A poor,
+  moved, non-converged, or single-frame calibration is ineligible.
 - Camera and calibration progress is saved independently so successful work is
   not lost when another check fails or the page is reopened.
-- For normal matches, opening readiness obtains exactly one backend
-  `SIDELINE_LEFT` and one `SIDELINE_RIGHT` device-camera record. The left and
-  right cards use those role directions and their stored preview metadata. A
-  freshly created record starts with a placeholder resolution/FPS that is
-  reconciled with the phone's actual decoded stream before calibration.
+- For normal matches, opening readiness only reads existing backend camera
+  records. Selecting **Pair phone** creates or reuses that role's device-camera
+  record immediately before the QR pairing session. The left and right cards
+  remain visible even when a role has not yet been provisioned. A freshly
+  created record starts with a placeholder resolution/FPS that is reconciled
+  with the phone's actual decoded stream before calibration.
   Unexpected, duplicate, inactive, or non-device records block setup with an
   actionable error rather than being guessed at.
 - For normal backend matches, each camera becomes ready only when its paired
@@ -62,8 +65,9 @@ before monitoring.
   cannot be loaded; the operator receives a safe route back to the match
   workspace.
 - **Incomplete:** One or more required checks remain and monitoring is blocked.
-- **Ready:** A normal match has a decoded live preview and eligible current
-  calibrations for both cameras, or the demo path satisfies its simulated gate.
+- **Ready:** In development, a normal match has one decoded live preview. In
+  production, it has both decoded previews and eligible current calibrations.
+  The demo path instead satisfies its simulated gate.
 - **Live:** The match has already started and can return to monitoring.
 - **Completed:** The match is closed and can open its decision view.
 - **Action failure:** A readiness update or monitoring transition failed; the
@@ -72,16 +76,16 @@ before monitoring.
 
 ## Actions and consequences
 
-| Action                           | Business consequence                                                                              |
-| -------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Pair phone                       | Creates a short-lived code for one backend camera and waits for its independent live preview.     |
-| Advance or retry a camera check  | Demo-only simulated action; updates only that camera's saved readiness state.                     |
-| Reset a camera before monitoring | Demo-only simulated action; makes the readiness gate incomplete again.                            |
-| Calibrate court                  | Opens the selected connected camera's real captured-frame calibration workflow.                   |
-| Select or clear calibration      | Demo-only: updates the simulated court-profile requirement.                                       |
-| Start monitoring                 | For normal matches, enters live monitoring with a decoded preview and both eligible calibrations. |
-| Confirm demo start               | Starts monitoring and begins the single 15-minute demo trial.                                     |
-| Keep configuring                 | Closes the demo confirmation without starting the timer.                                          |
+| Action                           | Business consequence                                                                                 |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Pair phone                       | Creates or reuses the selected role's backend record, then creates a short-lived pairing code.       |
+| Advance or retry a camera check  | Demo-only simulated action; updates only that camera's saved readiness state.                        |
+| Reset a camera before monitoring | Demo-only simulated action; makes the readiness gate incomplete again.                               |
+| Calibrate court                  | Opens the selected connected camera's real captured-frame calibration workflow.                      |
+| Select or clear calibration      | Demo-only: updates the simulated court-profile requirement.                                          |
+| Start monitoring                 | In development, enters with one decoded preview; production requires both previews and calibrations. |
+| Confirm demo start               | Starts monitoring and begins the single 15-minute demo trial.                                        |
+| Keep configuring                 | Closes the demo confirmation without starting the timer.                                             |
 
 ## Navigation
 
