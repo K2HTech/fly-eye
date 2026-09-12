@@ -1,6 +1,6 @@
 # Line-Call Review Workflow
 
-Status: Current simulated behavior with approved implementation gaps
+Status: Current normal-backend analysis workflow with simulated demo review
 
 This workflow owns the operator journey from live monitoring through a disputed
 landing review, decision evidence, and return to play. Page-specific behavior is
@@ -16,22 +16,25 @@ documented by [LiveMonitor](../pages/LiveMonitor.md),
   match while the trial remains active.
 - The [match-preparation workflow](MatchPreparationWorkflow.md) owns readiness,
   match access, status transitions, and match completion.
-- Camera capture, rally detection, synchronized media, reconstruction, and
-  verdict generation are simulated in the current UI and do not establish
-  production processing behavior.
+- Normal matches retain recent browser-decoded video in memory and consume the
+  backend clip/analysis contract. The backend and engine remain responsible for
+  verification, tracking, calibration use, verdict generation, and overlays.
+  The demo route remains simulated.
 
 ## Review journey
 
-1. The live workspace presents the active match context, two camera views, and
-   a conceptual recent-footage buffer.
-2. After a disputed rally, the operator chooses **Review last rally** to open a
-   synchronized clip review for the same match.
-3. The operator inspects both views at one shared frame, adjusts the review
-   range, and chooses automatic or manual landing-frame selection.
-4. **Get the call** starts the current simulated reconstruction. A completed
-   run carries the selected landing frame into the decision view.
-5. The decision view presents a verdict, confidence, supporting facts, and a
-   top-down evidence illustration.
+1. The normal live workspace retains at most 30 seconds of each active decoded
+   camera stream in browser memory.
+2. After a disputed rally, the operator chooses **Review last rally**. Fly Eye
+   snapshots the final 12 seconds, keeps live capture running, and declares,
+   uploads, completes, and submits the available calibrated camera assets.
+3. Clip review shows the submitted captured video and backend-owned coarse
+   analysis progress. It polls until `done` or `failed`.
+4. A completed analysis opens the decision view, which presents the backend
+   verdict, diagnostics, reason values, and authorized generated overlay.
+5. A failed analysis returns a recovery message; a successful `INCONCLUSIVE`
+   result requires a manual umpire decision rather than creating a third
+   line-call verdict.
 6. The operator may run the review again, request that the clip be saved, or
    return to live monitoring for the same match.
 
@@ -46,11 +49,14 @@ additional line-call result.
 
 ## Interaction invariants
 
-- Both review views remain on the same current frame.
-- The selected review start cannot move after its end, and the end cannot move
-  before its start.
-- Automatic and manual landing selection are mutually exclusive choices.
-- A reconstruction request cannot start a duplicate run while one is active.
+- Normal review snapshots the final 12-second window at operator action and
+  does not stop live capture while upload or analysis is in progress.
+- A submitted normal camera requires a current eligible calibration. Development
+  may submit one such camera; production submits both calibrated camera assets.
+- Browser recording must be supported as backend-compatible MP4/H.264 or the
+  operator receives a clear failure rather than an unsupported upload.
+- A normal analysis request cannot create a duplicate while upload/submission
+  is in progress.
 - Returning from review or decision preserves the current match identifier.
 - Trial expiry removes a demo operator's protected access across every stage;
   the [demo-trial workflow](DemoTrialWorkflow.md) owns timing and expiry.
@@ -61,10 +67,10 @@ additional line-call result.
 
 | Action            | Destination or consequence                                                       |
 | ----------------- | -------------------------------------------------------------------------------- |
-| Review last rally | Clip review for the same match                                                   |
+| Review last rally | Snapshots and submits the recent calibrated rally, then opens review             |
 | Leave clip review | Live monitor for the same match                                                  |
-| Get the call      | Decision view after reconstruction completes                                     |
-| Run it again      | Clip review for the same match                                                   |
+| Backend done      | Decision view with the backend result                                            |
+| Run it again      | Clip review for another review attempt                                           |
 | Back to live      | Live monitor for the same match                                                  |
 | Save clip         | Requests clip retention; current UI only acknowledges a simulated queue          |
 | Matches           | Normal operators may return to the match dashboard; demo access remains isolated |
@@ -76,8 +82,10 @@ additional line-call result.
   match exists, belongs to the operator, or has the required status.
 - The live workspace still uses fixed match, score, camera, and buffer fixtures
   instead of the selected match and processing services.
-- Review frames, reconstruction progress, decision evidence, and verdict values
-  are deterministic UI fixtures rather than media-backed results.
+- Normal review must still receive real-browser/device validation for
+  MP4/H.264 browser capture, object-storage acceptance, and an engine worker.
+- Demo review frames, reconstruction progress, decision evidence, and verdict
+  values remain deterministic UI fixtures.
 - **Save clip** does not yet persist media or associate a saved artifact with
   the match.
 - The live workspace does not yet offer the approved **End match** action.
@@ -88,10 +96,8 @@ silently implemented as part of this documentation batch.
 
 ## Open questions
 
-- Real processing must define what constitutes the “last rally,” how much media
-  is retained, when a buffer segment is safe to review, synchronization
-  tolerance, reconstruction failure behavior, confidence meaning, and evidence
-  provenance.
+- The backend/engine must continue to define detection semantics,
+  synchronization tolerance, confidence meaning, and evidence provenance.
 - The end-match feature must decide its immediate destination and confirmation
   behavior when it is specified.
 

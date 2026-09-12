@@ -122,10 +122,19 @@ Production readiness requires both supported roles, both decoded previews, and
 safe current calibrations. This browser-derived policy is a presentation gate;
 the backend must enforce the production rule before official monitoring.
 
-Live views, rolling-buffer segments, synchronized frames, reconstructed
-evidence, and decision values are likewise simulated UI behavior in the current
-product. Camera capture, calibration, tracking, inference, real-time buffering,
-and evidence provenance remain outside this repository's current boundary.
+For a normal live match, a browser capture service retains up to 30 seconds of
+the decoded stream for each active role and snapshots the final 12 seconds on a
+review request. It requires a browser-supported MP4/H.264 recorder, keeps
+media only in memory, declares metadata and checksums through the backend,
+uploads only to returned direct-upload targets, then polls the backend analysis
+resource. The browser reads generated overlays through an authenticated backend
+redirect and turns bytes into temporary object URLs; it never persists or logs
+presigned storage URLs. The backend and engine own clip acceptance,
+calibration eligibility, tracking, inference, verdicts, and overlay creation.
+
+The demo review remains simulated. Real browser/device and engine acceptance is
+not proven by the frontend automated tests and remains a documented manual
+release gate.
 
 Future hardware and processing integrations must enter through explicit
 service or host boundaries and preserve the distinction between unavailable,
