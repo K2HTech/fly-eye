@@ -1,12 +1,15 @@
 export interface BackendErrorInfo {
   readonly status: number;
   readonly code: string | null;
+  readonly field?: string | null;
   readonly requestId: string | null;
 }
 
 export class BackendRequestError extends Error {
   readonly status: number;
   readonly code: string | null;
+  /** The offending request field when the service reports one, if public. */
+  readonly field: string | null;
   readonly requestId: string | null;
 
   constructor(message: string, info: BackendErrorInfo) {
@@ -14,6 +17,7 @@ export class BackendRequestError extends Error {
     this.name = "BackendRequestError";
     this.status = info.status;
     this.code = info.code;
+    this.field = info.field ?? null;
     this.requestId = info.requestId;
   }
 }
@@ -26,6 +30,9 @@ const publicErrorCodes = new Set([
   "CAMERA_PAIRING_ACTIVE",
   "SIGNALING_CAPACITY_REACHED",
   "RATE_LIMITED",
+  "CALIBRATION_DEGENERATE",
+  "CALIBRATION_FRAME_INCOMPLETE",
+  "CALIBRATION_FRAME_INVALID",
 ]);
 
 export function publicBackendMessage(status: number, code?: unknown): string {
@@ -54,6 +61,7 @@ export async function toBackendError(
   requestId: string | null,
 ): Promise<BackendRequestError> {
   let code: string | null = null;
+  let field: string | null = null;
   try {
     const body: unknown = await response.clone().json();
     if (typeof body === "object" && body !== null && "detail" in body) {
@@ -64,9 +72,13 @@ export async function toBackendError(
           typeof error === "object" &&
           error !== null &&
           "code" in error &&
-          typeof error.code === "string"
-        )
-          code = publicErrorCodes.has(error.code) ? error.code : null;
+          typeof error.code === "string" &&
+          publicErrorCodes.has(error.code)
+        ) {
+          code = error.code;
+          if ("field" in error && typeof error.field === "string")
+            field = error.field;
+        }
       }
     }
   } catch {
@@ -75,6 +87,7 @@ export async function toBackendError(
   return new BackendRequestError(publicBackendMessage(response.status, code), {
     status: response.status,
     code,
+    field,
     requestId,
   });
 }
@@ -85,6 +98,7 @@ export function networkBackendError(
   return new BackendRequestError("Unable to reach the Fly Eye service.", {
     status: 0,
     code: "NETWORK_ERROR",
+    field: null,
     requestId,
   });
 }

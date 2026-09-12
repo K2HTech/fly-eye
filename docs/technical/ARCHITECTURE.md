@@ -111,18 +111,30 @@ Evidence: [authentication contracts](../../src/services/contracts.ts),
 
 ## Hardware and processing boundary
 
-Readiness is currently a replaceable application service whose connection
-checks and calibration state are explicitly simulated. For normal backend
-matches, a camera registry obtains exactly the two supported device records:
-`SIDELINE_LEFT` and `SIDELINE_RIGHT`, with 1280x720/30-FPS preview metadata.
-Those records establish pairing identity only. For normal matches, readiness
-requires each browser-owned peer to be connected and delivering a live preview;
-saved simulated values cannot satisfy that gate.
+For normal backend matches, the camera registry lists existing supported device
+records without mutation. A role-specific record is created or reused only when
+the operator begins pairing that role, because the pairing boundary requires a
+camera identifier. A new record begins with a placeholder capture specification
+that is reconciled with the phone's actual decoded resolution before
+calibration. Records establish pairing identity only; they do not prove a phone
+connection. Development readiness requires one browser-owned decoded preview.
+Production readiness requires both supported roles, both decoded previews, and
+safe current calibrations. This browser-derived policy is a presentation gate;
+the backend must enforce the production rule before official monitoring.
 
-Live views, rolling-buffer segments, synchronized frames, reconstructed
-evidence, and decision values are likewise simulated UI behavior in the current
-product. Camera capture, calibration, tracking, inference, real-time buffering,
-and evidence provenance remain outside this repository's current boundary.
+For a normal live match, a browser capture service retains up to 30 seconds of
+the decoded stream for each active role and snapshots the final 12 seconds on a
+review request. It requires a browser-supported MP4/H.264 recorder, keeps
+media only in memory, declares metadata and checksums through the backend,
+uploads only to returned direct-upload targets, then polls the backend analysis
+resource. The browser reads generated overlays through an authenticated backend
+redirect and turns bytes into temporary object URLs; it never persists or logs
+presigned storage URLs. The backend and engine own clip acceptance,
+calibration eligibility, tracking, inference, verdicts, and overlay creation.
+
+The demo review remains simulated. Real browser/device and engine acceptance is
+not proven by the frontend automated tests and remains a documented manual
+release gate.
 
 Future hardware and processing integrations must enter through explicit
 service or host boundaries and preserve the distinction between unavailable,
@@ -147,6 +159,22 @@ The readiness surface creates the per-camera QR session and derives its normal
 readiness gate from those ephemeral streams. The live surface maps streams by
 their backend role, labels the unrelated review buffer as simulated, and offers
 camera setup when a preview is unavailable.
+
+### Pairing reload-recovery gap
+
+Pairing session identifiers are deliberately memory-only. A browser reload can
+therefore lose the identifier before its best-effort cancellation reaches the
+backend, leaving a short-lived active pairing that blocks another code for the
+same camera until it expires. The backend must define an authenticated,
+operator-scoped create-or-replace pairing operation (or equivalent active
+pairing cancellation) so a new browser session can revoke its stale
+predecessor without knowing the lost identifier. The UI must not attempt to
+infer, reuse, or persist the previous QR credentials.
+
+The browser pairing transport is covered by automated tests, while real-device
+and network acceptance remains a required manual gate. Its exact scenarios and
+evidence requirements are owned by the [browser camera pairing validation
+checklist](BROWSER-CAMERA-PAIRING-VALIDATION.md).
 
 Evidence: [readiness service contract](../../src/services/contracts.ts), [local
 readiness adapter](../../src/infrastructure/local/localAppServices.ts),

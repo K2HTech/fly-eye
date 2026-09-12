@@ -3,20 +3,20 @@ import type {
   CameraRecord,
   CameraRegistry,
   CameraRole,
-  PreparedCameraPair,
+  CameraUpdateInput,
 } from "../../../services";
 
 export type {
   CameraRecord,
   CameraRegistry,
   CameraRole,
-  PreparedCameraPair,
 } from "../../../services";
 
 export type CameraRegistryErrorCode =
   | "INVALID_CAMERA_RESPONSE"
   | "UNSUPPORTED_CAMERA_SET"
   | "INCOMPATIBLE_CAMERA"
+  | "INVALID_CAMERA_UPDATE"
   | "SECURE_RANDOMNESS_UNAVAILABLE";
 
 export class CameraRegistryError extends Error {
@@ -59,6 +59,16 @@ const cameraNames: Record<CameraRole, string> = {
   SIDELINE_LEFT: "Left sideline",
   SIDELINE_RIGHT: "Right sideline",
 };
+
+/**
+ * Placeholder capture spec used only when a camera record must be created
+ * before its phone has reported the real capture resolution. The registry
+ * reconciles this placeholder with the observed stream through `update`
+ * before calibration, so the stored spec is never treated as the phone's
+ * actual output.
+ */
+const DEFAULT_CAPTURE_RESOLUTION = { w: 1280, h: 720 } as const;
+const DEFAULT_CAPTURE_FPS = 30;
 
 function object(value: unknown): Record<string, unknown> {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
@@ -185,17 +195,11 @@ function toCameraRecord(camera: BackendCameraDto): CameraRecord {
 }
 
 function assertCompatible(camera: CameraRecord): void {
-  if (
-    !camera.isActive ||
-    camera.sourceType !== "device" ||
-    camera.resolution.width !== 1280 ||
-    camera.resolution.height !== 720 ||
-    camera.targetFps !== 30
-  ) {
+  if (!camera.isActive || camera.sourceType !== "device") {
     const direction = camera.role === "SIDELINE_LEFT" ? "left" : "right";
     throw new CameraRegistryError(
       "INCOMPATIBLE_CAMERA",
-      `The existing ${direction} camera is inactive or incompatible with the Fly Eye preview target.`,
+      `The existing ${direction} camera is inactive or is not a device camera.`,
     );
   }
 }
@@ -227,6 +231,34 @@ function assertMatchId(matchId: string): void {
   }
 }
 
+function invalidUpdate(message: string): CameraRegistryError {
+  return new CameraRegistryError("INVALID_CAMERA_UPDATE", message);
+}
+
+function assertCameraUpdate(input: CameraUpdateInput): void {
+  const { resolution, targetFps } = input;
+  if (resolution === undefined && targetFps === undefined) {
+    throw invalidUpdate(
+      "A camera update must change resolution or target FPS.",
+    );
+  }
+  if (
+    resolution !== undefined &&
+    (!Number.isInteger(resolution.w) ||
+      resolution.w <= 0 ||
+      !Number.isInteger(resolution.h) ||
+      resolution.h <= 0)
+  ) {
+    throw invalidUpdate("A camera resolution must use positive integers.");
+  }
+  if (
+    targetFps !== undefined &&
+    (!Number.isFinite(targetFps) || targetFps <= 0)
+  ) {
+    throw invalidUpdate("A camera target frame rate must be positive.");
+  }
+}
+
 export interface BackendCameraRegistryOptions {
   readonly client: BackendHttpClient;
   readonly crypto?: CryptoLike;
@@ -244,48 +276,47 @@ export class BackendCameraRegistry implements CameraRegistry {
   }
 
   async list(matchId: string): Promise<CameraRecord[]> {
-    return (await this.fetchCameras(matchId)).map(toCameraRecord);
+    return this.validatedCameras(matchId);
   }
 
-  async prepare(matchId: string): Promise<PreparedCameraPair> {
-    const rawCameras = await this.fetchCameras(matchId);
-    if (rawCameras.length > 2) {
-      throw new CameraRegistryError(
-        "UNSUPPORTED_CAMERA_SET",
-        "This match has more than the two supported cameras.",
-      );
-    }
-    const cameras = rawCameras.map(toCameraRecord);
-
+  async provision(matchId: string, role: CameraRole): Promise<CameraRecord> {
+    const cameras = await this.validatedCameras(matchId);
     const byRole = new Map<CameraRole, CameraRecord>();
     for (const camera of cameras) {
-      if (byRole.has(camera.role)) {
-        throw new CameraRegistryError(
-          "UNSUPPORTED_CAMERA_SET",
-          "This match contains duplicate camera roles; panel identity is ambiguous.",
-        );
-      }
-      assertCompatible(camera);
       byRole.set(camera.role, camera);
     }
+    const existing = byRole.get(role);
+    if (existing) return existing;
+    const created = await this.createCamera(matchId, role);
+    assertCompatible(created);
+    return created;
+  }
 
-    for (const role of approvedRoles) {
-      if (!byRole.has(role)) {
-        const created = await this.createCamera(matchId, role);
-        assertCompatible(created);
-        byRole.set(role, created);
-      }
-    }
-
-    const left = byRole.get("SIDELINE_LEFT");
-    const right = byRole.get("SIDELINE_RIGHT");
-    if (!left || !right) {
-      throw new CameraRegistryError(
-        "UNSUPPORTED_CAMERA_SET",
-        "The match does not have both supported camera roles.",
+  async update(
+    matchId: string,
+    cameraId: string,
+    input: CameraUpdateInput,
+  ): Promise<CameraRecord> {
+    assertMatchId(matchId);
+    if (!uuidPattern.test(cameraId)) {
+      throw invalidUpdate(
+        "A valid camera is required to update its resolution.",
       );
     }
-    return { left, right };
+    assertCameraUpdate(input);
+    const body: Record<string, unknown> = {};
+    if (input.resolution)
+      body.resolution = { w: input.resolution.w, h: input.resolution.h };
+    if (input.targetFps !== undefined) body.targetFps = input.targetFps;
+    const raw = await this.client.request<unknown>(
+      `cameras/${encodeURIComponent(cameraId)}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      },
+    );
+    return toCameraRecord(parseCamera(raw, matchId));
   }
 
   private async fetchCameras(matchId: string): Promise<BackendCameraDto[]> {
@@ -295,6 +326,29 @@ export class BackendCameraRegistry implements CameraRegistry {
     );
     if (!Array.isArray(raw)) throw invalidResponse();
     return raw.map((value) => parseCamera(value, matchId));
+  }
+
+  private async validatedCameras(matchId: string): Promise<CameraRecord[]> {
+    const rawCameras = await this.fetchCameras(matchId);
+    if (rawCameras.length > approvedRoles.length) {
+      throw new CameraRegistryError(
+        "UNSUPPORTED_CAMERA_SET",
+        "This match has more than the two supported cameras.",
+      );
+    }
+    const cameras = rawCameras.map(toCameraRecord);
+    const roles = new Set<CameraRole>();
+    for (const camera of cameras) {
+      if (roles.has(camera.role)) {
+        throw new CameraRegistryError(
+          "UNSUPPORTED_CAMERA_SET",
+          "This match contains duplicate camera roles; panel identity is ambiguous.",
+        );
+      }
+      assertCompatible(camera);
+      roles.add(camera.role);
+    }
+    return cameras;
   }
 
   private stableValue(
@@ -330,8 +384,11 @@ export class BackendCameraRegistry implements CameraRegistry {
           role,
           sourceType: "device",
           sourceRef: `fly-eye-device-${sourceRef}`,
-          resolution: { w: 1280, h: 720 },
-          targetFps: 30,
+          resolution: {
+            w: DEFAULT_CAPTURE_RESOLUTION.w,
+            h: DEFAULT_CAPTURE_RESOLUTION.h,
+          },
+          targetFps: DEFAULT_CAPTURE_FPS,
           clientRequestId,
         }),
       },

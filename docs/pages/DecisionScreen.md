@@ -1,6 +1,6 @@
 # DecisionScreen
 
-Status: Current simulated decision behavior with approved implementation gap
+Status: Current backend-result behavior with simulated demo decision
 
 - Route: `#/matches/:matchId/decision`
 - Primary source: [`DecisionScreen.tsx`](../../src/features/decision/DecisionScreen.tsx)
@@ -35,14 +35,19 @@ is owned by the line-call review workflow.
 - The only approved line-call results are **IN** and **OUT**. Evidence and
   confidence information help the umpire make the call; the umpire retains
   final authority.
-- The current verdict, margin, line, landing frame, cameras used,
-  reprojection error, calibration age, confidence, score, and game shown by the
-  screen are hard-coded or supplied demonstration values. They must not be
-  treated as approved scoring, accuracy, confidence, calibration, or evidence
-  requirements.
-- The top-down landing reconstruction and evidence legend communicate the
-  intended explanation of a result, but the current reconstruction is
-  simulated and does not establish real tracking or inference output.
+- For a normal backend analysis, the verdict, confidence, nearest-line
+  distance, per-camera diagnostics, explanation, and top-down overlay are
+  backend-owned values. The UI displays them without adjusting or substituting
+  an inference result.
+- Backend `IN` and `OUT` responses are displayed as line-call verdicts.
+  Backend `INCONCLUSIVE` is displayed with its reason and evidence but is not
+  presented or recorded as a third line-call verdict; the umpire decides the
+  call manually.
+- The top-down overlay is retrieved through the authorized backend endpoint at
+  display time. Its short-lived storage URL is never persisted or exposed by
+  the UI.
+- Demo values and the demo reconstruction illustration remain simulated; they
+  do not establish accuracy, confidence, calibration, or evidence guarantees.
 - Saving a clip currently shows only a simulated queued acknowledgment. It does
   not create a durable queue, store media, export a file, or integrate with a
   backend match folder.
@@ -51,8 +56,10 @@ is owned by the line-call review workflow.
 
 ## Meaningful states
 
-- **Decision presented:** The operator can inspect the result and its simulated
-  evidence context.
+- **Backend decision presented:** The operator can inspect the backend result
+  and its available evidence context.
+- **Backend inconclusive:** The backend has completed successfully but the
+  umpire must decide manually.
 - **Rerun requested:** The operator returns to clip review to inspect or
   reconstruct the rally again.
 - **Back to live:** The operator returns to monitoring without completing the
@@ -85,8 +92,6 @@ is owned by the line-call review workflow.
 - [Match preparation](../workflows/MatchPreparationWorkflow.md)
 - [Isolated demo trial](../workflows/DemoTrialWorkflow.md)
 
-## Open questions
+## Related technical validation
 
-The product owner must define authoritative result provenance, confidence
-meaning, processing-failure recovery, durable clip ownership/export behavior,
-and its retention policy.
+- [Real rally analysis validation](../technical/REAL-RALLY-ANALYSIS-VALIDATION.md)

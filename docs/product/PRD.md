@@ -58,8 +58,9 @@ security or data-integrity guarantees.
   three games, and choose a 15-point or 21-point target for each game.
 - Guide the operator through camera and calibration readiness before
   monitoring can begin.
-- Present the live-monitoring, synchronized clip-review, evidence, and
-  decision-recording journey for a line call.
+- Retain recent browser-decoded camera footage for a live match, submit a
+  disputed rally to the backend, and present the backend's review result and
+  generated evidence.
 - Preserve local UI state across an application restart while keeping the
   storage and service seams replaceable.
 
@@ -96,10 +97,11 @@ current UI.
 
 The initial product handles standalone matches. Its normal progression is
 `draft` to `ready` to `live` to `completed`; returning from readiness setup may
-move a ready match back to draft. For the current normal-camera POC, the UI
-verifies one decoded live camera preview then advances the backend directly from
-`draft` to `live`; backend status has no persisted `ready` state. Calibration
-remains a visible simulated placeholder and the second camera may be unavailable.
+move a ready match back to draft. For normal-camera operation, the UI verifies
+one decoded live camera preview and current eligible calibration from both
+backend cameras before advancing directly from `draft` to `live`; backend
+status has no persisted `ready` state. The demo retains its visible simulated
+calibration selection.
 Other invalid status transitions are not permitted.
 
 Singles has one participant per side; doubles has two. The selected scoring
@@ -131,6 +133,11 @@ decision, but the umpire retains final authority over the call.
 processing failure is a workflow failure that must offer a clear recovery
 path; it must not be recorded as a third verdict.
 
+A successful backend `INCONCLUSIVE` response is displayed faithfully with its
+reason and evidence, but it is a manual-umpire outcome rather than an official
+Fly Eye result. Only backend `IN` and `OUT` responses are presented as
+line-call verdicts.
+
 ## Success criteria
 
 The product baseline is successful when an operator can understand the value
@@ -146,11 +153,12 @@ the Tauri desktop webview.
 
 ## Current limitations and deferred integrations
 
-The current UI does not capture camera input, calibrate physical devices,
-track objects, infer line calls, record evidence, or provide a production
-adjudication system. Monitoring, review evidence, and recorded results still
-represent the operator journey and simulated data until those integrations are
-implemented.
+The browser retains a short, in-memory camera buffer and submits real rally
+media through the backend clip and analysis contract. The backend/engine own
+clip verification, calibration eligibility, tracking, inference, verdicts, and
+generated evidence. Real browser/device acceptance of MP4/H.264 capture and
+backend processing remains a required release validation, not a completed
+product claim.
 
 The live workspace does not yet provide **End match**. This is an
 implementation gap, not a change to the approved product rules above.

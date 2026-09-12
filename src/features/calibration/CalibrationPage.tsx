@@ -1,0 +1,388 @@
+import { useEffect, useMemo, useState } from "react";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
+
+import { useCameraSessions } from "../../app/cameraContext";
+import { matchRoutes } from "../../app/paths";
+import { useSession } from "../../app/sessionContext";
+import { useAppServices } from "../../app/servicesContext";
+import { BackendRequestError } from "../../infrastructure/backend";
+import type {
+  CalibrationFrameUpload,
+  CalibrationResult,
+  CameraRecord,
+  CameraRole,
+  CapturedCalibrationFrame,
+} from "../../services";
+import "./calibration.css";
+import { LandmarkEditor } from "./LandmarkEditor";
+import { CalibrationReview } from "./CalibrationReview";
+import { completeSeeds, initialLandmarks } from "./landmarks";
+
+type FrameStatus = "captured" | "uploading" | "uploaded" | "error";
+interface FrameState {
+  readonly captured: CapturedCalibrationFrame;
+  readonly target?: CalibrationFrameUpload;
+  readonly status: FrameStatus;
+}
+
+function solveFailureMessage(error: unknown): string {
+  if (!(error instanceof BackendRequestError))
+    return "Fly Eye hit an unexpected problem while solving this calibration. Please try again.";
+  if (error.code === "CALIBRATION_FRAME_INCOMPLETE")
+    return "One or more frame uploads are incomplete. Retry the missing frame upload before solving.";
+  if (error.code === "CALIBRATION_FRAME_INVALID") {
+    if (error.field === "frameSize")
+      return "The camera's saved resolution no longer matches the captured frames. Recapture every frame at the current resolution.";
+    return "An uploaded frame does not match the camera's current resolution or checksum. Recapture every frame at the current resolution.";
+  }
+  if (error.code === "CALIBRATION_DEGENERATE")
+    return "These points do not define a usable court, or court lines are too unclear. Adjust markers first; recapture only if the lines are unclear.";
+  return "Fly Eye could not solve this court calibration. Try again shortly.";
+}
+
+export function CalibrationPage() {
+  const { matchId = "", cameraId = "" } = useParams();
+  const navigate = useNavigate();
+  const session = useSession();
+  const services = useAppServices();
+  const cameraSessions = useCameraSessions();
+  const [role, setRole] = useState<CameraRole | null>(null);
+  const [camera, setCamera] = useState<CameraRecord | null>(null);
+  const [frames, setFrames] = useState<readonly FrameState[]>([]);
+  const [loading, setLoading] = useState(() =>
+    Boolean(services.cameras && cameraId),
+  );
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [landmarks, setLandmarks] = useState(initialLandmarks);
+  const [result, setResult] = useState<CalibrationResult | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    if (!services.cameras || !cameraId) {
+      return undefined;
+    }
+    services.cameras
+      .list(matchId)
+      .then(
+        (cameras) => {
+          if (!active) return;
+          const selected =
+            cameras.find((entry) => entry.id === cameraId) ?? null;
+          setRole(selected?.role ?? null);
+          setCamera(selected);
+        },
+        () =>
+          active &&
+          setMessage(
+            "Camera details could not be loaded. Return to readiness and try again.",
+          ),
+      )
+      .finally(() => active && setLoading(false));
+    return () => {
+      active = false;
+    };
+  }, [cameraId, matchId, services.cameras]);
+
+  const stream = role ? cameraSessions.streams[role] : null;
+  const uploaded = useMemo(
+    () => frames.filter((frame) => frame.status === "uploaded").length,
+    [frames],
+  );
+  const baseline = frames[0]?.captured ?? null;
+  const frameSizeChanged =
+    baseline !== null &&
+    frames.some(
+      (frame) =>
+        frame.captured.width !== baseline.width ||
+        frame.captured.height !== baseline.height,
+    );
+  const available = Boolean(
+    cameraId &&
+    services.calibration &&
+    services.calibrationFrames &&
+    services.cameras,
+  );
+  const capture = async () => {
+    if (!stream || !services.calibrationFrames || frames.length >= 5) return;
+    setBusy(true);
+    setMessage(null);
+    try {
+      const captured = await services.calibrationFrames.capture(stream);
+      if (
+        baseline &&
+        (captured.width !== baseline.width ||
+          captured.height !== baseline.height)
+      ) {
+        setMessage(
+          `This frame is ${captured.width}×${captured.height}, but Frame 1 is ${baseline.width}×${baseline.height}. The camera resolution changed; recapture every frame without changing the stream.`,
+        );
+      }
+      setFrames((current) => [...current, { captured, status: "captured" }]);
+    } catch {
+      setMessage(
+        "A calibration frame could not be captured. Keep the preview stable and try again.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+  const uploadOne = async (index: number, target: CalibrationFrameUpload) => {
+    const captured = frames[index]?.captured;
+    if (!captured || !services.calibrationFrames) return;
+    setFrames((current) =>
+      current.map((frame, i) =>
+        i === index ? { ...frame, target, status: "uploading" } : frame,
+      ),
+    );
+    try {
+      await services.calibrationFrames.upload(target, captured.bytes);
+      setFrames((current) =>
+        current.map((frame, i) =>
+          i === index ? { ...frame, target, status: "uploaded" } : frame,
+        ),
+      );
+    } catch {
+      setFrames((current) =>
+        current.map((frame, i) =>
+          i === index ? { ...frame, target, status: "error" } : frame,
+        ),
+      );
+    }
+  };
+  const upload = async () => {
+    if (!services.calibration || frames.length < 3) return;
+    setBusy(true);
+    setMessage(null);
+    try {
+      const targets = await services.calibration.createFrameUploads(
+        cameraId,
+        frames.map((frame) => frame.captured.declaration),
+      );
+      if (targets.length !== frames.length) {
+        throw new Error("The service did not prepare each captured frame.");
+      }
+      await Promise.all(
+        targets.map((target, index) => uploadOne(index, target)),
+      );
+    } catch {
+      setMessage(
+        "Fly Eye could not prepare uploads. Captured frames remain available; try again.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+  const solve = async () => {
+    if (
+      !services.calibration ||
+      !services.cameras ||
+      frames.length < 3 ||
+      uploaded !== frames.length
+    )
+      return;
+    if (frameSizeChanged) {
+      setMessage(
+        `The captured frames do not all measure ${baseline?.width}×${baseline?.height}. Recapture every frame at the current camera resolution before solving.`,
+      );
+      return;
+    }
+    const selectedFrame = frames[0].captured;
+    const currentSeeds = completeSeeds(landmarks);
+    if (!currentSeeds) {
+      setMessage("Place all four A–D court markers before solving.");
+      return;
+    }
+    const assets = frames
+      .map((frame) => frame.target?.assetId)
+      .filter((assetId): assetId is string => Boolean(assetId));
+    if (assets.length !== frames.length) return;
+    setBusy(true);
+    setMessage(null);
+    try {
+      if (
+        camera &&
+        (camera.resolution.width !== selectedFrame.width ||
+          camera.resolution.height !== selectedFrame.height)
+      ) {
+        try {
+          await services.cameras.update(matchId, cameraId, {
+            resolution: { w: selectedFrame.width, h: selectedFrame.height },
+          });
+        } catch {
+          setMessage(
+            "Fly Eye could not save this camera's current resolution. Reload the page, reconnect the camera, and try again.",
+          );
+          return;
+        }
+      }
+      setResult(
+        await services.calibration.solve(cameraId, {
+          frameAssetIds: assets,
+          seedPoints: currentSeeds,
+          frameSize: { w: selectedFrame.width, h: selectedFrame.height },
+        }),
+      );
+    } catch (error) {
+      setMessage(solveFailureMessage(error));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (session.identity?.session.mode !== "backend")
+    return <Navigate replace to={matchRoutes.readiness(matchId)} />;
+  return (
+    <main className="calibration" aria-labelledby="calibration-title">
+      <header className="calibration__header">
+        <div>
+          <p className="calibration__eyebrow">COURT GEOMETRY</p>
+          <h1 id="calibration-title">Calibrate court</h1>
+          <p>
+            Capture three to five stable frames from this camera before placing
+            court landmarks.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => navigate(matchRoutes.readiness(matchId))}
+        >
+          Return to readiness
+        </button>
+      </header>
+      {!available || loading ? (
+        <p role={loading ? "status" : "alert"} className="calibration__notice">
+          {loading
+            ? "Checking the selected camera."
+            : "Calibration is unavailable. Check the backend camera configuration and return to hardware readiness."}
+        </p>
+      ) : !role || !stream ? (
+        <p role="alert" className="calibration__notice">
+          Connect this camera and wait for its live preview before capturing
+          calibration frames.
+        </p>
+      ) : (
+        <section
+          className="calibration__capture"
+          aria-labelledby="capture-title"
+        >
+          <div className="calibration__capture-heading">
+            <div>
+              <p className="calibration__eyebrow">STEP 1 OF 3</p>
+              <h2 id="capture-title">Capture stable court frames</h2>
+            </div>
+            <span aria-live="polite">
+              {frames.length} / 5 captured · {uploaded} uploaded
+            </span>
+          </div>
+          <p>
+            Keep the full doubles court visible and avoid players or shuttle
+            motion. Three frames are required; up to two more can improve the
+            solve.
+          </p>
+          {message && (
+            <p role="alert" className="calibration__error">
+              {message}
+            </p>
+          )}
+          <div className="calibration__actions">
+            <button
+              type="button"
+              onClick={capture}
+              disabled={busy || frames.length >= 5}
+            >
+              {busy
+                ? "Working…"
+                : frames.length
+                  ? "Capture another frame"
+                  : "Capture first frame"}
+            </button>
+            <button
+              type="button"
+              onClick={upload}
+              disabled={
+                busy ||
+                frames.length < 3 ||
+                frames.some((frame) => frame.status === "uploading")
+              }
+            >
+              Upload captured frames
+            </button>
+          </div>
+          <div className="calibration__frames" aria-live="polite">
+            {frames.map((frame, index) => (
+              <article
+                key={`${frame.captured.declaration.checksumSha256}-${index}`}
+                className={`calibration__frame calibration__frame--${frame.status}`}
+              >
+                <img
+                  src={frame.captured.previewDataUrl}
+                  alt={`Captured calibration frame ${index + 1}`}
+                />
+                <div>
+                  <strong>Frame {index + 1}</strong>
+                  <span>
+                    {frame.status === "uploaded"
+                      ? "Uploaded"
+                      : frame.status === "uploading"
+                        ? "Uploading"
+                        : frame.status === "error"
+                          ? "Upload failed"
+                          : "Ready to upload"}{" "}
+                    · {frame.captured.width}×{frame.captured.height}
+                  </span>
+                  {frame.status === "error" && (
+                    <>
+                      <p>
+                        This frame upload failed or expired. Retry only this
+                        frame.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => void uploadOne(index, frame.target!)}
+                      >
+                        Retry this frame
+                      </button>
+                    </>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+          {frames.length >= 3 &&
+            uploaded === frames.length &&
+            (result ? (
+              <CalibrationReview
+                frame={frames[0].captured}
+                result={result}
+                onRedo={() => setResult(null)}
+              />
+            ) : (
+              <>
+                <LandmarkEditor
+                  frame={frames[0].captured}
+                  landmarks={landmarks}
+                  onChange={(nextLandmarks) => setLandmarks([...nextLandmarks])}
+                />
+                <div className="calibration__solve">
+                  <button
+                    type="button"
+                    onClick={solve}
+                    disabled={busy || completeSeeds(landmarks) === null}
+                  >
+                    {busy
+                      ? "Solving court geometry…"
+                      : `Solve calibration with ${frames.length} frames`}
+                  </button>
+                  <p>
+                    Solving saves the immutable calibration immediately. You can
+                    adjust these markers and solve again without re-uploading.
+                  </p>
+                </div>
+              </>
+            ))}
+        </section>
+      )}
+    </main>
+  );
+}

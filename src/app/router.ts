@@ -16,6 +16,7 @@ import {
 } from "./RouteScreens";
 import { RegisterPage, SignInPage, WelcomePage } from "../features/auth";
 import { CreateMatchPage, MatchDashboardPage } from "../features/matches";
+import { CalibrationPage } from "../features/calibration";
 import { HardwareReadinessPage } from "../features/readiness";
 import { routePaths } from "./paths";
 
@@ -55,6 +56,10 @@ const appRoutes: RouteObject[] = [
       {
         path: routePaths.readinessPattern,
         element: createElement(HardwareReadinessPage),
+      },
+      {
+        path: routePaths.calibrationPattern,
+        element: createElement(CalibrationPage),
       },
       { path: routePaths.livePattern, element: createElement(LiveRoute) },
       { path: routePaths.reviewPattern, element: createElement(ReviewRoute) },

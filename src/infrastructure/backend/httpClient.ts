@@ -21,6 +21,7 @@ export interface BackendHttpClientOptions {
 
 export interface BackendHttpClient {
   request<T>(path: string, init?: RequestInit): Promise<T>;
+  download?(path: string, init?: RequestInit): Promise<Blob>;
 }
 
 function defaultRequestId(
@@ -87,11 +88,11 @@ export function createBackendHttpClient(
     return refreshPromise;
   };
 
-  const request = async <T>(
+  const send = async (
     path: string,
     init: RequestInit = {},
     replayed = false,
-  ): Promise<T> => {
+  ): Promise<Response> => {
     const requestId = requestIdFactory();
     const headers = new Headers(init.headers);
     headers.set("X-Request-ID", requestId);
@@ -117,12 +118,20 @@ export function createBackendHttpClient(
       if (latest?.accessToken === credentials.accessToken) {
         await ensureRefresh();
       }
-      return request<T>(path, init, true);
+      return send(path, init, true);
     }
     if (!response.ok) {
       if (response.status === 401 && credentials) options.credentials.clear();
       throw await toBackendError(response, requestId);
     }
+    return response;
+  };
+
+  const request = async <T>(
+    path: string,
+    init: RequestInit = {},
+  ): Promise<T> => {
+    const response = await send(path, init);
     if (response.status === 204) return undefined as T;
     try {
       return (await response.json()) as T;
@@ -131,5 +140,17 @@ export function createBackendHttpClient(
     }
   };
 
-  return { request };
+  const download = async (
+    path: string,
+    init: RequestInit = {},
+  ): Promise<Blob> => {
+    const response = await send(path, init);
+    try {
+      return await response.blob();
+    } catch {
+      throw new Error("The Fly Eye service returned an invalid download.");
+    }
+  };
+
+  return { request, download };
 }

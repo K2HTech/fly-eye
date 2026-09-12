@@ -6,14 +6,19 @@ import type { AppServices } from "../services";
 import {
   createBackendAuthService,
   createBackendCameraRegistry,
+  createBackendCalibrationService,
   createBackendHttpClient,
   createBackendMatchRepository,
+  BackendRallyAnalysisService,
+  BackendRallyClipService,
   MemoryCredentialStore,
 } from "./backend";
 import {
   BrowserCameraConnectionFactory,
+  BrowserRallyCaptureService,
   createBackendPairingClient,
 } from "./browser/cameras";
+import { BrowserCalibrationFrameCaptureService } from "./browser/calibration";
 import { createHybridAuthService, UnavailableNormalAuthService } from "./auth";
 import { HybridMatchRepository, UnavailableMatchRepository } from "./matches";
 import {
@@ -88,7 +93,14 @@ export function createBrowserAppServices(
       auth.getActiveSessionMode(),
     ),
     cameras: createBackendCameraRegistry({ client }),
+    calibration: createBackendCalibrationService(client),
+    calibrationFrames: new BrowserCalibrationFrameCaptureService({
+      fetchImpl: options.fetchImpl,
+    }),
     pairing,
     cameraConnections: new BrowserCameraConnectionFactory(pairing),
+    clips: new BackendRallyClipService(client, options.fetchImpl),
+    analyses: new BackendRallyAnalysisService(client),
+    rallyCapture: new BrowserRallyCaptureService(),
   };
 }

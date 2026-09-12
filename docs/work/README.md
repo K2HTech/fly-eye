@@ -30,16 +30,32 @@ active/<feature>/
 `PLAN.md` owns batch order, dependencies, file ownership, validation, and
 proposed commits.
 
-Current active work:
+Active work:
 
-- [Browser camera pairing](active/browser-camera-pairing/SPEC.md) — approved
-  specification, [implementation plan](active/browser-camera-pairing/PLAN.md),
-  and historical [signaling-server
-  handoff](active/browser-camera-pairing/SIGNALING-SERVER-HANDOFF.md).
+- None.
 
 Completed historical specifications:
 
+- [Real rally analysis](archive/2026/real-rally-analysis/SPEC.md) — delivered
+  browser-buffer, backend analysis, and result-presentation integration;
+  real-environment acceptance is retained in the [rally-analysis validation
+  checklist](../technical/REAL-RALLY-ANALYSIS-VALIDATION.md).
 - [Documentation system](archive/2026/documentation-system/SPEC.md)
+- [Browser camera pairing](archive/2026/browser-camera-pairing/SPEC.md) —
+  delivered browser integration; its required real-environment acceptance is
+  retained in the [camera-pairing validation checklist](../technical/BROWSER-CAMERA-PAIRING-VALIDATION.md).
+- [Court calibration](archive/2026/court-calibration/SPEC.md) — delivered UI
+  integration; its external dependencies and required physical-camera
+  validation are retained in the [dependency record](archive/2026/court-calibration/BACKEND-DEPENDENCIES.md)
+  and [calibration validation checklist](../technical/CALIBRATION-VALIDATION.md).
+- [Calibration marker precision](archive/2026/calibration-marker-precision/SPEC.md)
+  — delivered explicit landmark placement and precision reticles.
+- [Calibration precision navigation](archive/2026/calibration-precision-navigation/SPEC.md)
+  — delivered full-width precision navigation and selected-marker controls.
+- [Calibration result overlay](archive/2026/calibration-result-overlay/SPEC.md)
+  — delivered image-aligned, yellow detected-line highlights.
+- [Lazy camera provisioning and environment policy](archive/2026/lazy-camera-policy/SPEC.md)
+  — delivered role-on-demand provisioning and build-mode monitor entry.
 
 ## Approval rules
 

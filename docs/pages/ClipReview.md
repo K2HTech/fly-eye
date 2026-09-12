@@ -1,6 +1,6 @@
 # ClipReview
 
-Status: Current simulated review behavior
+Status: Current backend-analysis behavior with simulated demo review
 
 - Route: `#/matches/:matchId/review`
 - Primary source: [`ClipReview.tsx`](../../src/features/review/ClipReview.tsx)
@@ -10,9 +10,10 @@ Status: Current simulated review behavior
 
 ## Purpose
 
-Clip review lets the operator inspect a disputed rally frame by frame, keep
-the two camera perspectives aligned, and identify the landing moment before
-requesting a line-call result.
+For a normal backend match, clip review lets the operator see the submitted
+rally while backend analysis progresses. The backend result then opens the
+decision view. The older frame-by-frame controls remain the visibly simulated
+demo review experience.
 
 ## Approved actors and entry conditions
 
@@ -29,48 +30,38 @@ is owned by the line-call review workflow.
 
 ## Business rules and current boundaries
 
-- Both camera views are intended to represent synchronized evidence. The
-  current paused court scenes and the `SYNC ±1 FRAME` indicator are simulated;
-  they do not establish a physical synchronization tolerance.
-- Frame transport allows the operator to inspect a bounded clip, constrain its
-  start and end, and choose either an automatic landing selection or a manual
-  selection. The current frame numbers, timeline bounds, landing frame,
-  duration, tracked-frame count, and “Back boundary” question are hard-coded
-  demonstration values, not product rules.
-- **Get the call** requests reconstruction of the selected clip and proceeds
-  only after the simulated reconstruction completes. The current progress
-  meter and deterministic callback model are UI behavior, not a claim about
-  inference latency or algorithm output.
+- Normal review receives a final 12-second snapshot from the live browser
+  buffer and displays the available captured camera video while the backend
+  reports `queued` or `running` progress. It has no frontend landing-frame
+  selection or frontend inference.
+- The review surface polls the backend once per second until a terminal result.
+  A terminal failure states the backend message and lets the operator return to
+  monitoring; it is not a line-call outcome.
+- The demo frame transport, selection controls, and deterministic **Get the
+  call** behavior are simulated-only UI. Their frame numbers and evidence do
+  not establish a synchronization or inference requirement.
 
 ## Meaningful states
 
-- **Paused and synchronized:** Both views show the same selected frame for
-  inspection.
-- **Automatic selection:** The review service is asked to identify the
-  landing moment.
-- **Manual selection:** The operator's selected landing frame is used.
-- **Reconstructing:** A call request is in progress and duplicate requests are
-  prevented.
-- **Decision ready:** Reconstruction opens the decision surface with the
-  selected landing context.
-- **Processing failure:** Real reconstruction failure, missing frames, and
-  unavailable evidence have no finalized product recovery behavior yet.
+- **Analysis in progress:** The submitted captured media is available while
+  the backend reports coarse stage and progress.
+- **Analysis failed:** The backend failure is visible and the operator can
+  return to live monitoring without recording a result.
+- **Result ready:** A terminal backend result opens the decision surface.
+- **Paused and synchronized:** Demo-only simulated views show the same
+  selected frame for inspection.
 
 ## Actions and consequences
 
-| Action              | Business consequence                                        |
-| ------------------- | ----------------------------------------------------------- |
-| Move through frames | Inspects synchronized views of the rally.                   |
-| Set clip bounds     | Defines the portion of the rally to review.                 |
-| Find it for me      | Chooses automatic landing-frame selection.                  |
-| I'll pick it        | Chooses manual landing-frame selection.                     |
-| Get the call        | Requests reconstruction and, when complete, opens decision. |
-| Back or Escape      | Returns to the live monitor without ending the match.       |
+| Action                   | Business consequence                               |
+| ------------------------ | -------------------------------------------------- |
+| Return to live or Escape | Leaves processing/review without ending the match. |
+| Demo frame controls      | Inspect simulated synchronized evidence only.      |
 
 ## Navigation
 
 - Entry is from `#/matches/:matchId/live`.
-- A completed reconstruction continues to `#/matches/:matchId/decision`.
+- A completed backend analysis continues to `#/matches/:matchId/decision`.
 - Back and Escape return to the same match's live monitor.
 - A decision does not complete the match; the operator can return to live
   monitoring for another rally.
@@ -81,9 +72,6 @@ is owned by the line-call review workflow.
 - [Match preparation](../workflows/MatchPreparationWorkflow.md)
 - [Isolated demo trial](../workflows/DemoTrialWorkflow.md)
 
-## Open questions
+## Related technical validation
 
-The product owner must define the real clip source, capture-window policy,
-landing-selection semantics, missing-tracking behavior, and the operator
-recovery path when reconstruction cannot produce a call. A processing failure
-is not a third line-call result.
+- [Real rally analysis validation](../technical/REAL-RALLY-ANALYSIS-VALIDATION.md)

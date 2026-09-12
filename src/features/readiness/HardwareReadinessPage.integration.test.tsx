@@ -82,7 +82,11 @@ async function readinessApp(options?: {
   return { ...result, match, router, services };
 }
 
-async function backendReadinessApp(options?: { live?: boolean }) {
+async function backendReadinessApp(options?: {
+  live?: boolean;
+  ready?: boolean;
+  cameras?: CameraRecord[];
+}) {
   const base = createLocalAppServices(new MemoryStorage(), {
     createId: (prefix) => `${prefix}-42`,
     now: () => new Date().toISOString(),
@@ -93,13 +97,15 @@ async function backendReadinessApp(options?: { live?: boolean }) {
     passwordConfirmation: "test-password",
   });
   const match = await base.matches.create(matchInput);
-  if (options?.live) {
+  if (options?.live || options?.ready) {
     await base.readiness.save(match.id, {
       cameraA: { status: "ready", simulated: true },
       cameraB: { status: "ready", simulated: true },
       calibrationProfile: profile,
     });
     await base.matches.updateStatus(match.id, "ready");
+  }
+  if (options?.live) {
     await base.matches.updateStatus(match.id, "live");
   }
   const left: CameraRecord = {
@@ -135,6 +141,10 @@ async function backendReadinessApp(options?: { live?: boolean }) {
     viewerToken: "b".repeat(32),
   };
   let callbacks: CameraConnectionCallbacks | null = null;
+  const provision = vi.fn(
+    async (_matchId: string, role: CameraRecord["role"]) =>
+      role === "SIDELINE_LEFT" ? left : right,
+  );
   const services: AppServices = {
     ...base,
     auth: {
@@ -145,8 +155,9 @@ async function backendReadinessApp(options?: { live?: boolean }) {
       }),
     },
     cameras: {
-      list: async () => [left, right],
-      prepare: async () => ({ left, right }),
+      list: async () => options?.cameras ?? [left, right],
+      provision,
+      update: async () => left,
     },
     cameraConnections: {
       create: (nextCallbacks) => {
@@ -164,7 +175,7 @@ async function backendReadinessApp(options?: { live?: boolean }) {
   const router = createAppMemoryRouter([`/matches/${match.id}/readiness`]);
   render(<App router={router} services={services} />);
   await screen.findByRole("heading", { name: /hardware readiness/i });
-  return { callbacks: () => callbacks, match, router };
+  return { callbacks: () => callbacks, match, provision, router };
 }
 
 function camera(name: "Camera A" | "Camera B") {
@@ -477,6 +488,48 @@ describe("hardware readiness", () => {
         screen.getByRole("article", { name: /left camera/i }),
       ).findByText(/^ready$/i),
     ).toBeVisible();
+  });
+
+  it("opens development monitoring with one decoded preview without calibration", async () => {
+    const user = userEvent.setup();
+    const { callbacks, match, router } = await backendReadinessApp({
+      cameras: [],
+      ready: true,
+    });
+
+    await user.click(
+      within(screen.getByRole("article", { name: /left camera/i })).getByRole(
+        "button",
+        { name: /pair phone/i },
+      ),
+    );
+    callbacks()?.onStream({} as MediaStream);
+
+    const start = await screen.findByRole("button", {
+      name: /start monitoring/i,
+    });
+    expect(start).toBeEnabled();
+    await user.click(start);
+
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe(`/matches/${match.id}/live`),
+    );
+  });
+
+  it("does not provision either camera until the selected role is paired", async () => {
+    const user = userEvent.setup();
+    const { provision } = await backendReadinessApp({ cameras: [] });
+
+    expect(provision).not.toHaveBeenCalled();
+    await user.click(
+      within(screen.getByRole("article", { name: /left camera/i })).getByRole(
+        "button",
+        { name: /pair phone/i },
+      ),
+    );
+
+    expect(provision).toHaveBeenCalledWith(expect.any(String), "SIDELINE_LEFT");
+    expect(provision).toHaveBeenCalledTimes(1);
   });
 
   it("shows a recoverable state for an unknown match", async () => {
