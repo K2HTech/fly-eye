@@ -24,38 +24,52 @@ export function CalibrationReview({
       </div>
       <div className="calibration__review-grid">
         <div className="calibration__wireframe">
-          <img
-            src={frame.previewDataUrl}
-            alt="Captured frame with solved court geometry"
-          />
-          <svg
-            viewBox={`0 0 ${frame.width} ${frame.height}`}
-            aria-hidden="true"
+          <div
+            className="calibration__wireframe-frame"
+            style={{ aspectRatio: `${frame.width} / ${frame.height}` }}
           >
-            <polygon
-              points={result.courtOutlineImage
-                .map((point) => `${point.x},${point.y}`)
-                .join(" ")}
+            <img
+              src={frame.previewDataUrl}
+              alt="Captured frame with detected court lines"
             />
-            {Object.entries(result.wireframeImage).map(([name, points]) =>
-              points.length === 2 ? (
-                <line
-                  key={name}
-                  x1={points[0].x}
-                  y1={points[0].y}
-                  x2={points[1].x}
-                  y2={points[1].y}
-                />
-              ) : (
-                <polyline
-                  key={name}
-                  points={points
-                    .map((point) => `${point.x},${point.y}`)
-                    .join(" ")}
-                />
-              ),
-            )}
-          </svg>
+            <svg
+              viewBox={`0 0 ${frame.width} ${frame.height}`}
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              <g className="calibration__detected-lines">
+                {result.courtOutlineImage.length > 1 && (
+                  <polyline
+                    points={result.courtOutlineImage
+                      .map((point) => `${point.x},${point.y}`)
+                      .join(" ")}
+                  />
+                )}
+                {Object.entries(result.wireframeImage).map(([name, points]) =>
+                  points.length === 2 ? (
+                    <line
+                      key={name}
+                      x1={points[0].x}
+                      y1={points[0].y}
+                      x2={points[1].x}
+                      y2={points[1].y}
+                    />
+                  ) : (
+                    <polyline
+                      key={name}
+                      points={points
+                        .map((point) => `${point.x},${point.y}`)
+                        .join(" ")}
+                    />
+                  ),
+                )}
+              </g>
+            </svg>
+          </div>
+          <p className="calibration__overlay-legend">
+            Yellow highlights show the court lines detected from this captured
+            frame.
+          </p>
         </div>
         <aside
           className={`calibration__result calibration__result--${result.quality}`}
