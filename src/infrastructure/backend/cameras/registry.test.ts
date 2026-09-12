@@ -65,17 +65,15 @@ function clientFor(
 }
 
 describe("BackendCameraRegistry", () => {
-  it("creates both approved device cameras from an empty set", async () => {
+  it("creates only the requested approved device camera from an empty set", async () => {
     const { client, request } = clientFor([]);
     const registry = new BackendCameraRegistry({ client, crypto });
 
-    const pair = await registry.prepare(matchId);
+    const left = await registry.provision(matchId, "SIDELINE_LEFT");
 
-    expect(pair.left.role).toBe("SIDELINE_LEFT");
-    expect(pair.right.role).toBe("SIDELINE_RIGHT");
-    expect(request).toHaveBeenCalledTimes(3);
+    expect(left.role).toBe("SIDELINE_LEFT");
+    expect(request).toHaveBeenCalledTimes(2);
     const leftBody = JSON.parse(String(request.mock.calls[1][1]?.body));
-    const rightBody = JSON.parse(String(request.mock.calls[2][1]?.body));
     expect(leftBody).toMatchObject({
       name: "Left sideline",
       role: "SIDELINE_LEFT",
@@ -83,44 +81,36 @@ describe("BackendCameraRegistry", () => {
       resolution: { w: 1280, h: 720 },
       targetFps: 30,
     });
-    expect(rightBody).toMatchObject({
-      name: "Right sideline",
-      role: "SIDELINE_RIGHT",
-      sourceType: "device",
-      resolution: { w: 1280, h: 720 },
-      targetFps: 30,
-    });
     expect(leftBody.clientRequestId).toMatch(uuidPattern);
-    expect(rightBody.clientRequestId).toMatch(uuidPattern);
-    expect(leftBody.clientRequestId).not.toBe(rightBody.clientRequestId);
     expect(leftBody.sourceRef).toMatch(/^fly-eye-device-[0-9a-f-]+$/);
     expect(leftBody.sourceRef).not.toMatch(/[?&#/@]/);
   });
 
-  it("creates only the missing role and returns left/right independent of API order", async () => {
+  it("creates only the selected missing role", async () => {
     const { client, request } = clientFor([camera("SIDELINE_RIGHT")]);
     const registry = new BackendCameraRegistry({ client, crypto });
 
-    const pair = await registry.prepare(matchId);
+    const left = await registry.provision(matchId, "SIDELINE_LEFT");
 
-    expect(pair.left.id).toBe(leftId);
-    expect(pair.right.id).toBe(rightId);
+    expect(left.id).toBe(leftId);
     expect(request).toHaveBeenCalledTimes(2);
     expect(JSON.parse(String(request.mock.calls[1][1]?.body))).toMatchObject({
       role: "SIDELINE_LEFT",
     });
   });
 
-  it("reuses a compatible two-camera set without creating or reordering it", async () => {
+  it("reuses an existing compatible selected role without creating", async () => {
     const { client, request } = clientFor([
       camera("SIDELINE_RIGHT"),
       camera("SIDELINE_LEFT"),
     ]);
     const registry = new BackendCameraRegistry({ client, crypto });
 
-    await expect(registry.prepare(matchId)).resolves.toMatchObject({
-      left: { id: leftId, role: "SIDELINE_LEFT" },
-      right: { id: rightId, role: "SIDELINE_RIGHT" },
+    await expect(
+      registry.provision(matchId, "SIDELINE_LEFT"),
+    ).resolves.toMatchObject({
+      id: leftId,
+      role: "SIDELINE_LEFT",
     });
     expect(request).toHaveBeenCalledOnce();
   });
@@ -131,13 +121,13 @@ describe("BackendCameraRegistry", () => {
     ]);
     const registry = new BackendCameraRegistry({ client, crypto });
 
-    await expect(registry.prepare(matchId)).resolves.toMatchObject({
-      left: { id: leftId, resolution: { width: 1920, height: 1080 } },
+    await expect(
+      registry.provision(matchId, "SIDELINE_LEFT"),
+    ).resolves.toMatchObject({
+      id: leftId,
+      resolution: { width: 1920, height: 1080 },
     });
-    expect(request).toHaveBeenCalledTimes(2);
-    expect(JSON.parse(String(request.mock.calls[1][1]?.body))).toMatchObject({
-      role: "SIDELINE_RIGHT",
-    });
+    expect(request).toHaveBeenCalledOnce();
   });
 
   it("updates a camera resolution through PATCH", async () => {
@@ -214,19 +204,20 @@ describe("BackendCameraRegistry", () => {
         );
       }
       listCall += 1;
-      return listCall === 1 ? [] : [camera("SIDELINE_LEFT")];
+      return [];
     });
     const registry = new BackendCameraRegistry({
       client: { request } as BackendHttpClient,
       crypto,
     });
 
-    await expect(registry.prepare(matchId)).rejects.toThrow(
+    await expect(registry.provision(matchId, "SIDELINE_LEFT")).rejects.toThrow(
       "temporary failure",
     );
-    await expect(registry.prepare(matchId)).resolves.toMatchObject({
-      left: { role: "SIDELINE_LEFT" },
-      right: { role: "SIDELINE_RIGHT" },
+    await expect(
+      registry.provision(matchId, "SIDELINE_LEFT"),
+    ).resolves.toMatchObject({
+      role: "SIDELINE_LEFT",
     });
     const postBodies = request.mock.calls
       .filter(([, init]) => init?.method === "POST")
@@ -251,9 +242,9 @@ describe("BackendCameraRegistry", () => {
     const { client, request } = clientFor(cameras);
     const registry = new BackendCameraRegistry({ client, crypto });
 
-    await expect(registry.prepare(matchId)).rejects.toBeInstanceOf(
-      CameraRegistryError,
-    );
+    await expect(
+      registry.provision(matchId, "SIDELINE_LEFT"),
+    ).rejects.toBeInstanceOf(CameraRegistryError);
     expect(request).toHaveBeenCalledOnce();
   });
 
@@ -265,7 +256,7 @@ describe("BackendCameraRegistry", () => {
     ]);
     const registry = new BackendCameraRegistry({ client, crypto });
 
-    await expect(registry.prepare(matchId)).rejects.toThrow(
+    await expect(registry.provision(matchId, "SIDELINE_LEFT")).rejects.toThrow(
       "more than the two supported cameras",
     );
     expect(request).toHaveBeenCalledOnce();

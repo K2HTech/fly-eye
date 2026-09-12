@@ -4,14 +4,12 @@ import type {
   CameraRegistry,
   CameraRole,
   CameraUpdateInput,
-  PreparedCameraPair,
 } from "../../../services";
 
 export type {
   CameraRecord,
   CameraRegistry,
   CameraRole,
-  PreparedCameraPair,
 } from "../../../services";
 
 export type CameraRegistryErrorCode =
@@ -278,48 +276,20 @@ export class BackendCameraRegistry implements CameraRegistry {
   }
 
   async list(matchId: string): Promise<CameraRecord[]> {
-    return (await this.fetchCameras(matchId)).map(toCameraRecord);
+    return this.validatedCameras(matchId);
   }
 
-  async prepare(matchId: string): Promise<PreparedCameraPair> {
-    const rawCameras = await this.fetchCameras(matchId);
-    if (rawCameras.length > 2) {
-      throw new CameraRegistryError(
-        "UNSUPPORTED_CAMERA_SET",
-        "This match has more than the two supported cameras.",
-      );
-    }
-    const cameras = rawCameras.map(toCameraRecord);
-
+  async provision(matchId: string, role: CameraRole): Promise<CameraRecord> {
+    const cameras = await this.validatedCameras(matchId);
     const byRole = new Map<CameraRole, CameraRecord>();
     for (const camera of cameras) {
-      if (byRole.has(camera.role)) {
-        throw new CameraRegistryError(
-          "UNSUPPORTED_CAMERA_SET",
-          "This match contains duplicate camera roles; panel identity is ambiguous.",
-        );
-      }
-      assertCompatible(camera);
       byRole.set(camera.role, camera);
     }
-
-    for (const role of approvedRoles) {
-      if (!byRole.has(role)) {
-        const created = await this.createCamera(matchId, role);
-        assertCompatible(created);
-        byRole.set(role, created);
-      }
-    }
-
-    const left = byRole.get("SIDELINE_LEFT");
-    const right = byRole.get("SIDELINE_RIGHT");
-    if (!left || !right) {
-      throw new CameraRegistryError(
-        "UNSUPPORTED_CAMERA_SET",
-        "The match does not have both supported camera roles.",
-      );
-    }
-    return { left, right };
+    const existing = byRole.get(role);
+    if (existing) return existing;
+    const created = await this.createCamera(matchId, role);
+    assertCompatible(created);
+    return created;
   }
 
   async update(
@@ -356,6 +326,29 @@ export class BackendCameraRegistry implements CameraRegistry {
     );
     if (!Array.isArray(raw)) throw invalidResponse();
     return raw.map((value) => parseCamera(value, matchId));
+  }
+
+  private async validatedCameras(matchId: string): Promise<CameraRecord[]> {
+    const rawCameras = await this.fetchCameras(matchId);
+    if (rawCameras.length > approvedRoles.length) {
+      throw new CameraRegistryError(
+        "UNSUPPORTED_CAMERA_SET",
+        "This match has more than the two supported cameras.",
+      );
+    }
+    const cameras = rawCameras.map(toCameraRecord);
+    const roles = new Set<CameraRole>();
+    for (const camera of cameras) {
+      if (roles.has(camera.role)) {
+        throw new CameraRegistryError(
+          "UNSUPPORTED_CAMERA_SET",
+          "This match contains duplicate camera roles; panel identity is ambiguous.",
+        );
+      }
+      assertCompatible(camera);
+      roles.add(camera.role);
+    }
+    return cameras;
   }
 
   private stableValue(

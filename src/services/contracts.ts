@@ -100,11 +100,6 @@ export interface CameraRecord {
   readonly createdAt: string;
 }
 
-export interface PreparedCameraPair {
-  readonly left: CameraRecord;
-  readonly right: CameraRecord;
-}
-
 export interface CameraUpdateInput {
   readonly resolution?: { readonly w: number; readonly h: number };
   readonly targetFps?: number;
@@ -112,7 +107,7 @@ export interface CameraUpdateInput {
 
 export interface CameraRegistry {
   list(matchId: string): Promise<CameraRecord[]>;
-  prepare(matchId: string): Promise<PreparedCameraPair>;
+  provision(matchId: string, role: CameraRole): Promise<CameraRecord>;
   update(
     matchId: string,
     cameraId: string,
