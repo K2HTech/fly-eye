@@ -56,6 +56,9 @@ export function CameraProvider({ children }: CameraProviderProps) {
   const [streams, setStreams] = useState<
     Record<CameraRole, MediaStream | null>
   >({ SIDELINE_LEFT: null, SIDELINE_RIGHT: null });
+  const [cameraRecords, setCameraRecords] = useState<
+    Record<CameraRole, CameraRecord | null>
+  >({ SIDELINE_LEFT: null, SIDELINE_RIGHT: null });
 
   const disconnectAll = useCallback(() => {
     ownedMatch.current = null;
@@ -65,19 +68,26 @@ export function CameraProvider({ children }: CameraProviderProps) {
     connections.current = {};
     sessionIds.current = {};
     setStreams({ SIDELINE_LEFT: null, SIDELINE_RIGHT: null });
+    services.rallyCapture?.stopAll();
+    setCameraRecords({ SIDELINE_LEFT: null, SIDELINE_RIGHT: null });
     setSessions(snapshots());
-  }, []);
+  }, [services.rallyCapture]);
 
-  const disconnect = useCallback((role: CameraRole) => {
-    connections.current[role]?.close();
-    delete connections.current[role];
-    delete sessionIds.current[role];
-    setStreams((current) => ({ ...current, [role]: null }));
-    setSessions((current) => ({
-      ...current,
-      [role]: reduceCameraSession(current[role], { type: "disconnect" }),
-    }));
-  }, []);
+  const disconnect = useCallback(
+    (role: CameraRole) => {
+      connections.current[role]?.close();
+      delete connections.current[role];
+      delete sessionIds.current[role];
+      services.rallyCapture?.stop(role);
+      setStreams((current) => ({ ...current, [role]: null }));
+      setCameraRecords((current) => ({ ...current, [role]: null }));
+      setSessions((current) => ({
+        ...current,
+        [role]: reduceCameraSession(current[role], { type: "disconnect" }),
+      }));
+    },
+    [services.rallyCapture],
+  );
 
   const begin = useCallback(
     async (
@@ -88,6 +98,7 @@ export function CameraProvider({ children }: CameraProviderProps) {
       if (!services.cameraConnections)
         throw new Error("Camera pairing is unavailable.");
       disconnect(role);
+      setCameraRecords((current) => ({ ...current, [role]: camera }));
       setSessions((current) => ({
         ...current,
         [role]: reduceCameraSession(current[role], { type: "create" }),
@@ -103,8 +114,14 @@ export function CameraProvider({ children }: CameraProviderProps) {
             }),
           }));
         },
-        onStream: (stream) =>
-          setStreams((current) => ({ ...current, [role]: stream })),
+        onStream: (stream) => {
+          try {
+            services.rallyCapture?.start(role, stream, camera.targetFps);
+            setStreams((current) => ({ ...current, [role]: stream }));
+          } catch {
+            setStreams((current) => ({ ...current, [role]: null }));
+          }
+        },
         onState: (state) => {
           const sessionId = sessionIds.current[role];
           if (!sessionId) return;
@@ -171,7 +188,7 @@ export function CameraProvider({ children }: CameraProviderProps) {
         throw error;
       }
     },
-    [disconnect, services.cameraConnections],
+    [disconnect, services.cameraConnections, services.rallyCapture],
   );
 
   useEffect(() => {
@@ -200,8 +217,15 @@ export function CameraProvider({ children }: CameraProviderProps) {
   useEffect(() => () => disconnectAll(), [disconnectAll]);
 
   const value = useMemo(
-    () => ({ sessions, streams, begin, disconnect, disconnectAll }),
-    [begin, disconnect, disconnectAll, sessions, streams],
+    () => ({
+      sessions,
+      streams,
+      cameraRecords,
+      begin,
+      disconnect,
+      disconnectAll,
+    }),
+    [begin, cameraRecords, disconnect, disconnectAll, sessions, streams],
   );
   return (
     <CameraContext.Provider value={value}>{children}</CameraContext.Provider>

@@ -14,6 +14,7 @@ export interface CameraContextValue {
     camera: CameraRecord,
   ): Promise<PairingSession>;
   streams: Readonly<Record<CameraRole, MediaStream | null>>;
+  cameraRecords: Readonly<Record<CameraRole, CameraRecord | null>>;
 }
 
 export const CameraContext = createContext<CameraContextValue | null>(null);

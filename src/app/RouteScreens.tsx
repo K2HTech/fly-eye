@@ -19,6 +19,8 @@ import { useSession } from "./sessionContext";
 import { useAppServices } from "./servicesContext";
 import { AuthenticatedShell } from "./AuthenticatedShell";
 import { canOpenNormalMonitoring } from "../features/readiness/monitoringPolicy";
+import { calibrationSafety } from "../features/calibration/safety";
+import { sha256Hex } from "../infrastructure/browser/calibration/sha256";
 
 interface RouteMessageState {
   message?: string;
@@ -162,12 +164,14 @@ export function LiveRoute() {
   const navigate = useNavigate();
   const session = useSession();
   const services = useAppServices();
-  const { sessions, streams } = useCameraSessions();
+  const { sessions, streams, cameraRecords } = useCameraSessions();
   const isBackendSession = session.identity?.session.mode === "backend";
   const developmentMode = import.meta.env.MODE !== "production";
   const [calibrationGate, setCalibrationGate] = useState<
     "checking" | "eligible" | "blocked"
   >(() => (isBackendSession && !developmentMode ? "checking" : "eligible"));
+  const [reviewBusy, setReviewBusy] = useState(false);
+  const [reviewMessage, setReviewMessage] = useState<string | null>(null);
   useEffect(() => {
     let active = true;
     if (
@@ -235,6 +239,105 @@ export function LiveRoute() {
   const hasBothNormalLivePreviews =
     streams.SIDELINE_LEFT !== null && streams.SIDELINE_RIGHT !== null;
 
+  const requestReview = async () => {
+    if (!isBackendSession) {
+      navigate(matchRoutes.review(matchId));
+      return;
+    }
+    if (
+      !services.rallyCapture ||
+      !services.clips ||
+      !services.analyses ||
+      !services.calibration
+    ) {
+      setReviewMessage("Rally analysis is unavailable in this configuration.");
+      return;
+    }
+    const roles = (Object.keys(streams) as (keyof typeof streams)[]).filter(
+      (role) => streams[role] !== null,
+    );
+    const records = roles.map((role) => cameraRecords[role]);
+    if (records.some((record) => record === null)) {
+      setReviewMessage(
+        "Pair the active camera again before requesting review.",
+      );
+      return;
+    }
+    setReviewBusy(true);
+    setReviewMessage(null);
+    try {
+      const activeRecords = records.filter(
+        (record): record is NonNullable<typeof record> => record !== null,
+      );
+      const calibrations = await Promise.all(
+        activeRecords.map((record) =>
+          services.calibration!.getCurrent(record.id),
+        ),
+      );
+      if (
+        calibrations.some(
+          (calibration) =>
+            !calibration ||
+            !calibration.isCurrent ||
+            calibrationSafety(calibration).blocksCamera,
+        )
+      )
+        throw new Error(
+          "Calibrate every active camera before submitting a rally for analysis.",
+        );
+      const snapshots = await services.rallyCapture.snapshot(roles);
+      const assets = await Promise.all(
+        snapshots.map(async (snapshot) => ({
+          cameraId: cameraRecords[snapshot.role]!.id,
+          contentType: snapshot.contentType,
+          codec: snapshot.codec,
+          fps: snapshot.fps,
+          frameCount: snapshot.frameCount,
+          startTsUs: snapshot.startTsUs,
+          endTsUs: snapshot.endTsUs,
+          sizeBytes: snapshot.bytes.size,
+          checksumSha256: sha256Hex(
+            new Uint8Array(await snapshot.bytes.arrayBuffer()),
+          ),
+        })),
+      );
+      const durationMs = Math.min(
+        ...snapshots.map((snapshot) =>
+          Math.round((snapshot.endTsUs - snapshot.startTsUs) / 1_000),
+        ),
+      );
+      const created = await services.clips.create(matchId, {
+        capturedAt: new Date().toISOString(),
+        durationMs,
+        note: "Line-call capture",
+        assets,
+      });
+      await Promise.all(
+        created.uploads.map((target) => {
+          const snapshot = snapshots.find(
+            (candidate) =>
+              cameraRecords[candidate.role]?.id === target.cameraId,
+          );
+          if (!snapshot) throw new Error("Clip asset mismatch.");
+          return services.clips!.upload(target, snapshot.bytes);
+        }),
+      );
+      await services.clips.complete(created.clip.id);
+      const submitted = await services.analyses.submit(created.clip.id);
+      navigate(matchRoutes.review(matchId), {
+        state: { analysisId: submitted.analysisId },
+      });
+    } catch (error) {
+      setReviewMessage(
+        error instanceof Error
+          ? error.message
+          : "Unable to submit the rally for analysis. Please try again.",
+      );
+    } finally {
+      setReviewBusy(false);
+    }
+  };
+
   if (
     isBackendSession &&
     (developmentMode ? !hasNormalLivePreview : !hasBothNormalLivePreviews)
@@ -268,7 +371,9 @@ export function LiveRoute() {
   return (
     <LiveMonitor
       cameras={cameras}
-      onReview={() => navigate(matchRoutes.review(matchId))}
+      onReview={() => void requestReview()}
+      reviewBusy={reviewBusy}
+      reviewMessage={reviewMessage}
       onReturnToSetup={
         isBackendSession
           ? () => navigate(matchRoutes.readiness(matchId))

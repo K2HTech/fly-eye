@@ -48,6 +48,8 @@ export interface LiveMonitorProps {
   match?: MatchState;
   cameras?: readonly CameraFeed[];
   buffer?: RollingBuffer;
+  reviewBusy?: boolean;
+  reviewMessage?: string | null;
 }
 
 function CourtView({ camera }: { camera: CameraFeed }) {
@@ -233,18 +235,20 @@ export function LiveMonitor({
   match = simulatedMatch,
   cameras = simulatedCameras,
   buffer = simulatedBuffer,
+  reviewBusy = false,
+  reviewMessage = null,
 }: LiveMonitorProps) {
   useEffect(() => {
     const handleShortcut = (event: KeyboardEvent) => {
       if (event.key === "F1" && !event.repeat) {
         event.preventDefault();
-        onReview();
+        if (!reviewBusy) onReview();
       }
     };
 
     window.addEventListener("keydown", handleShortcut);
     return () => window.removeEventListener("keydown", handleShortcut);
-  }, [onReview]);
+  }, [onReview, reviewBusy]);
 
   return (
     <section className="live-monitor" aria-labelledby="live-monitor-title">
@@ -320,9 +324,16 @@ export function LiveMonitor({
           className="live-monitor__review"
           type="button"
           onClick={onReview}
+          disabled={reviewBusy}
         >
-          Review last rally <kbd aria-hidden="true">F1</kbd>
+          {reviewBusy ? "Preparing rally…" : "Review last rally"}{" "}
+          {!reviewBusy && <kbd aria-hidden="true">F1</kbd>}
         </button>
+        {reviewMessage && (
+          <output className="live-monitor__review-message" role="status">
+            {reviewMessage}
+          </output>
+        )}
       </footer>
     </section>
   );
