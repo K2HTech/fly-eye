@@ -52,7 +52,8 @@ instructions](../AGENTS.md).
 - Technical baseline: [architecture](technical/ARCHITECTURE.md), [quality
   requirements](technical/QUALITY-REQUIREMENTS.md), [browser camera pairing
   validation](technical/BROWSER-CAMERA-PAIRING-VALIDATION.md), [court
-  calibration validation](technical/CALIBRATION-VALIDATION.md), and
+  calibration validation](technical/CALIBRATION-VALIDATION.md), [real rally
+  analysis validation](technical/REAL-RALLY-ANALYSIS-VALIDATION.md), and
   [architecture decision records](technical/decisions/README.md)
 
 ## Ownership rules

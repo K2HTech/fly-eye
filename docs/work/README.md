@@ -32,10 +32,14 @@ proposed commits.
 
 Active work:
 
-- [Real rally analysis](active/real-rally-analysis/SPEC.md)
+- None.
 
 Completed historical specifications:
 
+- [Real rally analysis](archive/2026/real-rally-analysis/SPEC.md) — delivered
+  browser-buffer, backend analysis, and result-presentation integration;
+  real-environment acceptance is retained in the [rally-analysis validation
+  checklist](../technical/REAL-RALLY-ANALYSIS-VALIDATION.md).
 - [Documentation system](archive/2026/documentation-system/SPEC.md)
 - [Browser camera pairing](archive/2026/browser-camera-pairing/SPEC.md) —
   delivered browser integration; its required real-environment acceptance is
