@@ -120,6 +120,46 @@
   background: #0b1a11;
 }
 
+.clip-review__video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  object-fit: contain;
+}
+
+.clip-review__analysis {
+  align-self: stretch;
+  padding: 18px;
+  border-left: 1px solid var(--review-line);
+  background: var(--review-panel);
+}
+
+.clip-review__analysis h2 {
+  margin: 0 0 10px;
+  color: var(--review-cork);
+  font-family: "Saira Condensed", Impact, sans-serif;
+  font-size: 18px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.clip-review__analysis p {
+  color: var(--review-mute);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.clip-review__analysis button {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #315889;
+  border-radius: 6px;
+  background: #1a2c48;
+  color: var(--review-chalk);
+  font: inherit;
+}
+
 .clip-review__paused {
   position: absolute;
   top: 9px;
@@ -151,6 +191,11 @@
 
   .clip-review__feeds {
     padding-right: 14px;
+  }
+
+  .clip-review__analysis {
+    border-top: 1px solid var(--review-line);
+    border-left: 0;
   }
 }
 

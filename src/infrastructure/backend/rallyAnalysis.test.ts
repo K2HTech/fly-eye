@@ -97,4 +97,59 @@ describe("backend rally analysis services", () => {
       method: "POST",
     });
   });
+
+  it("reads the backend result and downloads only its authorized overlay", async () => {
+    const request = vi.fn<BackendHttpClient["request"]>().mockResolvedValue({
+      id: analysisId,
+      clipId,
+      status: "done",
+      progress: 1,
+      stage: "done",
+      verdict: "OUT",
+      confidence: 0.95,
+      landing: { x: 1.2, y: 2.3 },
+      uncertaintyCm: 1.2,
+      nearestLine: "back boundary",
+      distanceToLineCm: 2.4,
+      reasonCode: null,
+      reasonText: null,
+      perCamera: [
+        {
+          cameraId,
+          trackPoints: 14,
+          landing: { x: 1.2, y: 2.3 },
+          trajectoryResidual: 0.3,
+          occlusionScore: 0.1,
+          usable: true,
+        },
+      ],
+      overlays: {
+        frame: null,
+        topdown: `/api/v1/analyses/${analysisId}/overlay/topdown`,
+        trajectory: null,
+      },
+      error: null,
+    });
+    const download = vi
+      .fn<NonNullable<BackendHttpClient["download"]>>()
+      .mockResolvedValue(new Blob(["overlay"]));
+    const service = new BackendRallyAnalysisService({
+      request: request as BackendHttpClient["request"],
+      download,
+    });
+
+    await expect(service.get(analysisId)).resolves.toMatchObject({
+      verdict: "OUT",
+      perCamera: [expect.objectContaining({ trackPoints: 14 })],
+    });
+    await expect(
+      service.getOverlay(`/api/v1/analyses/${analysisId}/overlay/topdown`),
+    ).resolves.toBeInstanceOf(Blob);
+    expect(download).toHaveBeenCalledWith(
+      `analyses/${analysisId}/overlay/topdown`,
+    );
+    await expect(
+      service.getOverlay("https://storage.test/overlay"),
+    ).rejects.toThrow("overlay URL is invalid");
+  });
 });

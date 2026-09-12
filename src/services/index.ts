@@ -21,6 +21,7 @@ export type {
   CreateRallyClipInput,
   CreatedRallyClip,
   RallyAnalysis,
+  AnalysisVerdict,
   RallyAnalysisService,
   RallyClip,
   RallyClipAssetDeclaration,

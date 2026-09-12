@@ -81,6 +81,32 @@ function point(value: unknown) {
   return { x: finite(body, "x"), y: finite(body, "y") };
 }
 
+function perCamera(value: unknown): NonNullable<RallyAnalysis["perCamera"]> {
+  return array(value).map((entry) => {
+    const body = object(entry);
+    const trackPoints = finite(body, "trackPoints");
+    const trajectoryResidual = finite(body, "trajectoryResidual");
+    const occlusionScore = finite(body, "occlusionScore");
+    if (
+      !Number.isInteger(trackPoints) ||
+      trackPoints < 0 ||
+      trajectoryResidual < 0 ||
+      occlusionScore < 0 ||
+      occlusionScore > 1 ||
+      typeof body.usable !== "boolean"
+    )
+      throw invalid();
+    return {
+      cameraId: id(body, "cameraId"),
+      trackPoints,
+      landing: body.landing === null ? null : point(body.landing),
+      trajectoryResidual,
+      occlusionScore,
+      usable: body.usable,
+    };
+  });
+}
+
 function asset(value: unknown): RallyClipAssetDeclaration {
   const body = object(value);
   const contentType = string(body, "contentType");
@@ -181,6 +207,7 @@ function analysis(value: unknown): RallyAnalysis {
     distanceToLineCm: nullableFinite(body, "distanceToLineCm"),
     reasonCode: nullableString(body, "reasonCode"),
     reasonText: nullableString(body, "reasonText"),
+    perCamera: body.perCamera === null ? null : perCamera(body.perCamera),
     overlays: {
       frame: nullableString(overlays, "frame"),
       topdown: nullableString(overlays, "topdown"),
@@ -286,5 +313,17 @@ export class BackendRallyAnalysisService implements RallyAnalysisService {
     return analysis(
       await this.client.request<unknown>(`analyses/${analysisId}`),
     );
+  }
+
+  async getOverlay(path: string): Promise<Blob> {
+    if (!path.startsWith("/api/v1/") || path.startsWith("//"))
+      throw new RallyAnalysisServiceError(
+        "The analysis overlay URL is invalid.",
+      );
+    if (!this.client.download)
+      throw new RallyAnalysisServiceError(
+        "Authenticated analysis-overlay downloads are unavailable.",
+      );
+    return this.client.download(path.replace(/^\/api\/v1\//, ""));
   }
 }

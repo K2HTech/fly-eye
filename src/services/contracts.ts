@@ -280,6 +280,16 @@ export interface RallyAnalysis {
   readonly distanceToLineCm: number | null;
   readonly reasonCode: string | null;
   readonly reasonText: string | null;
+  readonly perCamera:
+    | readonly {
+        readonly cameraId: string;
+        readonly trackPoints: number;
+        readonly landing: CalibrationPoint | null;
+        readonly trajectoryResidual: number;
+        readonly occlusionScore: number;
+        readonly usable: boolean;
+      }[]
+    | null;
   readonly overlays: Readonly<{
     frame: string | null;
     topdown: string | null;
@@ -291,6 +301,8 @@ export interface RallyAnalysis {
 export interface RallyAnalysisService {
   submit(clipId: string, force?: boolean): Promise<{ analysisId: string }>;
   get(analysisId: string): Promise<RallyAnalysis>;
+  /** Resolves an authenticated, short-lived backend overlay endpoint to bytes. */
+  getOverlay(path: string): Promise<Blob>;
 }
 
 export interface RallyCaptureSnapshot {
