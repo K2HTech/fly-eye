@@ -37,3 +37,4 @@ the historical decision.
 | ------------------------------------------------------------------ | -------- | ------------------------------------------------------------------------------------------------ |
 | [0001](0001-use-react-and-tauri-for-the-cross-platform-ui.md)      | Accepted | Use a React and TypeScript frontend built by Vite and hosted by Tauri v2                         |
 | [0002](0002-separate-ui-from-storage-with-application-services.md) | Accepted | Put application service contracts and replaceable adapters between UI components and persistence |
+| [0003](0003-use-build-mode-for-development-camera-entry.md)        | Accepted | Use Vite build mode for the frontend development monitor-entry policy                            |
