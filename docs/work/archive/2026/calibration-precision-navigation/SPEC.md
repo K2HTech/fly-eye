@@ -1,6 +1,6 @@
 # Calibration Precision Navigation Specification
 
-Status: Approved — Batch 2 complete; Batch 3 pending
+Status: Implemented — 2026-09-12
 
 Related historical work: [court calibration](../../archive/2026/court-calibration/SPEC.md) and [marker precision](../../archive/2026/calibration-marker-precision/SPEC.md).
 
