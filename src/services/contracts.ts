@@ -212,6 +212,87 @@ export interface CalibrationService {
   ): Promise<CalibrationResult>;
 }
 
+export interface RallyClipAssetDeclaration {
+  readonly cameraId: string;
+  readonly contentType: "video/mp4";
+  readonly codec: "h264";
+  readonly fps: number;
+  readonly frameCount: number;
+  readonly startTsUs: number;
+  readonly endTsUs: number;
+  readonly sizeBytes: number;
+  readonly checksumSha256: string;
+}
+
+export interface RallyClipUploadTarget {
+  readonly cameraId: string;
+  readonly assetId: string;
+  readonly url: string;
+  readonly method: "PUT";
+  readonly headers: Readonly<Record<string, string>>;
+  readonly expiresAt: string;
+}
+
+export interface RallyClip {
+  readonly id: string;
+  readonly matchId: string;
+  readonly capturedAt: string;
+  readonly durationMs: number;
+  readonly status: "uploading" | "ready" | "failed";
+  readonly assets: readonly RallyClipAssetDeclaration[];
+}
+
+export interface CreateRallyClipInput {
+  readonly capturedAt: string;
+  readonly durationMs: number;
+  readonly note?: string | null;
+  readonly assets: readonly RallyClipAssetDeclaration[];
+}
+
+export interface CreatedRallyClip {
+  readonly clip: RallyClip;
+  readonly uploads: readonly RallyClipUploadTarget[];
+}
+
+export interface RallyClipService {
+  create(
+    matchId: string,
+    input: CreateRallyClipInput,
+  ): Promise<CreatedRallyClip>;
+  upload(target: RallyClipUploadTarget, bytes: Blob): Promise<void>;
+  complete(clipId: string): Promise<RallyClip>;
+}
+
+export type AnalysisStatus = "queued" | "running" | "done" | "failed";
+export type AnalysisVerdict = "IN" | "OUT" | "INCONCLUSIVE";
+
+export interface RallyAnalysis {
+  readonly id: string;
+  readonly clipId: string;
+  readonly status: AnalysisStatus;
+  readonly progress: number;
+  readonly stage: string;
+  readonly verdict: AnalysisVerdict | null;
+  readonly confidence: number | null;
+  readonly landing: CalibrationPoint | null;
+  readonly uncertaintyCm: number | null;
+  readonly nearestLine: string | null;
+  readonly distanceToLineCm: number | null;
+  readonly reasonCode: string | null;
+  readonly reasonText: string | null;
+  readonly overlays: Readonly<{
+    frame: string | null;
+    topdown: string | null;
+    trajectory: string | null;
+  }>;
+  readonly error: Readonly<{ code: string; message: string }> | null;
+}
+
+export interface RallyAnalysisService {
+  submit(clipId: string, force?: boolean): Promise<{ analysisId: string }>;
+  get(analysisId: string): Promise<RallyAnalysis>;
+}
+
 export interface CameraConnectionCallbacks {
   onPairing(pairing: PairingSession): void;
   onStream(stream: MediaStream): void;
@@ -238,4 +319,6 @@ export interface AppServices {
   cameraConnections?: CameraConnectionFactory;
   calibration?: CalibrationService;
   calibrationFrames?: CalibrationFrameCaptureService;
+  clips?: RallyClipService;
+  analyses?: RallyAnalysisService;
 }
