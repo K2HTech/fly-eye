@@ -1,6 +1,6 @@
 # Calibration Result Overlay Specification
 
-Status: Approved — Batch 1 complete; closeout pending
+Status: Implemented — 2026-09-12
 
 ## Outcome
 
