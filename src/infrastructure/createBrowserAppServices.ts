@@ -9,6 +9,8 @@ import {
   createBackendCalibrationService,
   createBackendHttpClient,
   createBackendMatchRepository,
+  BackendRallyAnalysisService,
+  BackendRallyClipService,
   MemoryCredentialStore,
 } from "./backend";
 import {
@@ -96,5 +98,7 @@ export function createBrowserAppServices(
     }),
     pairing,
     cameraConnections: new BrowserCameraConnectionFactory(pairing),
+    clips: new BackendRallyClipService(client, options.fetchImpl),
+    analyses: new BackendRallyAnalysisService(client),
   };
 }
