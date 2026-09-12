@@ -15,6 +15,7 @@ import {
 } from "./backend";
 import {
   BrowserCameraConnectionFactory,
+  BrowserRallyCaptureService,
   createBackendPairingClient,
 } from "./browser/cameras";
 import { BrowserCalibrationFrameCaptureService } from "./browser/calibration";
@@ -100,5 +101,6 @@ export function createBrowserAppServices(
     cameraConnections: new BrowserCameraConnectionFactory(pairing),
     clips: new BackendRallyClipService(client, options.fetchImpl),
     analyses: new BackendRallyAnalysisService(client),
+    rallyCapture: new BrowserRallyCaptureService(),
   };
 }
