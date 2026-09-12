@@ -1,6 +1,6 @@
 # Real Rally Analysis Plan
 
-Status: Batch 1 complete — Batch 2 ready
+Status: Batch 2 complete — Batch 3 ready
 
 ## Batch 1 — Backend clip and analysis boundary
 

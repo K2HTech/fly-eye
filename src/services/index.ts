@@ -26,6 +26,8 @@ export type {
   RallyClipAssetDeclaration,
   RallyClipService,
   RallyClipUploadTarget,
+  RallyCaptureService,
+  RallyCaptureSnapshot,
   CreateMatchInput,
   MatchRepository,
   PairingService,

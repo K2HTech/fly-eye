@@ -293,6 +293,26 @@ export interface RallyAnalysisService {
   get(analysisId: string): Promise<RallyAnalysis>;
 }
 
+export interface RallyCaptureSnapshot {
+  readonly role: CameraRole;
+  readonly bytes: Blob;
+  readonly contentType: "video/mp4";
+  readonly codec: "h264";
+  readonly fps: number;
+  readonly frameCount: number;
+  readonly startTsUs: number;
+  readonly endTsUs: number;
+}
+
+export interface RallyCaptureService {
+  start(role: CameraRole, stream: MediaStream, fps: number): void;
+  stop(role: CameraRole): void;
+  stopAll(): void;
+  snapshot(
+    roles: readonly CameraRole[],
+  ): Promise<readonly RallyCaptureSnapshot[]>;
+}
+
 export interface CameraConnectionCallbacks {
   onPairing(pairing: PairingSession): void;
   onStream(stream: MediaStream): void;
@@ -321,4 +341,5 @@ export interface AppServices {
   calibrationFrames?: CalibrationFrameCaptureService;
   clips?: RallyClipService;
   analyses?: RallyAnalysisService;
+  rallyCapture?: RallyCaptureService;
 }
