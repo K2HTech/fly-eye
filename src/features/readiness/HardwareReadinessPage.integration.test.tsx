@@ -84,6 +84,7 @@ async function readinessApp(options?: {
 
 async function backendReadinessApp(options?: {
   live?: boolean;
+  ready?: boolean;
   cameras?: CameraRecord[];
 }) {
   const base = createLocalAppServices(new MemoryStorage(), {
@@ -96,13 +97,15 @@ async function backendReadinessApp(options?: {
     passwordConfirmation: "test-password",
   });
   const match = await base.matches.create(matchInput);
-  if (options?.live) {
+  if (options?.live || options?.ready) {
     await base.readiness.save(match.id, {
       cameraA: { status: "ready", simulated: true },
       cameraB: { status: "ready", simulated: true },
       calibrationProfile: profile,
     });
     await base.matches.updateStatus(match.id, "ready");
+  }
+  if (options?.live) {
     await base.matches.updateStatus(match.id, "live");
   }
   const left: CameraRecord = {
@@ -485,6 +488,32 @@ describe("hardware readiness", () => {
         screen.getByRole("article", { name: /left camera/i }),
       ).findByText(/^ready$/i),
     ).toBeVisible();
+  });
+
+  it("opens development monitoring with one decoded preview without calibration", async () => {
+    const user = userEvent.setup();
+    const { callbacks, match, router } = await backendReadinessApp({
+      cameras: [],
+      ready: true,
+    });
+
+    await user.click(
+      within(screen.getByRole("article", { name: /left camera/i })).getByRole(
+        "button",
+        { name: /pair phone/i },
+      ),
+    );
+    callbacks()?.onStream({} as MediaStream);
+
+    const start = await screen.findByRole("button", {
+      name: /start monitoring/i,
+    });
+    expect(start).toBeEnabled();
+    await user.click(start);
+
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe(`/matches/${match.id}/live`),
+    );
   });
 
   it("does not provision either camera until the selected role is paired", async () => {

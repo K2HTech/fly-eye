@@ -1,6 +1,6 @@
 # Lazy Camera Provisioning and Environment Policy Plan
 
-Status: Batch 1 complete — Batch 2 ready
+Status: Batch 2 complete — Closeout ready
 
 ## Batch 1 — Provision only the selected role
 

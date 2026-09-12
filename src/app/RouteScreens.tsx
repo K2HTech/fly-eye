@@ -18,7 +18,7 @@ import { useRouteAccess } from "./routeAccess";
 import { useSession } from "./sessionContext";
 import { useAppServices } from "./servicesContext";
 import { AuthenticatedShell } from "./AuthenticatedShell";
-import { calibrationSafety } from "../features/calibration/safety";
+import { canOpenNormalMonitoring } from "../features/readiness/monitoringPolicy";
 
 interface RouteMessageState {
   message?: string;
@@ -164,28 +164,38 @@ export function LiveRoute() {
   const services = useAppServices();
   const { sessions, streams } = useCameraSessions();
   const isBackendSession = session.identity?.session.mode === "backend";
+  const developmentMode = import.meta.env.MODE !== "production";
   const [calibrationGate, setCalibrationGate] = useState<
     "checking" | "eligible" | "blocked"
-  >(() => (isBackendSession ? "checking" : "eligible"));
+  >(() => (isBackendSession && !developmentMode ? "checking" : "eligible"));
   useEffect(() => {
     let active = true;
-    if (!isBackendSession || !services.cameras || !services.calibration)
+    if (
+      !isBackendSession ||
+      developmentMode ||
+      !services.cameras ||
+      !services.calibration
+    )
       return undefined;
     void services.cameras
       .list(matchId)
-      .then((cameras) =>
+      .then((cameraRecords) =>
         Promise.all(
-          cameras.map((camera) => services.calibration!.getCurrent(camera.id)),
-        ),
+          cameraRecords.map((camera) =>
+            services.calibration!.getCurrent(camera.id),
+          ),
+        ).then((results) => ({ cameraRecords, results })),
       )
-      .then((results) => {
+      .then(({ cameraRecords, results }) => {
         if (!active) return;
         setCalibrationGate(
-          results.length === 2 &&
-            results.every(
-              (result) =>
-                result?.isCurrent && !calibrationSafety(result).blocksCamera,
-            )
+          canOpenNormalMonitoring({
+            cameraRecords,
+            calibrations: results,
+            hasLeftPreview: true,
+            hasRightPreview: true,
+            mode: "production",
+          })
             ? "eligible"
             : "blocked",
         );
@@ -194,7 +204,13 @@ export function LiveRoute() {
     return () => {
       active = false;
     };
-  }, [isBackendSession, matchId, services.calibration, services.cameras]);
+  }, [
+    developmentMode,
+    isBackendSession,
+    matchId,
+    services.calibration,
+    services.cameras,
+  ]);
   const cameras = isBackendSession
     ? simulatedCameras.map((camera, index) => {
         const stream =
@@ -216,19 +232,28 @@ export function LiveRoute() {
     : simulatedCameras;
   const hasNormalLivePreview =
     streams.SIDELINE_LEFT !== null || streams.SIDELINE_RIGHT !== null;
+  const hasBothNormalLivePreviews =
+    streams.SIDELINE_LEFT !== null && streams.SIDELINE_RIGHT !== null;
 
-  if (isBackendSession && !hasNormalLivePreview) {
+  if (
+    isBackendSession &&
+    (developmentMode ? !hasNormalLivePreview : !hasBothNormalLivePreviews)
+  ) {
     return (
       <Navigate
         replace
-        state={{ message: "Pair a camera before opening the live monitor." }}
+        state={{
+          message: developmentMode
+            ? "Pair a camera before opening the live monitor."
+            : "Pair both cameras before opening the live monitor.",
+        }}
         to={matchRoutes.readiness(matchId)}
       />
     );
   }
-  if (isBackendSession && calibrationGate === "checking")
+  if (isBackendSession && !developmentMode && calibrationGate === "checking")
     return <RestorationScreen />;
-  if (isBackendSession && calibrationGate === "blocked") {
+  if (isBackendSession && !developmentMode && calibrationGate === "blocked") {
     return (
       <Navigate
         replace
