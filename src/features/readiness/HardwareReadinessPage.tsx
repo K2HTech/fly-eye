@@ -22,7 +22,7 @@ import {
 import type {
   CalibrationResult,
   CameraRecord,
-  PreparedCameraPair,
+  CameraRole,
 } from "../../services";
 import { calibrationSafety } from "../calibration/safety";
 import type { CameraConnectionState, PairingSession } from "../cameras";
@@ -41,6 +41,17 @@ type NormalCalibrations = Readonly<{
   left: CalibrationResult | null;
   right: CalibrationResult | null;
 }>;
+type CameraRecords = Readonly<{
+  left: CameraRecord | null;
+  right: CameraRecord | null;
+}>;
+
+function cameraRecords(cameras: readonly CameraRecord[]): CameraRecords {
+  return {
+    left: cameras.find((camera) => camera.role === "SIDELINE_LEFT") ?? null,
+    right: cameras.find((camera) => camera.role === "SIDELINE_RIGHT") ?? null,
+  };
+}
 
 const statusLabels: Record<CameraStatus, string> = {
   disconnected: "Disconnected",
@@ -115,7 +126,10 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
   const [loadingState, setLoadingState] = useState<LoadingState>("loading");
   const [match, setMatch] = useState<MatchRecord | null>(null);
   const [readiness, setReadiness] = useState<HardwareReadiness | null>(null);
-  const [cameraPair, setCameraPair] = useState<PreparedCameraPair | null>(null);
+  const [cameras, setCameras] = useState<CameraRecords>({
+    left: null,
+    right: null,
+  });
   const [loadError, setLoadError] = useState<string | null>(null);
   const [pendingControl, setPendingControl] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -143,9 +157,9 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
     let active = true;
 
     const isBackendSession = session.identity?.session.mode === "backend";
-    const preparedCameras = isBackendSession
+    const listedCameras = isBackendSession
       ? services.cameras
-        ? services.cameras.prepare(matchId)
+        ? services.cameras.list(matchId)
         : Promise.reject(
             new Error(
               "Camera setup is unavailable. Check the public endpoint configuration.",
@@ -153,21 +167,25 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
           )
       : Promise.resolve(null);
 
-    const calibrationRecords = preparedCameras.then((pair) =>
-      pair && services.calibration
-        ? Promise.all([
-            services.calibration.getCurrent(pair.left.id),
-            services.calibration.getCurrent(pair.right.id),
-          ]).then(([left, right]) => ({ left, right }))
-        : null,
-    );
+    const calibrationRecords = listedCameras.then((records) => {
+      if (!records || !services.calibration) return null;
+      const cameras = cameraRecords(records);
+      return Promise.all([
+        cameras.left
+          ? services.calibration.getCurrent(cameras.left.id)
+          : Promise.resolve(null),
+        cameras.right
+          ? services.calibration.getCurrent(cameras.right.id)
+          : Promise.resolve(null),
+      ]).then(([left, right]) => ({ left, right }));
+    });
     void Promise.all([
       services.matches.get(matchId),
       services.readiness.get(matchId),
-      preparedCameras,
+      listedCameras,
       calibrationRecords,
     ])
-      .then(([record, savedReadiness, pair, calibrations]) => {
+      .then(([record, savedReadiness, records, calibrations]) => {
         if (!active) return;
         if (!record) {
           setLoadingState("not-found");
@@ -175,7 +193,9 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
         }
         setMatch(record);
         setReadiness(savedReadiness);
-        setCameraPair(pair);
+        setCameras(
+          records ? cameraRecords(records) : { left: null, right: null },
+        );
         setNormalCalibrations(calibrations);
         setLoadError(null);
         setLoadingState("ready");
@@ -242,12 +262,27 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
     }
   };
 
-  const openPairing = async (camera: CameraRecord) => {
+  const openPairing = async (role: CameraRole) => {
     if (pendingControl) return;
-    setPendingControl(camera.id);
+    setPendingControl(role);
     setActionError(null);
     try {
-      setPairing(await cameraSessions.begin(camera.role, matchId, camera));
+      const camera = role === "SIDELINE_LEFT" ? cameras.left : cameras.right;
+      const pairedCamera =
+        camera ??
+        (services.cameras
+          ? await services.cameras.provision(matchId, role)
+          : (() => {
+              throw new Error("Camera setup is unavailable.");
+            })());
+      setCameras((current) =>
+        role === "SIDELINE_LEFT"
+          ? { ...current, left: pairedCamera }
+          : { ...current, right: pairedCamera },
+      );
+      setPairing(
+        await cameraSessions.begin(pairedCamera.role, matchId, pairedCamera),
+      );
     } catch (error) {
       setActionError(pairingFailureMessage(error));
     } finally {
@@ -461,24 +496,24 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
         <div className="readiness__grid">
           <CameraCard
             camera="cameraA"
-            label={cameraPair ? "Left camera" : "Camera A"}
-            location={cameraPair ? "Sideline left" : "Sideline"}
-            cameraRecord={cameraPair?.left}
+            label={isBackendSession ? "Left camera" : "Camera A"}
+            location={isBackendSession ? "Sideline left" : "Sideline"}
+            cameraRecord={cameras.left ?? undefined}
             calibrateDisabled={!leftCameraPreview || !services.calibration}
             onCalibrate={
-              cameraPair?.left
+              cameras.left
                 ? () =>
                     navigate(
-                      matchRoutes.calibration(matchId, cameraPair.left.id),
+                      matchRoutes.calibration(matchId, cameras.left?.id ?? ""),
                     )
                 : undefined
             }
             onPair={
-              cameraPair?.left
-                ? () => void openPairing(cameraPair.left)
+              isBackendSession
+                ? () => void openPairing("SIDELINE_LEFT")
                 : undefined
             }
-            pending={pendingControl === "cameraA"}
+            pending={pendingControl === "SIDELINE_LEFT"}
             readiness={currentReadiness.cameraA}
             disabled={isBusy}
             showSimulatorControls={!isBackendSession}
@@ -486,24 +521,24 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
           />
           <CameraCard
             camera="cameraB"
-            label={cameraPair ? "Right camera" : "Camera B"}
-            location={cameraPair ? "Sideline right" : "Baseline"}
-            cameraRecord={cameraPair?.right}
+            label={isBackendSession ? "Right camera" : "Camera B"}
+            location={isBackendSession ? "Sideline right" : "Baseline"}
+            cameraRecord={cameras.right ?? undefined}
             calibrateDisabled={!rightCameraPreview || !services.calibration}
             onCalibrate={
-              cameraPair?.right
+              cameras.right
                 ? () =>
                     navigate(
-                      matchRoutes.calibration(matchId, cameraPair.right.id),
+                      matchRoutes.calibration(matchId, cameras.right?.id ?? ""),
                     )
                 : undefined
             }
             onPair={
-              cameraPair?.right
-                ? () => void openPairing(cameraPair.right)
+              isBackendSession
+                ? () => void openPairing("SIDELINE_RIGHT")
                 : undefined
             }
-            pending={pendingControl === "cameraB"}
+            pending={pendingControl === "SIDELINE_RIGHT"}
             readiness={currentReadiness.cameraB}
             disabled={isBusy}
             showSimulatorControls={!isBackendSession}
@@ -617,10 +652,10 @@ function HardwareReadinessWorkspace({ matchId }: { matchId: string }) {
           onPreviewReady={() => setPairing(null)}
           onRegenerate={() => {
             const camera =
-              cameraPair?.left.id === pairing.cameraId
-                ? cameraPair.left
-                : cameraPair?.right;
-            void cancelPairing().then(() => camera && openPairing(camera));
+              cameras.left?.id === pairing.cameraId
+                ? cameras.left
+                : cameras.right;
+            void cancelPairing().then(() => camera && openPairing(camera.role));
           }}
         />
       )}
