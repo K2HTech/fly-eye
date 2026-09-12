@@ -28,6 +28,12 @@ interface RouteMessageState {
 
 interface DecisionRouteState {
   landingFrame?: number | string;
+  analysis?: import("../services").RallyAnalysis;
+}
+
+interface ReviewRouteState {
+  analysisId?: string;
+  media?: readonly { role: import("../services").CameraRole; url: string }[];
 }
 
 function routeMessage(location: Location): string | undefined {
@@ -50,6 +56,21 @@ function decisionResult(
   return typeof landingFrame === "number" || typeof landingFrame === "string"
     ? { landingFrame }
     : undefined;
+}
+
+function decisionAnalysis(
+  location: Location,
+): import("../services").RallyAnalysis | undefined {
+  if (typeof location.state !== "object" || location.state === null) {
+    return undefined;
+  }
+  const { analysis } = location.state as DecisionRouteState;
+  return analysis;
+}
+
+function reviewState(location: Location): ReviewRouteState {
+  if (typeof location.state !== "object" || location.state === null) return {};
+  return location.state as ReviewRouteState;
 }
 
 export function RestorationScreen() {
@@ -325,7 +346,13 @@ export function LiveRoute() {
       await services.clips.complete(created.clip.id);
       const submitted = await services.analyses.submit(created.clip.id);
       navigate(matchRoutes.review(matchId), {
-        state: { analysisId: submitted.analysisId },
+        state: {
+          analysisId: submitted.analysisId,
+          media: snapshots.map((snapshot) => ({
+            role: snapshot.role,
+            url: URL.createObjectURL(snapshot.bytes),
+          })),
+        },
       });
     } catch (error) {
       setReviewMessage(
@@ -386,6 +413,41 @@ export function LiveRoute() {
 export function ReviewRoute() {
   const matchId = useMatchId();
   const navigate = useNavigate();
+  const location = useLocation();
+  const services = useAppServices();
+  const { analysisId, media } = reviewState(location);
+  const [analysis, setAnalysis] = useState<
+    import("../services").RallyAnalysis | null
+  >(null);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!analysisId || !services.analyses) return undefined;
+    let active = true;
+    let timer: number | undefined;
+    const poll = async () => {
+      try {
+        const result = await services.analyses!.get(analysisId);
+        if (!active) return;
+        setAnalysis(result);
+        if (result.status === "queued" || result.status === "running") {
+          timer = window.setTimeout(() => void poll(), 1_000);
+        }
+      } catch {
+        if (active) setAnalysisError("Unable to retrieve the rally analysis.");
+      }
+    };
+    void poll();
+    return () => {
+      active = false;
+      if (timer) window.clearTimeout(timer);
+    };
+  }, [analysisId, services.analyses]);
+
+  useEffect(
+    () => () => media?.forEach((entry) => URL.revokeObjectURL(entry.url)),
+    [media],
+  );
 
   const openDecision = (decision: ClipDecision) => {
     navigate(matchRoutes.decision(matchId), {
@@ -393,8 +455,19 @@ export function ReviewRoute() {
     });
   };
 
+  useEffect(() => {
+    if (!analysis || analysis.status !== "done") return;
+    navigate(matchRoutes.decision(matchId), {
+      replace: true,
+      state: { analysis },
+    });
+  }, [analysis, matchId, navigate]);
+
   return (
     <ClipReview
+      analysis={analysisId ? analysis : undefined}
+      analysisError={analysisId ? analysisError : undefined}
+      media={media}
       onBack={() => navigate(matchRoutes.live(matchId))}
       onDecision={openDecision}
     />
@@ -405,9 +478,38 @@ export function DecisionRoute() {
   const matchId = useMatchId();
   const location = useLocation();
   const navigate = useNavigate();
+  const services = useAppServices();
+  const analysis = decisionAnalysis(location);
+  const [overlayUrl, setOverlayUrl] = useState<string | null>(null);
+  const [overlayError, setOverlayError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const overlayPath = analysis?.overlays.topdown;
+    if (!overlayPath || !services.analyses) return undefined;
+    let active = true;
+    let objectUrl: string | null = null;
+    void services.analyses
+      .getOverlay(overlayPath)
+      .then((bytes) => {
+        if (!active) return;
+        objectUrl = URL.createObjectURL(bytes);
+        setOverlayUrl(objectUrl);
+      })
+      .catch(() => {
+        if (active)
+          setOverlayError("Unable to retrieve the backend analysis overlay.");
+      });
+    return () => {
+      active = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [analysis?.overlays.topdown, services.analyses]);
 
   return (
     <DecisionScreen
+      analysis={analysis}
+      overlayUrl={overlayUrl}
+      overlayError={overlayError}
       result={decisionResult(location)}
       onRunAgain={() => navigate(matchRoutes.review(matchId))}
       onBackToLive={() => navigate(matchRoutes.live(matchId))}

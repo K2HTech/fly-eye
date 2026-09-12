@@ -36,6 +36,26 @@ describe("backend HTTP client", () => {
     expect(headers.get("X-Request-ID")).toBe("request-1");
   });
 
+  it("downloads authorized overlay bytes through the same credential boundary", async () => {
+    const credentials = new MemoryCredentialStore();
+    credentials.set({ accessToken: "access-1", refreshToken: "refresh-1" });
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValue(new Response("overlay", { status: 200 }));
+    const client = createBackendHttpClient({
+      baseUrl: "https://api.test/api/v1",
+      credentials,
+      fetchImpl,
+      requestIdFactory: () => "request-1",
+    });
+
+    await expect(
+      client.download!("analyses/id/overlay/topdown"),
+    ).resolves.toBeInstanceOf(Blob);
+    const headers = fetchImpl.mock.calls[0][1].headers as Headers;
+    expect(headers.get("Authorization")).toBe("Bearer access-1");
+  });
+
   it("allows secure request ID generation to be injected", async () => {
     const fetchImpl = vi.fn().mockResolvedValue(json({ ok: true }));
     const client = createBackendHttpClient({
