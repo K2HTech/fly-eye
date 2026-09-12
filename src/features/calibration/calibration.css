@@ -328,7 +328,7 @@
   margin: 0 auto;
   fill: #15462f;
   stroke: #dbe5df;
-  stroke-width: 5;
+  stroke-width: 3;
 }
 .calibration__court path {
   fill: none;
@@ -396,29 +396,44 @@
   margin-top: 20px;
 }
 .calibration__wireframe {
+  min-width: 0;
+}
+.calibration__wireframe-frame {
   position: relative;
-  background: #05080c;
+  overflow: hidden;
 }
 .calibration__wireframe img,
 .calibration__wireframe svg {
   display: block;
   width: 100%;
 }
+.calibration__wireframe img {
+  height: 100%;
+  object-fit: fill;
+}
 .calibration__wireframe svg {
   position: absolute;
   inset: 0;
   height: 100%;
+  overflow: hidden;
+  pointer-events: none;
 }
-.calibration__wireframe polygon,
-.calibration__wireframe line {
+.calibration__detected-lines polyline,
+.calibration__detected-lines line {
   fill: none;
-  stroke: #f4aa35;
-  stroke-width: 4;
+  stroke: rgb(255 205 64 / 82%);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 5;
   vector-effect: non-scaling-stroke;
 }
-.calibration__wireframe polygon {
-  stroke: #6fa3ff;
-  stroke-dasharray: 10 6;
+.calibration__overlay-legend {
+  margin: 10px 0 0;
+  color: #f5c45b;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 .calibration__result {
   padding: 18px;
